@@ -307,7 +307,6 @@ theorem pentBipyramid_energy :
   field_simp
   ring
 
-
 /- BEGIN M0 -/
 namespace Base
 
@@ -325,7 +324,6 @@ lemma norm_sub_inv_eq_phi {x y : R3} (hx : ‖x‖ = 1) (hy : ‖y‖ = 1) :
     ‖x - y‖⁻¹ = phi (inner ℝ x y) := by
   unfold phi
   rw [← norm_sub_sq_of_unit hx hy, Real.sqrt_sq (norm_nonneg _)]
-
 
 lemma neg_one_le_inner_of_unit {x y : R3} (hx : ‖x‖ = 1) (hy : ‖y‖ = 1) :
     -1 ≤ inner ℝ x y := by
@@ -391,7 +389,6 @@ lemma coulombEnergy_comp_perm {n : ℕ} (σ : Equiv.Perm (Fin n)) (x : Fin n →
           Equiv.sum_comp σ (fun i => ∑ j, if i = j then (0 : ℝ) else ‖x i - x j‖⁻¹)
   linarith
 
-
 lemma sphereConfig_comp {n : ℕ} (g : R3 ≃ₗᵢ[ℝ] R3) (σ : Equiv.Perm (Fin n)) {x : Fin n → R3}
     (hx : x ∈ SphereConfig n) : (fun i => g (x (σ i))) ∈ SphereConfig n := by
   refine ⟨fun i => ?_, ?_⟩
@@ -435,8 +432,6 @@ lemma cos_8pi5 : cos (8 * π / 5) = c1 := by
     rw [← cos_neg (2 * π / 5), ← cos_add_two_pi (-(2 * π / 5))]; congr 1; ring
   rw [h, cos_2pi5]
 
-
-
 lemma pent_inner_north {i : Fin 7} (hi : (i : ℕ) < 5) :
     inner ℝ (pentBipyramid i) (pentBipyramid 5) = 0 := by
   rw [pent_of_lt hi, pent_five, inner_cyl]; simp
@@ -448,10 +443,7 @@ lemma pent_inner_south {i : Fin 7} (hi : (i : ℕ) < 5) :
 lemma pent_inner_poles : inner ℝ (pentBipyramid 5) (pentBipyramid 6) = -1 := by
   rw [pent_five, pent_six, inner_cyl]; simp
 
-
-
 lemma pent_norm (i : Fin 7) : ‖pentBipyramid i‖ = 1 := pentBipyramid_mem.1 i
-
 
 end Base
 /- END M0 -/
@@ -719,7 +711,6 @@ end Comb
 section Comb2
 
 variable {n : ℕ}
-
 
 theorem dsum_add (f g : Fin n → Fin n → Fin n → ℝ) :
     dsum (fun i j l => f i j l + g i j l) = dsum f + dsum g := by
@@ -1052,50 +1043,32 @@ theorem three_point_identity (hn : 3 ≤ n) (s : ℝ → ℝ → ℝ → ℝ)
   field_simp
   ring
 
-
 end Final
 
 /-! ### The kernels at the diagonal `(1,1,1)` -/
-
-
-
 
 section FinalZ
 
 variable {n : ℕ}
 
-
 end FinalZ
-
 
 /- BEGIN M5 -/
 section Critical
 
-
-
-
 end Critical
 
 section Critical
 
-
-
-
 end Critical
 
 section Critical
-
-
-
 
 end Critical
 
 section CriticalZ
 
 variable {n : ℕ}
-
-
-
 
 end CriticalZ
 
@@ -1121,11 +1094,6 @@ variable (τ : Fin n → Fin n → ℝ) (hτ : ∀ i j, τ j i = τ i j) (f : �
 
 include hτ
 
-
-
-
-
-
 end Perm
 
 end CriticalZsym
@@ -1133,9 +1101,6 @@ end CriticalZsym
 section CriticalFinal
 
 variable {n : ℕ}
-
-
-
 
 end CriticalFinal
 
@@ -1254,7 +1219,6 @@ lemma sumT_flatMap {R : Type*} [CommRing R] (W : ℕ → ℕ → ℕ → R)
     rw [List.flatMap_cons, sumT_append, ih, sumT_scale W hW]
     simp only [sumT, List.map_cons, List.sum_cons]
     ring
-
 
 namespace Ex
 
@@ -1586,16 +1550,12 @@ lemma ev_sumRange (r : ℕ) (f : ℕ → Ex) :
 
 /-! ### Substitution of variables by variables or `1` -/
 
-
 /-- Value of the variable with code `i`. -/
 def varVal : ℕ → ℝ
   | 0 => u
   | 1 => v
   | 2 => t
   | _ => 1
-
-
-
 
 end Ex
 end Kron
@@ -2325,8 +2285,6 @@ lemma hpt_cut (cf : Cert3) (hc : cf.check = true) {u v t : ℝ} (hg : GramOK u v
       ≤ (cf.Hf u + cf.Hf v + cf.Hf t) / 3 - ((cf.eps : ℝ) / cf.Lam) / (cf.n.choose 2 : ℕ) :=
   hpt_gramCut cf hc (gramCut_of_le (check_parts hc).2.2.1 hg hu hv ht)
 
-
-
 end Cert3
 
 end Cert
@@ -2335,16 +2293,10 @@ end Cert3Block
 
 /- END CERT3 -/
 
-
 /- BEGIN M2 -/
 namespace M2
 
 /-! ## The number field `ℚ(√2, 2 sin (π/5))` -/
-
-
-
-
-
 
 /-- Elements `∑ x_(4i+j) a^i b^j` of `ℚ(a, b)`, `a = √2`, `b = 2 sin (π/5)`. -/
 structure K8 where
@@ -2360,39 +2312,11 @@ structure K8 where
 
 namespace K8
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /-! ### Rational enclosures and positivity of elements of `K8` -/
-
-
 
 end K8
 
-
-
-
-
-
-
-
-
 namespace K8
-
-
-
 
 end K8
 
@@ -2400,56 +2324,9 @@ end K8
 
 namespace Pl
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 end Pl
 
-
-
 open Pl
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 end M2
 /- END M2 -/
@@ -2459,8 +2336,6 @@ namespace M3
 
 open scoped InnerProductSpace
 
-
-
 /-- colour of the pair (k,l) in the pentagonal bipyramid (0:-1, 1:a, 2:0, 3:b) -/
 def cP (k l : Fin 7) : Fin 4 :=
   if k.val < 5 ∧ l.val < 5 then
@@ -2468,18 +2343,6 @@ def cP (k l : Fin 7) : Fin 4 :=
   else if k.val = 5 ∧ l.val = 6 then 0
   else if k.val = 6 ∧ l.val = 5 then 0
   else 2
-
-
-
-
-
-
-
-
-
-
-
-
 
 /-- The Gram determinant of four unit vectors, written with a free diagonal entry `δ` so that it
 is homogeneous of degree four. -/
@@ -2493,7 +2356,6 @@ lemma det4h_scale {R : Type*} [CommRing R] (s δ p01 p02 p03 p12 p13 p23 : R) :
     det4h (s * δ) (s * p01) (s * p02) (s * p03) (s * p12) (s * p13) (s * p23) =
       s ^ 4 * det4h δ p01 p02 p03 p12 p13 p23 := by
   unfold det4h; ring
-
 
 lemma det_fin_four_unit (p01 p02 p03 p12 p13 p23 : ℝ) :
     Matrix.det !![1, p01, p02, p03; p01, 1, p12, p13; p02, p12, 1, p23; p03, p13, p23, 1] =
@@ -2527,14 +2389,6 @@ noncomputable def cosB : ℝ := (√5 - 1) / 4
 
 /-- The four contact values `-1, cos (4π/5), 0, cos (2π/5)` indexed by `Fin 4`. -/
 noncomputable def val : Fin 4 → ℝ := ![-1, cosA, 0, cosB]
-
-
-
-
-
-
-
-
 
 lemma inner_cyl (ρ θ h ρ' θ' h' : ℝ) :
     ⟪cyl ρ θ h, cyl ρ' θ' h'⟫_ℝ = ρ * ρ' * cos (θ - θ') + h * h' := by
@@ -2642,18 +2496,6 @@ lemma inner_P (k l : Fin 7) :
     simp [val]
   · rw [pent_six, inner_cyl, ite_eq_left rfl]; norm_num
 
-
-
-
-
-
-
-
-
-
-
-
-
 end M3
 
 /- BEGIN P3ext -/
@@ -2709,8 +2551,6 @@ lemma phi_bregman_cubic {t0 t : ℝ} (h0 : t0 < 1) (h : t < 1) :
     positivity
   linarith
 
-
-
 end Base
 
 /- END P3ext -/
@@ -2722,7 +2562,6 @@ end Base
 namespace Reg
 
 open Base
-
 
 /-- `sin (2π/5)`. -/
 noncomputable def s1 : ℝ := sin (2 * π / 5)
@@ -3215,10 +3054,6 @@ theorem pent_critical (i : Fin 7) :
   · exact pent_critical_5
   · exact pent_critical_6
 
-
-
-
-
 lemma W_symm (i j : Fin 7) : W i j = W j i := by
   by_cases h : i = j
   · subst h; rfl
@@ -3238,9 +3073,6 @@ lemma sum_Ioi_add_swap {n : ℕ} (F : Fin n → Fin n → ℝ) (hd : ∀ i, F i 
   simp only [h3, h4] at h2
   linarith
 
-
-
-
 end Reg
 
 /- END P1 -/
@@ -3248,7 +3080,6 @@ end Reg
 /- BEGIN GAUGE -/
 
 /-! ## G: gauge (Procrustes) lemma `exists_gauge` (agent7) -/
-
 
 namespace Reg
 
@@ -3421,7 +3252,6 @@ theorem exists_gauge {n : ℕ} (P y : Fin n → R3) :
 
 end Reg
 
-
 /- END GAUGE -/
 
 /- BEGIN P2 -/
@@ -3431,50 +3261,11 @@ namespace RegB
 
 open Base Finset
 
-
-
-
-
-
-
-
-
 section vectors
 
 variable (y : Fin 7 → R3)
 
-
-
-
-
-
-
 end vectors
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 end RegB
 /- END RegB -/
@@ -3482,7 +3273,6 @@ end RegB
 /- END P2 -/
 
 /- BEGIN GV -/
-
 
 namespace GV
 
@@ -3504,7 +3294,6 @@ lemma pent1 : pentBipyramid 1 = !₂[cos (2 * π / 5), sin (2 * π / 5), 0] := b
 
 lemma pent5' : pentBipyramid 5 = !₂[0, 0, 1] := by
   simp [pentBipyramid, cyl]
-
 
 lemma abs_le_one_of_sq_add {a b c : ℝ} (h : a ^ 2 + b ^ 2 + c ^ 2 = 1) : |a| ≤ 1 := by
   rw [abs_le]
@@ -3531,7 +3320,6 @@ lemma L32_bound {g01 g05 g15 L22 L32 w : ℝ} (hw0 : 0 ≤ w)
     rw [← this, hL32, abs_le]
     constructor <;> nlinarith
   nlinarith [abs_nonneg L32]
-
 
 lemma L33_bounds {g05 L32 L33 w : ℝ} (hw0 : 0 ≤ w) (hw : w ≤ 1 / 10)
     (hg05 : |g05| ≤ w) (hL32 : |L32| ≤ 157 / 100 * w)
@@ -3564,7 +3352,6 @@ lemma L22_s1_close {c1 s1 g01 L22 w : ℝ} (hw0 : 0 ≤ w)
           mul_le_mul h3 h4 (abs_nonneg _) hw0
       _ = 72 / 100 * w := by ring
   nlinarith [abs_nonneg (L22 - s1)]
-
 
 lemma abs_mul_le' {x y p q : ℝ} (hx : |x| ≤ p) (hy : |y| ≤ q) : |x * y| ≤ p * q := by
   rw [abs_mul]
@@ -3611,7 +3398,6 @@ lemma dc_bound {g05 L32 L33 a b c c0 w : ℝ} (hw0 : 0 ≤ w)
   rw [abs_mul, abs_of_pos (by linarith : 0 < L33)] at h1
   nlinarith [abs_nonneg (c - c0)]
 
-
 lemma core_bound {c1 s1 g01 g05 g15 L22 L32 L33 a b c a0 b0 c0 w : ℝ}
     (hw0 : 0 ≤ w) (hw : w ≤ 1 / 10)
     (hc1 : 309 / 1000 ≤ c1) (hc1' : c1 ≤ 31 / 100) (hs1 : s1 ^ 2 = 1 - c1 ^ 2) (hs1p : 0 < s1)
@@ -3644,15 +3430,12 @@ lemma core_bound {c1 s1 g01 g05 g15 L22 L32 L33 a b c a0 b0 c0 w : ℝ}
   have h3 : (c - c0) ^ 2 ≤ (39 / 10 * w) ^ 2 := sq_le_sq' (abs_le.1 dc).1 (abs_le.1 dc).2
   nlinarith
 
-
 open scoped InnerProductSpace
 
 lemma inner_cols (a b c d e f : ℝ) :
     inner ℝ (!₂[a, b, c] : R3) (!₂[d, e, f] : R3) = a * d + b * e + c * f := by
   rw [inner_coord]
   simp
-
-
 
 lemma isometry_of_gram_fin3 (u v : Fin 3 → R3) (hu : LinearIndependent ℝ u)
     (h : ∀ i j, ⟪u i, u j⟫_ℝ = ⟪v i, v j⟫_ℝ) :
@@ -3679,7 +3462,6 @@ lemma isometry_of_gram_fin3 (u v : Fin 3 → R3) (hu : LinearIndependent ℝ u)
     simp [map_sum, map_smul, sum_inner, inner_sum, inner_smul_left, inner_smul_right, hf, h,
       bu]
   exact ⟨f.isometryOfInner key, fun i => by simpa using hf i⟩
-
 
 /-- The (2,2) entry of the Cholesky factor of a unit-diagonal Gram matrix. -/
 noncomputable def L22 (g01 : ℝ) : ℝ := √(1 - g01 ^ 2)
@@ -3739,7 +3521,6 @@ lemma frame_gram {g01 g05 g15 : ℝ} (h22 : 0 < L22 g01)
   · exact (real_inner_comm _ _).trans e12
   · exact e22
 
-
 lemma c1_bounds : 309 / 1000 ≤ c1 ∧ c1 ≤ 31 / 100 := by
   have h5 : (5 : ℝ) = √5 ^ 2 := (Real.sq_sqrt (by norm_num)).symm
   have hs : 0 ≤ √5 := Real.sqrt_nonneg 5
@@ -3774,7 +3555,6 @@ lemma sin_2pi5_pos : 0 < sin (2 * π / 5) := by
   apply sin_pos_of_pos_of_lt_pi
   · positivity
   · linarith [pi_pos]
-
 
 theorem exists_iso_close {y : Fin 7 → R3} (hy : ∀ i, ‖y i‖ = 1) {w : ℝ} (hw : w ≤ 1 / 10)
     (hG : ∀ i j, |⟪y i, y j⟫_ℝ - ⟪pentBipyramid i, pentBipyramid j⟫_ℝ| ≤ w) :
@@ -3877,32 +3657,22 @@ theorem exists_iso_close {y : Fin 7 → R3} (hy : ∀ i, ‖y i‖ = 1) {w : ℝ
   refine (sq_le_sq₀ (norm_nonneg _) (by positivity)).1 ?_
   rw [hsq]; exact key
 
-
-
-
 end GV
 
 /- END GV -/
 
 /- BEGIN TWOREGIME -/
 
-
 namespace TwoRegime
 
 open scoped InnerProductSpace
 
-
-
-
-
 end TwoRegime
-
 
 namespace TwoRegime
 
 open scoped InnerProductSpace
 open Base
-
 
 /-- **Local statement** (radius `d`, sup-norm): every unit configuration within `d` of the
 labelled `P` has energy at least `E(P)`, with equality only on the `O(3)`-orbit of `P`. -/
@@ -3911,10 +3681,6 @@ def LocalMinAt (d : ℝ) : Prop :=
     coulombEnergy pentBipyramid ≤ coulombEnergy z ∧
     (coulombEnergy z = coulombEnergy pentBipyramid →
       ∃ g : R3 ≃ₗᵢ[ℝ] R3, ∀ i, z i = g (pentBipyramid i))
-
-
-
-
 
 end TwoRegime
 
@@ -3934,7 +3700,6 @@ def LocalGram (ω : ℝ → ℝ) : Prop :=
     coulombEnergy pentBipyramid ≤ coulombEnergy y ∧
     (coulombEnergy y = coulombEnergy pentBipyramid →
       ∃ g : R3 ≃ₗᵢ[ℝ] R3, ∀ i, y i = g (pentBipyramid i))
-
 
 /-- A uniform Gram window `w ≤ 1/10` around the labelled `P` is controlled by the sup-norm
 statement at radius `(11/2) w` (chart step `GV.exists_iso_close`). -/
@@ -3965,9 +3730,6 @@ theorem localGram_of_localMinAt {w : ℝ} (hw : w ≤ 1 / 10) (hL : LocalMinAt (
   rw [← this]
   simp
 
-
-
-
 end TwoRegime
 
 /- END TWOREGIME -/
@@ -3977,8 +3739,6 @@ namespace TwoRegime
 
 open scoped InnerProductSpace
 open Base
-
-
 
 end TwoRegime
 
@@ -4065,8 +3825,6 @@ theorem margin_of_threePoint_cut {H : ℝ → ℝ} {a η : ℝ} (K : ℕ) (m : �
     (coulombEnergy pentBipyramid + η) hpt y hy.1 hya
   linarith
 
-
-
 end TwoRegime
 
 /- END TR_E -/
@@ -4077,13 +3835,6 @@ namespace TwoRegime
 open scoped InnerProductSpace
 open Base
 
-
-
-
-
-
-
-
 end TwoRegime
 
 namespace TwoRegime
@@ -4091,10 +3842,7 @@ namespace TwoRegime
 open scoped InnerProductSpace
 open Base
 
-
-
 end TwoRegime
-
 
 /- BEGIN TR_G3 -/
 namespace TwoRegime
@@ -4121,7 +3869,6 @@ def LocalGramA (lo hi : ℝ → ℝ) : Prop :=
     (coulombEnergy y = coulombEnergy pentBipyramid →
       ∃ g : R3 ≃ₗᵢ[ℝ] R3, ∀ i, y i = g (pentBipyramid i))
 
-
 /-- A symmetric local statement gives the asymmetric one on any smaller window. -/
 theorem localGramA_of_localGram {ω lo hi : ℝ → ℝ} (hL : LocalGram ω) (hlo : ∀ t, lo t ≤ ω t)
     (hhi : ∀ t, hi t ≤ ω t) : LocalGramA lo hi := by
@@ -4133,7 +3880,6 @@ theorem localGramA_of_localGram {ω lo hi : ℝ → ℝ} (hL : LocalGram ω) (hl
   have := hhi ⟪pentBipyramid i, pentBipyramid j⟫_ℝ
   simp only [Equiv.refl_apply] at h1 h2
   constructor <;> linarith
-
 
 /-- The local statement transported along a relabelling of the points. -/
 theorem local_of_windowA {lo hi : ℝ → ℝ} (hL : LocalGramA lo hi) {y : Fin 7 → R3}
@@ -4156,7 +3902,6 @@ theorem local_of_windowA {lo hi : ℝ → ℝ} (hL : LocalGramA lo hi) {y : Fin 
   have := hg' (σ j)
   simpa using this
 
-
 end TwoRegime
 /- END TR_G3 -/
 /- BEGIN TR_G4 -/
@@ -4164,8 +3909,6 @@ namespace TwoRegime
 
 open scoped InnerProductSpace
 open Base
-
-
 
 end TwoRegime
 /- END TR_G4 -/
@@ -4176,12 +3919,6 @@ namespace Interfaces
 
 open Finset Base
 
-
-
-
-
-
-
 end Interfaces
 /- END INTERFACES -/
 
@@ -4190,12 +3927,8 @@ namespace Glue
 
 open Finset Base Interfaces
 
-
-
-
 end Glue
 /- END GLUE -/
-
 
 /- BEGIN TR_F -/
 namespace EPBounds
@@ -4267,7 +4000,6 @@ lemma pent_formula_bounds :
   constructor
   · norm_num at h1' h2' ⊢; linarith
   · norm_num at h1 h2 ⊢; linarith
-
 
 /-- **Rational enclosure of the minimum energy**: `14.452977 ≤ E(P) ≤ 14.452978`. -/
 lemma coulombEnergy_pent_bounds :
@@ -4411,7 +4143,6 @@ end Reg
 /- END LOC1 -/
 
 end ThomsonN7
-
 
 /- BEGIN QCORE1 -/
 namespace ThomsonN7
@@ -4603,7 +4334,6 @@ noncomputable def Fq (c s p q r : ℝ) (x0 x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x1
   + CP_58 c s p q r * (x19 ^ 2)
   + CP_59 c s p q r * (x20 ^ 2)
 
-
 lemma cross_of_enc {C lo hi T θ u v : ℝ} (h1 : lo ≤ C) (h2 : C ≤ hi)
     (h3 : T - θ ≤ lo) (h4 : hi ≤ T + θ) :
     0 ≤ (C - T) * (u * v) + θ / 2 * (u ^ 2 + v ^ 2) := by
@@ -4616,7 +4346,6 @@ lemma diag_of_enc {C lo hi T θ u : ℝ} (h1 : lo ≤ C) (h2 : C ≤ hi)
     0 ≤ (C - T) * u ^ 2 + θ * u ^ 2 := by
   have e1 : 0 ≤ θ + (C - T) := by linarith
   nlinarith [mul_nonneg e1 (sq_nonneg u)]
-
 
 /-- The box in which the five atoms live. -/
 def InBox (c s p q r : ℝ) : Prop :=
@@ -6054,7 +5783,6 @@ noncomputable def Pen (h : Fin 7 → R3) : ℝ :=
   ∑ i, inner ℝ (pentBipyramid i) (h i) ^ 2
     + gaugeG h 0 1 ^ 2 + gaugeG h 0 2 ^ 2 + gaugeG h 1 2 ^ 2
 
-
 lemma expansion (h : Fin 7 → R3) :
     Qhess h + 2 * Pen h = Fq c1 s1 (phi c1) (phi c2) (phi 0) (h 0 0) (h 0 1) (h 0 2) (h 1 0) (h 1 1) (h 1 2) (h 2 0) (h 2 1) (h 2 2) (h 3 0) (h 3 1) (h 3 2) (h 4 0) (h 4 1) (h 4 2) (h 5 0) (h 5 1) (h 5 2) (h 6 0) (h 6 1) (h 6 2) := by
   have hc2 : c2 = -1 / 2 - c1 := by unfold c1 c2; ring
@@ -6451,7 +6179,6 @@ lemma atoms_inBox : InBox c1 s1 (phi c1) (phi c2) (phi 0) :=
   ⟨c1_box.1, c1_box.2, s1_box.1, s1_box.2, phi_c1_box.1, phi_c1_box.2, phi_c2_box.1,
     phi_c2_box.2, phi_zero_box.1, phi_zero_box.2⟩
 
-
 lemma phi_c1_le : phi c1 ≤ 8507 / 10000 := by
   have := phi_c1_box.2
   linarith
@@ -6581,7 +6308,6 @@ lemma pair_rem {A B t1 q ri rj r : ℝ} (hA : 0 ≤ A) (hB : 0 ≤ B) (hri : 0 �
   have h7 : 0 ≤ A * (r * (ri ^ 2 + rj ^ 2)) := by positivity
   have h8 : 0 ≤ B * (r * (ri ^ 2 + rj ^ 2)) := by positivity
   nlinarith [f1, f2, h7, h8]
-
 
 /-- The `(i, j)` remainder: the cubic Bregman lower bound term minus its quadratic part. -/
 noncomputable def Dpair (y : Fin 7 → R3) (i j : Fin 7) : ℝ :=
@@ -6765,7 +6491,6 @@ theorem pent_local_min {z : Fin 7 → R3} (hz : z ∈ SphereConfig 7)
 end Reg
 end ThomsonN7
 
-
 /- END LOC2 -/
 
 namespace ThomsonN7
@@ -6794,7 +6519,6 @@ theorem TwoRegime.localMinAt_tiny : TwoRegime.LocalMinAt (1 / 30000) :=
   fun _ hz h => Reg.pent_local_min_sup hz h
 
 end ThomsonN7
-
 
 /- END REGLOCAL -/
 end RegLocalSection
@@ -7248,7 +6972,6 @@ def cutCert : Cert where
     (3890988620567479007348469505273116, [0, 0, 0, 0, 0, 0, 0, 1, 1]),
     (16694992210719465232261569657622130, [0, 0, 0, 0, 0, 0, 0, 1, 0, -1]),
     (17386816999005137076740614757288084, [0, 0, 0, 0, 0, 0, 0, 0, 1, -1])]
-
 
 /-- The certificate passes the exact check. -/
 theorem cutCert_ok : cutCert.check 19 20 = true := by decide +kernel
@@ -8196,12 +7919,10 @@ theorem case1_margin : ∀ y ∈ SphereConfig 7, (∀ i j, i ≠ j → (-9 / 10 
     rw [Hf_eq]
     exact CutOneD.cutH_le_phi h1 h2
 
-
 end Case1
 end ThomsonN7
 
 /- END CASE1 -/
-
 
 /- BEGIN CASE2RED -/
 namespace ThomsonN7
@@ -8301,12 +8022,6 @@ variable {n : ℕ}
 noncomputable def mrg (s : Fin n → ℝ → ℝ → ℝ → ℝ) (i : Fin n) (t : ℝ) : ℝ :=
   s i 1 t t + s i t 1 t + s i t t 1
 
-
-
-
-
-
-
 theorem dsum_os6 (f : Fin n → Fin n → Fin n → ℝ) :
     dsum (fun i j l => f i j l + f i l j + f j i l + f j l i + f l i j + f l j i) = 6 * dsum f := by
   rw [dsum_add, dsum_add, dsum_add, dsum_add, dsum_add]
@@ -8319,8 +8034,6 @@ theorem dsum_os6 (f : Fin n → Fin n → Fin n → ℝ) :
     exact this.trans e4
   rw [e1, e2, e3, e4, e5]
   ring
-
-
 
 end TypedComb
 
@@ -8749,8 +8462,6 @@ theorem typed7_bound_lo (K : ℕ) (m : ℕ → ℕ)
       (fun i j => real_inner_comm _ _)
       (fun i j l _ _ _ => gramOK_inner (x i) (x j) (x l) (hx i) (hx j) (hx l)) hmin hcut hα hβ hγ
 
-
-
 end Typed7
 
 end ThreePoint
@@ -9056,8 +8767,6 @@ theorem chk4_sound (δ : ℤ) : ∀ (n : ℕ) (b : Box6) (a₁ a₂ a₃ a₄ a�
       · exact ih _ _ _ _ _ _ _ h1 hs
       · exact ih _ _ _ _ _ _ _ h2 hs
 
-
-
 end M6
 end ThomsonN7
 
@@ -9110,7 +8819,6 @@ lemma box_exclude (n : ℕ) (bx : Box6) (hbx : chk4 1000 n bx = true) (e a b c :
   · nlinarith
   · nlinarith
   · nlinarith
-
 
 lemma imem_of {lo hi : ℤ} {x : ℝ} (h1 : (lo : ℝ) ≤ x) (h2 : x ≤ hi) : Imem (lo, hi) x :=
   ⟨h1, h2⟩
@@ -9202,7 +8910,6 @@ theorem comb5_dec : ∀ b01 b02 b03 b04 b12 b13 b14 b23 b24 b34 : Bool,
 noncomputable def col (τ : ℝ) (y : Fin 7 → R3) (a b : Fin 5) : Bool :=
   decide (|⟪y a.succ.succ, y b.succ.succ⟫_ℝ - M3.cosB| ≤ τ)
 
-
 lemma mk10_col (τ : ℝ) (y : Fin 7 → R3) (a b : Fin 5) (hab : a < b) :
     mk10 [col τ y 0 1, col τ y 0 2, col τ y 0 3, col τ y 0 4, col τ y 1 2, col τ y 1 3,
       col τ y 1 4, col τ y 2 3, col τ y 2 4, col τ y 3 4] a b = col τ y a b := by
@@ -9257,7 +8964,6 @@ lemma sig7_one (s : Equiv.Perm (Fin 5)) : sig7 s 1 = 6 := by simp [sig7]
 lemma sig7_ring (s : Equiv.Perm (Fin 5)) (a : Fin 5) : sig7 s a.succ.succ = pentIdx (s a) := by
   have h : ¬ (a.succ.succ : Fin 7).val < 2 := by simp
   simp [sig7]
-
 
 /-! ### Nominal Gram entries of the relabelled bipyramid -/
 
@@ -9426,7 +9132,6 @@ theorem ring_rigid {τ : ℝ} (hτ : τ ≤ 1 / 10) (y : Fin 7 → R3) (hy : ∀
     rwa [real_inner_comm (y i) (y j),
       real_inner_comm (pentBipyramid (sigEquiv s i)) (pentBipyramid (sigEquiv s j))] at this
 
-
 end T4
 end ThomsonN7
 
@@ -9570,7 +9275,6 @@ and `C` for ring--ring pairs. -/
 def cls3 {α : Sort*} (A B C : α) (i j : Fin 7) : α :=
   if i.val ≤ 1 ∧ j.val ≤ 1 then A else if i.val ≤ 1 ∨ j.val ≤ 1 then B else C
 
-
 /-- Termwise facts for the pairs of a minimal-pair configuration: the class minorant lies below
 `phi` and its contact set is contained in the class zero predicate. -/
 lemma pair_facts {y : Fin 7 → R3} (hy : y ∈ SphereConfig 7) {lo hi : ℝ}
@@ -9597,7 +9301,6 @@ lemma pair_facts {y : Fin 7 → R3} (hy : y ∈ SphereConfig 7) {lo hi : ℝ}
   · by_cases h2 : i.val ≤ 1 ∨ j.val ≤ 1
     · simpa only [h1, h2, ite_false, ite_true] using hB _ hge hlt
     · simpa only [h1, h2, ite_false] using hC _ hge hlt
-
 
 /-- The energy of a unit configuration as a double sum of `phi`. -/
 lemma energy_eq_sum {y : Fin 7 → R3} (hy : y ∈ SphereConfig 7) :
@@ -9628,7 +9331,6 @@ theorem slab_of_typed {lo hi e : ℝ} (HA HB HC : ℝ → ℝ) (he : coulombEner
       (fun t h1 h2 => ⟨hB t h1 h2, fun _ => trivial⟩)
       (fun t h1 h2 => ⟨hC t h1 h2, fun _ => trivial⟩) i j (Finset.mem_Ioi.1 hj)).1
   linarith
-
 
 /-- **Top-level assembly from a cap certificate and slab certificates**, both stated in the
 minimal-pair normal form. -/
@@ -9876,17 +9578,12 @@ lemma sum_H7_eq_sum_cls3 (HA HB HC : ℝ → ℝ) (g : Fin 7 → Fin 7 → ℝ) 
   refine Finset.sum_congr rfl fun i _ => Finset.sum_congr rfl fun j _ => ?_
   exact H7_eq_cls3 HA HB HC i j _
 
-
-
 end Bridge
 
 section Assembly
 
 open scoped InnerProductSpace
 open Base
-
-
-
 
 end Assembly
 
@@ -9918,7 +9615,6 @@ section Final
 
 open scoped InnerProductSpace
 open Base
-
 
 /-- **Cap specification.**  A near-sharp cap certificate on the cap `⟪y 0, y 1⟫ ≤ a0`: class
 minorants `HA HB HC` whose typed sum is bounded below by `e` on minimal-pair configurations of the
@@ -9964,8 +9660,6 @@ theorem slabSpec_sound {lo hi : ℝ} (h : SlabSpec lo hi) :
       coulombEnergy pentBipyramid < coulombEnergy y := by
   obtain ⟨e, HA, HB, HC, he, hTB, hA, hB, hC⟩ := h
   exact slab_of_typed HA HB HC he (fun y hy hlo hhi hmin => hTB y hy hlo hhi hmin) hA hB hC
-
-
 
 /-- **Assembly.**  A cap specification at `a 0` and slab specifications on `[a k, a (k+1)]`
 for `k < K`, with `-9/10 ≤ a K`, prove both open Challenge statements for `N = 7`. -/
@@ -10057,7 +9751,6 @@ lemma coulombEnergy_pent_enc40 :
 lemma coulombEnergy_pent_le_of {e δ : ℝ} (h : (144529774142213429350444915306029287904779:ℝ) / 10^40 ≤ e + δ) :
     coulombEnergy pentBipyramid ≤ e + δ :=
   le_trans coulombEnergy_pent_enc40.2 h
-
 
 end EPEnc
 end Glue
@@ -10219,7 +9912,6 @@ theorem yOf_le_one {t : ℝ} (h1 : -1 ≤ t) (h2 : t < 1) : yOf t ≤ 1 := by
   have := yOf_sq h2.le
   nlinarith
 
-
 /-- `y ≥ yh` as soon as `t ≤ 1 - 2 yh²`. -/
 theorem le_yOf_of_hi {t yh : ℝ} (h2 : t < 1) (hyh : 0 ≤ yh) (h : t ≤ 1 - 2 * yh ^ 2) :
     yh ≤ yOf t := by
@@ -10275,9 +9967,6 @@ theorem F_le_of_slack {Q : List ℤ} {Dq : ℕ} (hD : 0 < Dq) {t δ : ℝ} (h : 
 
 /-! ## C. Plain certificates: `H ≤ phi` on a `y`-interval -/
 
-
-
-
 /-! ## D. Contact certificates with coercivity -/
 
 /-- From `|y - y_ν| ≤ η` to the `t`-distance of `t = 1 - 2y²` from the node `1 - 2 y_ν²`. -/
@@ -10299,16 +9988,11 @@ theorem abs_t_sub_le {y yn η ν τ : ℝ} (hy : 0 < y) (hyn : 0 ≤ yn) (h : |y
     rwa [e] at this
   linarith
 
-
 /-- The linear factor `q y - p`. -/
 def lin (p q : ℕ) : List ℤ := [-(p : ℤ), (q : ℤ)]
 
 theorem peval_lin (p q : ℕ) (y : ℝ) : peval (lin p q) y = q * y - p := by
   simp only [lin, peval]; push_cast; ring
-
-
-
-
 
 /-- Two nodes: if `|(y - y1)(y - y2)| ≤ η |y1 - y2| / 2` then `y` is within `η` of a node. -/
 theorem two_node_alt {y y1 y2 η : ℝ} (hη : 0 ≤ η)
@@ -10325,11 +10009,6 @@ theorem two_node_alt {y y1 y2 η : ℝ} (hη : 0 ≤ η)
   rcases le_total |y - y1| |y - y2| with hle | hle
   · nlinarith [mul_lt_mul_of_pos_right ha hb0]
   · nlinarith [mul_lt_mul_of_pos_left hb ha0]
-
-
-
-
-
 
 /-- Certificate with a simple contact at the boundary node `y = 1` (`t = -1`, class `A`,
 pole--pole): `F = (1 - y) G` and `G ≥ g0 > 0` on `[ya1/ya2, 1]`. -/
@@ -10404,8 +10083,6 @@ theorem ContactA.tube (c : ContactA) (hc : c.check = true) {δ τ a0 : ℝ}
 
 /-! ## E. Shapes of the hypotheses `hA hB hC` of `cap_of_typed_tube7` and closeness of the nodes -/
 
-
-
 /-- `hA` (pole--pole class, node `-1`) from a boundary-node certificate. -/
 theorem ContactA.hA (c : ContactA) (hc : c.check = true) {δ τ a0 : ℝ}
     (hya : 0 ≤ (c.ya1 : ℝ) / c.ya2) (ha0 : ((c.ya1 : ℝ) / c.ya2) ^ 2 ≤ (1 - a0) / 2)
@@ -10427,8 +10104,6 @@ theorem abs_node_sub_c2_le {tn ε lo hi : ℝ} (hlo : lo ≤ √5) (hhi : √5 �
   unfold c2
   rw [abs_le]
   constructor <;> linarith
-
-
 
 end Coerce
 end Glue
@@ -11627,7 +11302,6 @@ lemma fqFlat_spec (w D : ℕ) (s : TBlk) (h : s.wf = true) :
     refine Finset.sum_congr rfl fun c _ => ?_
     ring
 
-
 /-- The evaluator used by the certificates: the flat `Nat`-only version. -/
 def fqCur (w D : ℕ) (s : TBlk) : ℤ := fqFlat w D s
 
@@ -12179,7 +11853,6 @@ def Cert.diff (P : Par) (c : Cert) : List ℤ :=
   padd (pscale c.m (padd [(c.Lam : ℤ)] (pneg (pmul [0, 2] (compQ c.Q)))))
     (pneg (sumTerms P c.terms))
 
-
 /-! ## Fast check by evaluation at a large integer point (Kronecker substitution)
 
 If an integer polynomial `R` satisfies `R(X) = 0` and all its coefficients have absolute value
@@ -12448,7 +12121,6 @@ theorem Cert.check_spec (P : Par) (c : Cert) (hc : c.check P = true) :
     rw [Int.abs_eq_natAbs]
     linarith
 
-
 theorem Term.nonneg (P : Par) (T : Term) (y : ℝ) (h0 : 0 ≤ y)
     (h2 : (P.nu2 : ℝ) * y ^ 2 ≤ P.mu2) (h1 : (P.mu1 : ℝ) ≤ P.nu1 * y ^ 2) :
     0 ≤ peval (T.mult P) y * sqEval T.sq y := by
@@ -12710,7 +12382,6 @@ lemma node_c1_of {tn ε lo hi : ℝ} (hlo : lo ^ 2 ≤ 5) (h0 : 0 ≤ hi) (hhi :
 lemma node_c2_of {tn ε lo hi : ℝ} (hlo : lo ^ 2 ≤ 5) (h0 : 0 ≤ hi) (hhi : 5 ≤ hi ^ 2)
     (h1 : -4 * tn - 1 - 4 * ε ≤ lo) (h2 : hi ≤ -4 * tn - 1 + 4 * ε) : |tn - c2| ≤ ε :=
   Coerce.abs_node_sub_c2_le (le_sqrt5_of hlo) (sqrt5_le_of h0 hhi) h1 h2
-
 
 end Bridge2
 
@@ -13279,14 +12950,6 @@ def tc_s99_98 : TCert where
   SB := [tc_s99_98_SB0, tc_s99_98_SB1, tc_s99_98_SB2, tc_s99_98_SB3, tc_s99_98_SB4]
   SG := [tc_s99_98_SG0, tc_s99_98_SG1, tc_s99_98_SG2, tc_s99_98_SG3, tc_s99_98_SG4]
 
-theorem tc_s99_98_meta : tc_s99_98.checkMeta = true := by decide +kernel
-
-theorem tc_s99_98_A : tc_s99_98.chkA = true := by decide +kernel
-
-theorem tc_s99_98_B : tc_s99_98.chkB = true := by decide +kernel
-
-theorem tc_s99_98_G : tc_s99_98.chkG = true := by decide +kernel
-
 end Cert
 end ThomsonN7
 
@@ -13393,7 +13056,6 @@ theorem HC_le_phi {t : ℝ} (hlo : (-99 / 100 : ℝ) ≤ t) (ht : t < 1) :
 
 end Slab_s99_98
 
-
 end SlabOneD
 end ThomsonN7
 
@@ -13404,18 +13066,12 @@ namespace ThomsonN7
 namespace Final
 
 /-- The slab `(-99 / 100 : ℝ) ≤ ⟪y 0, y 1⟫ ≤ (-49 / 50 : ℝ)` (certificate `s99_98`). -/
-theorem slab_s99_98 : Glue.SlabSpec (-99 / 100 : ℝ) (-49 / 50 : ℝ) := by
-  refine Glue.slabSpec_of_data Cert.tc_s99_98 Cert.tc_s99_98_meta Cert.tc_s99_98_A Cert.tc_s99_98_B
-    Cert.tc_s99_98_G ?_ ?_ ?_ ?_ ?_ ?_
-  · norm_num [Cert.TCert.alo, Cert.tc_s99_98]
-  · norm_num [Cert.TCert.ahi, Cert.tc_s99_98]
-  · norm_num [Cert.TCert.ef, Cert.tc_s99_98]
-  · intro t h1 h2
-    exact SlabOneD.Slab_s99_98.HA_le_phi h1 h2
-  · intro t h1 h2
-    exact SlabOneD.Slab_s99_98.HB_le_phi h1 h2
-  · intro t h1 h2
-    exact SlabOneD.Slab_s99_98.HC_le_phi h1 h2
+theorem slab_s99_98 : Glue.SlabSpec (-99 / 100 : ℝ) (-49 / 50 : ℝ) :=
+  Glue.slabSpec_of_data Cert.tc_s99_98 (by decide +kernel) (by decide +kernel) (by decide +kernel)
+    (by decide +kernel) (by norm_num [Cert.TCert.alo, Cert.tc_s99_98])
+    (by norm_num [Cert.TCert.ahi, Cert.tc_s99_98]) (by norm_num [Cert.TCert.ef, Cert.tc_s99_98])
+    (fun _ => SlabOneD.Slab_s99_98.HA_le_phi) (fun _ => SlabOneD.Slab_s99_98.HB_le_phi)
+    (fun _ => SlabOneD.Slab_s99_98.HC_le_phi)
 
 end Final
 end ThomsonN7
@@ -13608,14 +13264,6 @@ def tc_s98_96 : TCert where
   SB := [tc_s98_96_SB0, tc_s98_96_SB1, tc_s98_96_SB2, tc_s98_96_SB3, tc_s98_96_SB4]
   SG := [tc_s98_96_SG0, tc_s98_96_SG1, tc_s98_96_SG2, tc_s98_96_SG3, tc_s98_96_SG4]
 
-theorem tc_s98_96_meta : tc_s98_96.checkMeta = true := by decide +kernel
-
-theorem tc_s98_96_A : tc_s98_96.chkA = true := by decide +kernel
-
-theorem tc_s98_96_B : tc_s98_96.chkB = true := by decide +kernel
-
-theorem tc_s98_96_G : tc_s98_96.chkG = true := by decide +kernel
-
 end Cert
 end ThomsonN7
 
@@ -13722,7 +13370,6 @@ theorem HC_le_phi {t : ℝ} (hlo : (-49 / 50 : ℝ) ≤ t) (ht : t < 1) :
 
 end Slab_s98_96
 
-
 end SlabOneD
 end ThomsonN7
 
@@ -13733,18 +13380,12 @@ namespace ThomsonN7
 namespace Final
 
 /-- The slab `(-49 / 50 : ℝ) ≤ ⟪y 0, y 1⟫ ≤ (-24 / 25 : ℝ)` (certificate `s98_96`). -/
-theorem slab_s98_96 : Glue.SlabSpec (-49 / 50 : ℝ) (-24 / 25 : ℝ) := by
-  refine Glue.slabSpec_of_data Cert.tc_s98_96 Cert.tc_s98_96_meta Cert.tc_s98_96_A Cert.tc_s98_96_B
-    Cert.tc_s98_96_G ?_ ?_ ?_ ?_ ?_ ?_
-  · norm_num [Cert.TCert.alo, Cert.tc_s98_96]
-  · norm_num [Cert.TCert.ahi, Cert.tc_s98_96]
-  · norm_num [Cert.TCert.ef, Cert.tc_s98_96]
-  · intro t h1 h2
-    exact SlabOneD.Slab_s98_96.HA_le_phi h1 h2
-  · intro t h1 h2
-    exact SlabOneD.Slab_s98_96.HB_le_phi h1 h2
-  · intro t h1 h2
-    exact SlabOneD.Slab_s98_96.HC_le_phi h1 h2
+theorem slab_s98_96 : Glue.SlabSpec (-49 / 50 : ℝ) (-24 / 25 : ℝ) :=
+  Glue.slabSpec_of_data Cert.tc_s98_96 (by decide +kernel) (by decide +kernel) (by decide +kernel)
+    (by decide +kernel) (by norm_num [Cert.TCert.alo, Cert.tc_s98_96])
+    (by norm_num [Cert.TCert.ahi, Cert.tc_s98_96]) (by norm_num [Cert.TCert.ef, Cert.tc_s98_96])
+    (fun _ => SlabOneD.Slab_s98_96.HA_le_phi) (fun _ => SlabOneD.Slab_s98_96.HB_le_phi)
+    (fun _ => SlabOneD.Slab_s98_96.HC_le_phi)
 
 end Final
 end ThomsonN7
@@ -13937,14 +13578,6 @@ def tc_s96_94 : TCert where
   SB := [tc_s96_94_SB0, tc_s96_94_SB1, tc_s96_94_SB2, tc_s96_94_SB3, tc_s96_94_SB4]
   SG := [tc_s96_94_SG0, tc_s96_94_SG1, tc_s96_94_SG2, tc_s96_94_SG3, tc_s96_94_SG4]
 
-theorem tc_s96_94_meta : tc_s96_94.checkMeta = true := by decide +kernel
-
-theorem tc_s96_94_A : tc_s96_94.chkA = true := by decide +kernel
-
-theorem tc_s96_94_B : tc_s96_94.chkB = true := by decide +kernel
-
-theorem tc_s96_94_G : tc_s96_94.chkG = true := by decide +kernel
-
 end Cert
 end ThomsonN7
 
@@ -14051,7 +13684,6 @@ theorem HC_le_phi {t : ℝ} (hlo : (-24 / 25 : ℝ) ≤ t) (ht : t < 1) :
 
 end Slab_s96_94
 
-
 end SlabOneD
 end ThomsonN7
 
@@ -14062,18 +13694,12 @@ namespace ThomsonN7
 namespace Final
 
 /-- The slab `(-24 / 25 : ℝ) ≤ ⟪y 0, y 1⟫ ≤ (-47 / 50 : ℝ)` (certificate `s96_94`). -/
-theorem slab_s96_94 : Glue.SlabSpec (-24 / 25 : ℝ) (-47 / 50 : ℝ) := by
-  refine Glue.slabSpec_of_data Cert.tc_s96_94 Cert.tc_s96_94_meta Cert.tc_s96_94_A Cert.tc_s96_94_B
-    Cert.tc_s96_94_G ?_ ?_ ?_ ?_ ?_ ?_
-  · norm_num [Cert.TCert.alo, Cert.tc_s96_94]
-  · norm_num [Cert.TCert.ahi, Cert.tc_s96_94]
-  · norm_num [Cert.TCert.ef, Cert.tc_s96_94]
-  · intro t h1 h2
-    exact SlabOneD.Slab_s96_94.HA_le_phi h1 h2
-  · intro t h1 h2
-    exact SlabOneD.Slab_s96_94.HB_le_phi h1 h2
-  · intro t h1 h2
-    exact SlabOneD.Slab_s96_94.HC_le_phi h1 h2
+theorem slab_s96_94 : Glue.SlabSpec (-24 / 25 : ℝ) (-47 / 50 : ℝ) :=
+  Glue.slabSpec_of_data Cert.tc_s96_94 (by decide +kernel) (by decide +kernel) (by decide +kernel)
+    (by decide +kernel) (by norm_num [Cert.TCert.alo, Cert.tc_s96_94])
+    (by norm_num [Cert.TCert.ahi, Cert.tc_s96_94]) (by norm_num [Cert.TCert.ef, Cert.tc_s96_94])
+    (fun _ => SlabOneD.Slab_s96_94.HA_le_phi) (fun _ => SlabOneD.Slab_s96_94.HB_le_phi)
+    (fun _ => SlabOneD.Slab_s96_94.HC_le_phi)
 
 end Final
 end ThomsonN7
@@ -14266,14 +13892,6 @@ def tc_s94_93 : TCert where
   SB := [tc_s94_93_SB0, tc_s94_93_SB1, tc_s94_93_SB2, tc_s94_93_SB3, tc_s94_93_SB4]
   SG := [tc_s94_93_SG0, tc_s94_93_SG1, tc_s94_93_SG2, tc_s94_93_SG3, tc_s94_93_SG4]
 
-theorem tc_s94_93_meta : tc_s94_93.checkMeta = true := by decide +kernel
-
-theorem tc_s94_93_A : tc_s94_93.chkA = true := by decide +kernel
-
-theorem tc_s94_93_B : tc_s94_93.chkB = true := by decide +kernel
-
-theorem tc_s94_93_G : tc_s94_93.chkG = true := by decide +kernel
-
 end Cert
 end ThomsonN7
 
@@ -14380,7 +13998,6 @@ theorem HC_le_phi {t : ℝ} (hlo : (-47 / 50 : ℝ) ≤ t) (ht : t < 1) :
 
 end Slab_s94_93
 
-
 end SlabOneD
 end ThomsonN7
 
@@ -14391,18 +14008,12 @@ namespace ThomsonN7
 namespace Final
 
 /-- The slab `(-47 / 50 : ℝ) ≤ ⟪y 0, y 1⟫ ≤ (-93 / 100 : ℝ)` (certificate `s94_93`). -/
-theorem slab_s94_93 : Glue.SlabSpec (-47 / 50 : ℝ) (-93 / 100 : ℝ) := by
-  refine Glue.slabSpec_of_data Cert.tc_s94_93 Cert.tc_s94_93_meta Cert.tc_s94_93_A Cert.tc_s94_93_B
-    Cert.tc_s94_93_G ?_ ?_ ?_ ?_ ?_ ?_
-  · norm_num [Cert.TCert.alo, Cert.tc_s94_93]
-  · norm_num [Cert.TCert.ahi, Cert.tc_s94_93]
-  · norm_num [Cert.TCert.ef, Cert.tc_s94_93]
-  · intro t h1 h2
-    exact SlabOneD.Slab_s94_93.HA_le_phi h1 h2
-  · intro t h1 h2
-    exact SlabOneD.Slab_s94_93.HB_le_phi h1 h2
-  · intro t h1 h2
-    exact SlabOneD.Slab_s94_93.HC_le_phi h1 h2
+theorem slab_s94_93 : Glue.SlabSpec (-47 / 50 : ℝ) (-93 / 100 : ℝ) :=
+  Glue.slabSpec_of_data Cert.tc_s94_93 (by decide +kernel) (by decide +kernel) (by decide +kernel)
+    (by decide +kernel) (by norm_num [Cert.TCert.alo, Cert.tc_s94_93])
+    (by norm_num [Cert.TCert.ahi, Cert.tc_s94_93]) (by norm_num [Cert.TCert.ef, Cert.tc_s94_93])
+    (fun _ => SlabOneD.Slab_s94_93.HA_le_phi) (fun _ => SlabOneD.Slab_s94_93.HB_le_phi)
+    (fun _ => SlabOneD.Slab_s94_93.HC_le_phi)
 
 end Final
 end ThomsonN7
@@ -14595,14 +14206,6 @@ def tc_s93_90 : TCert where
   SB := [tc_s93_90_SB0, tc_s93_90_SB1, tc_s93_90_SB2, tc_s93_90_SB3, tc_s93_90_SB4]
   SG := [tc_s93_90_SG0, tc_s93_90_SG1, tc_s93_90_SG2, tc_s93_90_SG3, tc_s93_90_SG4]
 
-theorem tc_s93_90_meta : tc_s93_90.checkMeta = true := by decide +kernel
-
-theorem tc_s93_90_A : tc_s93_90.chkA = true := by decide +kernel
-
-theorem tc_s93_90_B : tc_s93_90.chkB = true := by decide +kernel
-
-theorem tc_s93_90_G : tc_s93_90.chkG = true := by decide +kernel
-
 end Cert
 end ThomsonN7
 
@@ -14709,7 +14312,6 @@ theorem HC_le_phi {t : ℝ} (hlo : (-93 / 100 : ℝ) ≤ t) (ht : t < 1) :
 
 end Slab_s93_90
 
-
 end SlabOneD
 end ThomsonN7
 
@@ -14720,18 +14322,12 @@ namespace ThomsonN7
 namespace Final
 
 /-- The slab `(-93 / 100 : ℝ) ≤ ⟪y 0, y 1⟫ ≤ (-9 / 10 : ℝ)` (certificate `s93_90`). -/
-theorem slab_s93_90 : Glue.SlabSpec (-93 / 100 : ℝ) (-9 / 10 : ℝ) := by
-  refine Glue.slabSpec_of_data Cert.tc_s93_90 Cert.tc_s93_90_meta Cert.tc_s93_90_A Cert.tc_s93_90_B
-    Cert.tc_s93_90_G ?_ ?_ ?_ ?_ ?_ ?_
-  · norm_num [Cert.TCert.alo, Cert.tc_s93_90]
-  · norm_num [Cert.TCert.ahi, Cert.tc_s93_90]
-  · norm_num [Cert.TCert.ef, Cert.tc_s93_90]
-  · intro t h1 h2
-    exact SlabOneD.Slab_s93_90.HA_le_phi h1 h2
-  · intro t h1 h2
-    exact SlabOneD.Slab_s93_90.HB_le_phi h1 h2
-  · intro t h1 h2
-    exact SlabOneD.Slab_s93_90.HC_le_phi h1 h2
+theorem slab_s93_90 : Glue.SlabSpec (-93 / 100 : ℝ) (-9 / 10 : ℝ) :=
+  Glue.slabSpec_of_data Cert.tc_s93_90 (by decide +kernel) (by decide +kernel) (by decide +kernel)
+    (by decide +kernel) (by norm_num [Cert.TCert.alo, Cert.tc_s93_90])
+    (by norm_num [Cert.TCert.ahi, Cert.tc_s93_90]) (by norm_num [Cert.TCert.ef, Cert.tc_s93_90])
+    (fun _ => SlabOneD.Slab_s93_90.HA_le_phi) (fun _ => SlabOneD.Slab_s93_90.HB_le_phi)
+    (fun _ => SlabOneD.Slab_s93_90.HC_le_phi)
 
 end Final
 end ThomsonN7
