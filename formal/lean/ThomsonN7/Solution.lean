@@ -1052,42 +1052,6 @@ theorem three_point_identity (hn : 3 ≤ n) (s : ℝ → ℝ → ℝ → ℝ)
   field_simp
   ring
 
-/-- **Three-point bound.** -/
-theorem three_point_bound (hn : 3 ≤ n) (K : ℕ) (m : ℕ → ℕ)
-    (F : (k : ℕ) → Matrix (Fin (m k)) (Fin (m k)) ℝ) (hF : ∀ k, k < K → (F k).PosSemidef)
-    (H : ℝ → ℝ) (e : ℝ)
-    (hpt : ∀ u v t : ℝ, GramOK u v t →
-      ∑ k ∈ Finset.range K, matDot (F k) (Rk n (m k) k u v t)
-        ≤ (H u + H v + H t) / 3 - e / (n.choose 2 : ℝ))
-    (x : Fin n → R3) (hx : ∀ i, ‖x i‖ = 1) :
-    e ≤ ∑ i, ∑ j ∈ Finset.Ioi i, H ⟪x i, x j⟫ := by
-  set s : ℝ → ℝ → ℝ → ℝ := fun u v t => ∑ k ∈ Finset.range K, matDot (F k) (S3 (m k) k u v t)
-    with hs
-  have hs12 : ∀ u v t, s u v t = s v u t := fun u v t => by
-    simp only [hs, S3_swap12 _ _ u v t]
-  have hs23 : ∀ u v t, s u v t = s u t v := fun u v t => by
-    simp only [hs, S3_swap23 _ _ u v t]
-  have hid := three_point_identity hn s hs12 hs23 H e x hx
-  have hBV : 0 ≤ ∑ i, ∑ j, ∑ l, s ⟪x i, x j⟫ ⟪x i, x l⟫ ⟪x j, x l⟫ := by
-    simp only [hs]
-    rw [sum4_swap]
-    exact Finset.sum_nonneg fun k hk =>
-      matDot_moment_nonneg (m k) k x hx (F k) (hF k (Finset.mem_range.mp hk))
-  have hslack : 0 ≤ dsum (fun i j l => ((H ⟪x i, x j⟫ + H ⟪x i, x l⟫ + H ⟪x j, x l⟫) / 3
-        - e / (n.choose 2 : ℝ)) - Rs s n ⟪x i, x j⟫ ⟪x i, x l⟫ ⟪x j, x l⟫) := by
-    refine dsum_nonneg fun i j l _ _ _ => ?_
-    have := hpt _ _ _ (gramOK_inner (x i) (x j) (x l) (hx i) (hx j) (hx l))
-    rw [sum_matDot_Rk] at this
-    linarith
-  have h3 : (3 : ℝ) ≤ n := by exact_mod_cast hn
-  have hpos : (0 : ℝ) < 2 * ((n : ℝ) - 2) := by linarith
-  have hprod : 0 ≤ 2 * ((n : ℝ) - 2) * (∑ i, ∑ j ∈ Finset.Ioi i, H ⟪x i, x j⟫ - e) := by
-    rw [← hid]
-    have : 0 ≤ ((n : ℝ) - 2) * ∑ i, ∑ j, ∑ l, s ⟪x i, x j⟫ ⟪x i, x l⟫ ⟪x j, x l⟫ :=
-      mul_nonneg (by linarith) hBV
-    linarith
-  have := nonneg_of_mul_nonneg_right hprod hpos
-  linarith
 
 end Final
 
@@ -1622,13 +1586,6 @@ lemma ev_sumRange (r : ℕ) (f : ℕ → Ex) :
 
 /-! ### Substitution of variables by variables or `1` -/
 
-/-- The `a`-th power of the variable with code `i` (`0, 1, 2 ↦ u, v, t`; otherwise `1`). -/
-def pw (i a : ℕ) : Ex :=
-  match i with
-  | 0 => mon a 0 0
-  | 1 => mon 0 a 0
-  | 2 => mon 0 0 a
-  | _ => c 1
 
 /-- Value of the variable with code `i`. -/
 def varVal : ℕ → ℝ
@@ -1638,12 +1595,6 @@ def varVal : ℕ → ℝ
   | _ => 1
 
 
-/-- Substitute the variables `(u, v, t)` by the variables with codes `(i, j, k)`. -/
-def subst (i j k : ℕ) : Ex → Ex
-  | c n => c n
-  | mon a b d => mul (mul (pw i a) (pw j b)) (pw k d)
-  | add p q => add (subst i j k p) (subst i j k q)
-  | mul p q => mul (subst i j k p) (subst i j k q)
 
 
 end Ex
@@ -2374,24 +2325,7 @@ lemma hpt_cut (cf : Cert3) (hc : cf.check = true) {u v t : ℝ} (hg : GramOK u v
       ≤ (cf.Hf u + cf.Hf v + cf.Hf t) / 3 - ((cf.eps : ℝ) / cf.Lam) / (cf.n.choose 2 : ℕ) :=
   hpt_gramCut cf hc (gramCut_of_le (check_parts hc).2.2.1 hg hu hv ht)
 
-/-- The pointwise inequality required by `three_point_bound` (no cut: `an / ad ≤ -1`). -/
-lemma hpt (cf : Cert3) (hc : cf.check = true) (hcut : (cf.an : ℝ) / cf.ad ≤ -1) {u v t : ℝ}
-    (hg : GramOK u v t) :
-    ∑ k ∈ Finset.range cf.K, matDot (cf.Fm k) (Rk cf.n (cf.m k) k u v t)
-      ≤ (cf.Hf u + cf.Hf v + cf.Hf t) / 3 - ((cf.eps : ℝ) / cf.Lam) / (cf.n.choose 2 : ℕ) := by
-  obtain ⟨hu, hv, ht, hd⟩ := hg
-  have hu' := abs_le.1 ((sq_le_one_iff_abs_le_one u).1 hu)
-  have hv' := abs_le.1 ((sq_le_one_iff_abs_le_one v).1 hv)
-  have ht' := abs_le.1 ((sq_le_one_iff_abs_le_one t).1 ht)
-  exact hpt_cut cf hc ⟨hu, hv, ht, hd⟩ (by linarith) (by linarith) (by linarith)
 
-/-- **Soundness of the checker (no cut).** -/
-theorem sound (cf : Cert3) (hc : cf.check = true) (hcut : (cf.an : ℝ) / cf.ad ≤ -1)
-    (x : Fin cf.n → R3) (hx : ∀ i, ‖x i‖ = 1) :
-    (cf.eps : ℝ) / cf.Lam ≤ ∑ i, ∑ j ∈ Finset.Ioi i, cf.Hf ⟪x i, x j⟫ := by
-  obtain ⟨hn, hL, hA, hF, hS, hz⟩ := check_parts hc
-  exact three_point_bound hn cf.K cf.m cf.Fm
-    (fun k hk => fmat_psd cf.Lam (hF k hk)) cf.Hf _ (fun u v t hg => hpt cf hc hcut hg) x hx
 
 end Cert3
 
@@ -2407,26 +2341,10 @@ namespace M2
 
 /-! ## The number field `ℚ(√2, 2 sin (π/5))` -/
 
-/-- `√2`. -/
-noncomputable def ra : ℝ := Real.sqrt 2
 
-/-- `2 sin (π/5)`, the side of the regular pentagon inscribed in the unit circle. -/
-noncomputable def rb : ℝ := 2 * Real.sin (π / 5)
 
-lemma ra_sq : ra ^ 2 = 2 := Real.sq_sqrt (by norm_num)
 
-lemma rb_sq : rb ^ 2 = (5 - Real.sqrt 5) / 2 := by
-  have h := Real.sin_sq_add_cos_sq (π / 5)
-  rw [Real.cos_pi_div_five] at h
-  have h5 := Real.sq_sqrt (show (0 : ℝ) ≤ 5 by norm_num)
-  unfold rb
-  nlinarith [h, h5]
 
-lemma rb_rel : rb ^ 4 = 5 * rb ^ 2 - 5 := by
-  have h5 := Real.sq_sqrt (show (0 : ℝ) ≤ 5 by norm_num)
-  have : rb ^ 4 = (rb ^ 2) ^ 2 := by ring
-  rw [this, rb_sq]
-  nlinarith [h5]
 
 /-- Elements `∑ x_(4i+j) a^i b^j` of `ℚ(a, b)`, `a = √2`, `b = 2 sin (π/5)`. -/
 structure K8 where
@@ -2442,181 +2360,39 @@ structure K8 where
 
 namespace K8
 
-/-- The real number represented by an element of `K8`. -/
-noncomputable def toReal (x : K8) : ℝ :=
-  (x.x0 : ℝ) + x.x1 * rb + x.x2 * rb ^ 2 + x.x3 * rb ^ 3 +
-    ra * ((x.x4 : ℝ) + x.x5 * rb + x.x6 * rb ^ 2 + x.x7 * rb ^ 3)
-
-/-- Zero. -/
-def zero : K8 := ⟨0, 0, 0, 0, 0, 0, 0, 0⟩
-
-/-- One. -/
-def one : K8 := ⟨1, 0, 0, 0, 0, 0, 0, 0⟩
-
-/-- Rational constants. -/
-def ofRat (c : ℚ) : K8 := ⟨c, 0, 0, 0, 0, 0, 0, 0⟩
-
-/-- Addition. -/
-def add (x y : K8) : K8 :=
-  ⟨x.x0 + y.x0, x.x1 + y.x1, x.x2 + y.x2, x.x3 + y.x3, x.x4 + y.x4, x.x5 + y.x5, x.x6 + y.x6,
-    x.x7 + y.x7⟩
-
-/-- Negation. -/
-def neg (x : K8) : K8 := ⟨-x.x0, -x.x1, -x.x2, -x.x3, -x.x4, -x.x5, -x.x6, -x.x7⟩
-
-lemma toReal_zero : zero.toReal = 0 := by simp [zero, toReal]
-
-lemma toReal_one : one.toReal = 1 := by simp [one, toReal]
-
-lemma toReal_ofRat (c : ℚ) : (ofRat c).toReal = c := by simp [ofRat, toReal]
-
-lemma toReal_add (x y : K8) : (add x y).toReal = x.toReal + y.toReal := by
-  simp only [add, toReal]; push_cast; ring
-
-lemma toReal_neg (x : K8) : (neg x).toReal = - x.toReal := by
-  simp only [neg, toReal]; push_cast; ring
-
-/-- Multiplication in the basis `a^i b^j`, `x_(4i+j)`, reduced by `a^2 = 2`, `b^4 = 5 b^2 - 5`. -/
-def mul (x y : K8) : K8 :=
-  ⟨x.x0*y.x0 - 5*x.x1*y.x3 - 5*x.x2*y.x2 - 5*x.x3*y.x1 - 25*x.x3*y.x3 + 2*x.x4*y.x4 - 10*x.x5*y.x7 - 10*x.x6*y.x6 - 10*x.x7*y.x5 - 50*x.x7*y.x7,
-    x.x0*y.x1 + x.x1*y.x0 - 5*x.x2*y.x3 - 5*x.x3*y.x2 + 2*x.x4*y.x5 + 2*x.x5*y.x4 - 10*x.x6*y.x7 - 10*x.x7*y.x6,
-    x.x0*y.x2 + x.x1*y.x1 + 5*x.x1*y.x3 + x.x2*y.x0 + 5*x.x2*y.x2 + 5*x.x3*y.x1 + 20*x.x3*y.x3 + 2*x.x4*y.x6 + 2*x.x5*y.x5 + 10*x.x5*y.x7 + 2*x.x6*y.x4 + 10*x.x6*y.x6 + 10*x.x7*y.x5 + 40*x.x7*y.x7,
-    x.x0*y.x3 + x.x1*y.x2 + x.x2*y.x1 + 5*x.x2*y.x3 + x.x3*y.x0 + 5*x.x3*y.x2 + 2*x.x4*y.x7 + 2*x.x5*y.x6 + 2*x.x6*y.x5 + 10*x.x6*y.x7 + 2*x.x7*y.x4 + 10*x.x7*y.x6,
-    x.x0*y.x4 - 5*x.x1*y.x7 - 5*x.x2*y.x6 - 5*x.x3*y.x5 - 25*x.x3*y.x7 + x.x4*y.x0 - 5*x.x5*y.x3 - 5*x.x6*y.x2 - 5*x.x7*y.x1 - 25*x.x7*y.x3,
-    x.x0*y.x5 + x.x1*y.x4 - 5*x.x2*y.x7 - 5*x.x3*y.x6 + x.x4*y.x1 + x.x5*y.x0 - 5*x.x6*y.x3 - 5*x.x7*y.x2,
-    x.x0*y.x6 + x.x1*y.x5 + 5*x.x1*y.x7 + x.x2*y.x4 + 5*x.x2*y.x6 + 5*x.x3*y.x5 + 20*x.x3*y.x7 + x.x4*y.x2 + x.x5*y.x1 + 5*x.x5*y.x3 + x.x6*y.x0 + 5*x.x6*y.x2 + 5*x.x7*y.x1 + 20*x.x7*y.x3,
-    x.x0*y.x7 + x.x1*y.x6 + x.x2*y.x5 + 5*x.x2*y.x7 + x.x3*y.x4 + 5*x.x3*y.x6 + x.x4*y.x3 + x.x5*y.x2 + x.x6*y.x1 + 5*x.x6*y.x3 + x.x7*y.x0 + 5*x.x7*y.x2⟩
 
 
-lemma mul_core (a0 a1 a2 a3 a4 a5 a6 a7 c0 c1 c2 c3 c4 c5 c6 c7 : ℝ) :
-    ((a0*c0 - 5*a1*c3 - 5*a2*c2 - 5*a3*c1 - 25*a3*c3 + 2*a4*c4 - 10*a5*c7 - 10*a6*c6 - 10*a7*c5 - 50*a7*c7) + (a0*c1 + a1*c0 - 5*a2*c3 - 5*a3*c2 + 2*a4*c5 + 2*a5*c4 - 10*a6*c7 - 10*a7*c6)*rb + (a0*c2 + a1*c1 + 5*a1*c3 + a2*c0 + 5*a2*c2 + 5*a3*c1 + 20*a3*c3 + 2*a4*c6 + 2*a5*c5 + 10*a5*c7 + 2*a6*c4 + 10*a6*c6 + 10*a7*c5 + 40*a7*c7)*rb^2 + (a0*c3 + a1*c2 + a2*c1 + 5*a2*c3 + a3*c0 + 5*a3*c2 + 2*a4*c7 + 2*a5*c6 + 2*a6*c5 + 10*a6*c7 + 2*a7*c4 + 10*a7*c6)*rb^3 + ra*((a0*c4 - 5*a1*c7 - 5*a2*c6 - 5*a3*c5 - 25*a3*c7 + a4*c0 - 5*a5*c3 - 5*a6*c2 - 5*a7*c1 - 25*a7*c3) + (a0*c5 + a1*c4 - 5*a2*c7 - 5*a3*c6 + a4*c1 + a5*c0 - 5*a6*c3 - 5*a7*c2)*rb + (a0*c6 + a1*c5 + 5*a1*c7 + a2*c4 + 5*a2*c6 + 5*a3*c5 + 20*a3*c7 + a4*c2 + a5*c1 + 5*a5*c3 + a6*c0 + 5*a6*c2 + 5*a7*c1 + 20*a7*c3)*rb^2 + (a0*c7 + a1*c6 + a2*c5 + 5*a2*c7 + a3*c4 + 5*a3*c6 + a4*c3 + a5*c2 + a6*c1 + 5*a6*c3 + a7*c0 + 5*a7*c2)*rb^3)) =
-    (a0 + a1*rb + a2*rb^2 + a3*rb^3 + ra*(a4 + a5*rb + a6*rb^2 + a7*rb^3)) * (c0 + c1*rb + c2*rb^2 + c3*rb^3 + ra*(c4 + c5*rb + c6*rb^2 + c7*rb^3)) := by
-  linear_combination (-a4*c4 - a4*c5*rb - a4*c6*rb^2 - a4*c7*rb^3 - a5*c4*rb - a5*c5*rb^2 - a5*c6*rb^3 - a5*c7*rb^4 - a6*c4*rb^2 - a6*c5*rb^3 - a6*c6*rb^4 - a6*c7*rb^5 - a7*c4*rb^3 - a7*c5*rb^4 - a7*c6*rb^5 - a7*c7*rb^6) * ra_sq + (-a1*c3 - a1*c7*ra - a2*c2 - a2*c3*rb - a2*c6*ra - a2*c7*ra*rb - a3*c1 - a3*c2*rb - a3*c3*rb^2 - 5*a3*c3 - a3*c5*ra - a3*c6*ra*rb - a3*c7*ra*rb^2 - 5*a3*c7*ra - a5*c3*ra - 2*a5*c7 - a6*c2*ra - a6*c3*ra*rb - 2*a6*c6 - 2*a6*c7*rb - a7*c1*ra - a7*c2*ra*rb - a7*c3*ra*rb^2 - 5*a7*c3*ra - 2*a7*c5 - 2*a7*c6*rb - 2*a7*c7*rb^2 - 10*a7*c7) * rb_rel
 
-lemma toReal_mul (x y : K8) : (mul x y).toReal = x.toReal * y.toReal := by
-  have h := mul_core x.x0 x.x1 x.x2 x.x3 x.x4 x.x5 x.x6 x.x7 y.x0 y.x1 y.x2 y.x3 y.x4 y.x5 y.x6 y.x7
-  simp only [mul, toReal]
-  push_cast
-  exact h
+
+
+
+
+
+
+
+
+
+
+
 
 /-! ### Rational enclosures and positivity of elements of `K8` -/
 
-/-- Term-wise lower bound of `c * A` for `lo ≤ A ≤ hi`. -/
-def tl (c lo hi : ℚ) : ℚ := if 0 ≤ c then c * lo else c * hi
 
-lemma tl_le {c lo hi : ℚ} {A : ℝ} (h1 : (lo : ℝ) ≤ A) (h2 : A ≤ (hi : ℝ)) :
-    ((tl c lo hi : ℚ) : ℝ) ≤ c * A := by
-  unfold tl
-  split_ifs with hc
-  · have hc' : (0 : ℝ) ≤ c := by exact_mod_cast hc
-    push_cast
-    exact mul_le_mul_of_nonneg_left h1 hc'
-  · have hc' : (c : ℝ) ≤ 0 := by exact_mod_cast (not_le.mp hc).le
-    push_cast
-    exact mul_le_mul_of_nonpos_left h2 hc'
 
 end K8
 
-/-- Enclosure of `√2`. -/
-def aL : ℚ := 1414213562373095048801688724209 / 10 ^ 30
-def aU : ℚ := aL + 1 / 10 ^ 30
-/-- Enclosure of `2 sin (π/5)`. -/
-def bL : ℚ := 1175570504584946258337411909278 / 10 ^ 30
-def bU : ℚ := bL + 1 / 10 ^ 30
-/-- Enclosure of `√5`. -/
-def r5L : ℚ := 2236067977499789696409173668731276235 / 10 ^ 36
-def r5U : ℚ := r5L + 1 / 10 ^ 36
 
-lemma aL_le_ra : (aL : ℝ) ≤ ra := by
-  unfold ra
-  rw [Real.le_sqrt (by norm_num [aL]) (by norm_num)]
-  norm_num [aL]
 
-lemma ra_le_aU : ra ≤ (aU : ℝ) := by
-  unfold ra
-  rw [Real.sqrt_le_left (by norm_num [aU, aL])]
-  norm_num [aU, aL]
 
-lemma r5L_le : (r5L : ℝ) ≤ Real.sqrt 5 := by
-  rw [Real.le_sqrt (by norm_num [r5L]) (by norm_num)]
-  norm_num [r5L]
 
-lemma le_r5U : Real.sqrt 5 ≤ (r5U : ℝ) := by
-  rw [Real.sqrt_le_left (by norm_num [r5U, r5L])]
-  norm_num [r5U, r5L]
 
-lemma rb_pos : 0 < rb := by
-  unfold rb
-  have := Real.sin_pos_of_pos_of_lt_pi (x := π / 5) (by positivity) (by linarith [Real.pi_pos])
-  linarith
 
-lemma bL_le_rb : (bL : ℝ) ≤ rb := by
-  have h := rb_sq
-  have h5 := le_r5U
-  have hb : ((bL : ℝ)) ^ 2 ≤ (5 - (r5U : ℝ)) / 2 := by norm_num [bL, r5U, r5L]
-  have hbL0 : (0 : ℝ) < bL := by norm_num [bL]
-  have := rb_pos
-  by_contra hlt
-  rw [not_le] at hlt
-  nlinarith [mul_pos (sub_pos.2 hlt) (add_pos hbL0 this)]
 
-lemma rb_le_bU : rb ≤ (bU : ℝ) := by
-  have h := rb_sq
-  have h5 := r5L_le
-  have hb : (5 - (r5L : ℝ)) / 2 ≤ ((bU : ℝ)) ^ 2 := by norm_num [bU, bL, r5L]
-  have hbU0 : (0 : ℝ) < bU := by norm_num [bU, bL]
-  have := rb_pos
-  by_contra hlt
-  rw [not_le] at hlt
-  nlinarith [mul_pos (sub_pos.2 hlt) (add_pos hbU0 this)]
 
 namespace K8
 
-/-- Rational lower bound for `toReal x`. -/
-def lb (x : K8) : ℚ :=
-  tl x.x0 1 1 + tl x.x1 bL bU + tl x.x2 (bL ^ 2) (bU ^ 2) + tl x.x3 (bL ^ 3) (bU ^ 3) +
-    tl x.x4 aL aU + tl x.x5 (aL * bL) (aU * bU) + tl x.x6 (aL * bL ^ 2) (aU * bU ^ 2) +
-    tl x.x7 (aL * bL ^ 3) (aU * bU ^ 3)
 
-lemma lb_le (x : K8) : (lb x : ℝ) ≤ x.toReal := by
-  have hb1 := bL_le_rb
-  have hb2 := rb_le_bU
-  have ha1 := aL_le_ra
-  have ha2 := ra_le_aU
-  have hbL0 : (0 : ℝ) ≤ bL := by norm_num [bL]
-  have haL0 : (0 : ℝ) ≤ aL := by norm_num [aL]
-  have hrb0 := rb_pos.le
-  have hra0 : (0 : ℝ) ≤ ra := le_trans haL0 ha1
-  have e0 := tl_le (c := x.x0) (lo := 1) (hi := 1) (A := 1) (by simp) (by simp)
-  have e1 := tl_le (c := x.x1) hb1 hb2
-  have e2 := tl_le (c := x.x2) (lo := bL ^ 2) (hi := bU ^ 2) (A := rb ^ 2)
-    (by push_cast; exact pow_le_pow_left₀ hbL0 hb1 2) (by push_cast; exact pow_le_pow_left₀ hrb0 hb2 2)
-  have e3 := tl_le (c := x.x3) (lo := bL ^ 3) (hi := bU ^ 3) (A := rb ^ 3)
-    (by push_cast; exact pow_le_pow_left₀ hbL0 hb1 3) (by push_cast; exact pow_le_pow_left₀ hrb0 hb2 3)
-  have e4 := tl_le (c := x.x4) ha1 ha2
-  have e5 := tl_le (c := x.x5) (lo := aL * bL) (hi := aU * bU) (A := ra * rb)
-    (by push_cast; exact mul_le_mul ha1 hb1 hbL0 hra0)
-    (by push_cast; exact mul_le_mul ha2 hb2 hrb0 (le_trans hra0 ha2))
-  have e6 := tl_le (c := x.x6) (lo := aL * bL ^ 2) (hi := aU * bU ^ 2) (A := ra * rb ^ 2)
-    (by push_cast; exact mul_le_mul ha1 (pow_le_pow_left₀ hbL0 hb1 2) (by positivity) hra0)
-    (by push_cast; exact mul_le_mul ha2 (pow_le_pow_left₀ hrb0 hb2 2) (by positivity) (le_trans hra0 ha2))
-  have e7 := tl_le (c := x.x7) (lo := aL * bL ^ 3) (hi := aU * bU ^ 3) (A := ra * rb ^ 3)
-    (by push_cast; exact mul_le_mul ha1 (pow_le_pow_left₀ hbL0 hb1 3) (by positivity) hra0)
-    (by push_cast; exact mul_le_mul ha2 (pow_le_pow_left₀ hrb0 hb2 3) (by positivity) (le_trans hra0 ha2))
-  have hsum : (lb x : ℝ) = (tl x.x0 1 1 : ℚ) + (tl x.x1 bL bU : ℚ) + (tl x.x2 (bL ^ 2) (bU ^ 2) : ℚ) +
-      (tl x.x3 (bL ^ 3) (bU ^ 3) : ℚ) + (tl x.x4 aL aU : ℚ) + (tl x.x5 (aL * bL) (aU * bU) : ℚ) +
-      (tl x.x6 (aL * bL ^ 2) (aU * bU ^ 2) : ℚ) + (tl x.x7 (aL * bL ^ 3) (aU * bU ^ 3) : ℚ) := by
-    unfold lb; push_cast; ring
-  have htr : x.toReal = x.x0 * 1 + x.x1 * rb + x.x2 * rb ^ 2 + x.x3 * rb ^ 3 + x.x4 * ra +
-      x.x5 * (ra * rb) + x.x6 * (ra * rb ^ 2) + x.x7 * (ra * rb ^ 3) := by
-    unfold toReal; ring
-  rw [hsum, htr]
-  linarith
 
-lemma toReal_pos {x : K8} (h : 0 < lb x) : 0 < x.toReal := by
-  have := lb_le x
-  have h' : (0 : ℝ) < (lb x : ℝ) := by exact_mod_cast h
-  linarith
 
 end K8
 
@@ -2624,84 +2400,20 @@ end K8
 
 namespace Pl
 
-/-- Evaluation (Horner scheme). -/
-noncomputable def eval : List K8 → ℝ → ℝ
-  | [], _ => 0
-  | c :: cs, x => c.toReal + x * eval cs x
 
-/-- Coefficientwise addition. -/
-def add : List K8 → List K8 → List K8
-  | [], q => q
-  | p :: ps, [] => p :: ps
-  | p :: ps, q :: qs => K8.add p q :: add ps qs
 
-lemma eval_add : ∀ (p q : List K8) (x : ℝ), eval (add p q) x = eval p x + eval q x
-  | [], q, x => by simp [add, eval]
-  | p :: ps, [], x => by simp [add, eval]
-  | p :: ps, q :: qs, x => by
-      simp only [add, eval, K8.toReal_add, eval_add ps qs x]; ring
 
-/-- Multiplication by a constant. -/
-def scale (c : K8) (p : List K8) : List K8 := p.map (K8.mul c)
 
-lemma eval_scale (c : K8) : ∀ (p : List K8) (x : ℝ), eval (scale c p) x = c.toReal * eval p x
-  | [], x => by simp [scale, eval]
-  | a :: as, x => by
-      have ih := eval_scale c as x
-      simp only [scale, List.map_cons, eval, K8.toReal_mul] at ih ⊢
-      rw [ih]; ring
 
-/-- Multiplication. -/
-def mul : List K8 → List K8 → List K8
-  | [], _ => []
-  | a :: as, q => add (scale a q) (K8.zero :: mul as q)
 
-lemma eval_mul : ∀ (p q : List K8) (x : ℝ), eval (mul p q) x = eval p x * eval q x
-  | [], q, x => by simp [mul, eval]
-  | a :: as, q, x => by
-      simp only [mul, eval_add, eval_scale, eval, K8.toReal_zero, eval_mul as q x]; ring
 
-/-- Powers. -/
-def pow (p : List K8) : ℕ → List K8
-  | 0 => [K8.one]
-  | n + 1 => mul p (pow p n)
 
-lemma eval_pow (p : List K8) : ∀ (n : ℕ) (x : ℝ), eval (pow p n) x = eval p x ^ n
-  | 0, x => by simp [pow, eval, K8.toReal_one]
-  | n + 1, x => by simp only [pow, eval_mul, eval_pow p n x]; ring
 
-/-- Composition `p ∘ r`. -/
-def comp : List K8 → List K8 → List K8
-  | [], _ => []
-  | c :: cs, r => add [c] (mul r (comp cs r))
 
-lemma eval_comp : ∀ (p r : List K8) (x : ℝ), eval (comp p r) x = eval p (eval r x)
-  | [], r, x => by simp [comp, eval]
-  | c :: cs, r, x => by
-      simp only [comp, eval_add, eval_mul, eval_comp cs r x, eval]; ring
 
-lemma eval_nonneg (p : List K8) (hp : ∀ c ∈ p, 0 ≤ c.toReal) {x : ℝ} (hx : 0 ≤ x) :
-    0 ≤ eval p x := by
-  induction p with
-  | nil => simp [eval]
-  | cons c cs ih =>
-    simp only [eval]
-    exact add_nonneg (hp c (by simp)) (mul_nonneg hx (ih fun d hd => hp d (by simp [hd])))
 
-lemma eval_pos (c : K8) (cs : List K8) (hc : 0 < c.toReal) (hcs : ∀ d ∈ cs, 0 ≤ d.toReal)
-    {x : ℝ} (hx : 0 ≤ x) : 0 < eval (c :: cs) x := by
-  simp only [eval]
-  exact add_pos_of_pos_of_nonneg hc (mul_nonneg hx (eval_nonneg cs hcs hx))
 
-/-- All coefficients are `0`. -/
-def allZero (p : List K8) : Bool := p.all fun c => decide (c = K8.zero)
 
-lemma eval_eq_zero_of_allZero : ∀ (p : List K8), allZero p = true → ∀ x : ℝ, eval p x = 0
-  | [], _, x => by simp [eval]
-  | c :: cs, h, x => by
-      simp only [allZero, List.all_cons, Bool.and_eq_true, decide_eq_true_eq] at h
-      have h2 : allZero cs = true := h.2
-      simp only [eval, h.1, K8.toReal_zero, eval_eq_zero_of_allZero cs h2 x]; ring
 
 end Pl
 
@@ -2709,134 +2421,31 @@ end Pl
 
 open Pl
 
-/-- `√2` as an element of `K8`. -/
-def kA : K8 := ⟨0, 0, 0, 0, 1, 0, 0, 0⟩
-
-/-- `b = 2 sin (π/5)` as an element of `K8`. -/
-def kB : K8 := ⟨0, 1, 0, 0, 0, 0, 0, 0⟩
-
-/-- `2 sin (2π/5) = 3 b - b³` as an element of `K8`. -/
-def kS2 : K8 := ⟨0, 3, 0, -1, 0, 0, 0, 0⟩
-
-/-- `2 sin (2π/5)`, expressed through `rb`. -/
-noncomputable def rs2 : ℝ := 3 * rb - rb ^ 3
-
-lemma toReal_kA : kA.toReal = ra := by simp [kA, K8.toReal]
-
-lemma toReal_kB : kB.toReal = rb := by simp [kB, K8.toReal]
-
-lemma toReal_kS2 : kS2.toReal = rs2 := by simp [kS2, K8.toReal, rs2]; ring
-
-/-- Coefficients (low degree first) of the Hermite minorant `H` (multiplicity `3` at `-1`). -/
-def Hlist : List K8 :=
-  [⟨(0 : ℚ), (0 : ℚ), (0 : ℚ), (0 : ℚ), (1 / 2 : ℚ), (0 : ℚ), (0 : ℚ), (0 : ℚ)⟩,
-   ⟨(0 : ℚ), (0 : ℚ), (0 : ℚ), (0 : ℚ), (1 / 4 : ℚ), (0 : ℚ), (0 : ℚ), (0 : ℚ)⟩,
-   ⟨(4667 / 64 : ℚ), (-1504 / 25 : ℚ), (0 : ℚ), (128 / 25 : ℚ), (-29 / 4 : ℚ), (0 : ℚ), (0 : ℚ), (0 : ℚ)⟩,
-   ⟨(-4927 / 32 : ℚ), (992 / 5 : ℚ), (0 : ℚ), (-928 / 25 : ℚ), (-53 / 4 : ℚ), (0 : ℚ), (0 : ℚ), (0 : ℚ)⟩,
-   ⟨(-49745 / 64 : ℚ), (19552 / 25 : ℚ), (0 : ℚ), (-2592 / 25 : ℚ), (75 / 4 : ℚ), (0 : ℚ), (0 : ℚ), (0 : ℚ)⟩,
-   ⟨(5675 / 16 : ℚ), (-2912 / 5 : ℚ), (0 : ℚ), (3296 / 25 : ℚ), (82 : ℚ), (0 : ℚ), (0 : ℚ), (0 : ℚ)⟩,
-   ⟨(49745 / 16 : ℚ), (-88832 / 25 : ℚ), (0 : ℚ), (2848 / 5 : ℚ), (101 : ℚ), (0 : ℚ), (0 : ℚ), (0 : ℚ)⟩,
-   ⟨(12993 / 4 : ℚ), (-3584 : ℚ), (0 : ℚ), (13632 / 25 : ℚ), (56 : ℚ), (0 : ℚ), (0 : ℚ), (0 : ℚ)⟩,
-   ⟨(4179 / 4 : ℚ), (-28416 / 25 : ℚ), (0 : ℚ), (4224 / 25 : ℚ), (12 : ℚ), (0 : ℚ), (0 : ℚ), (0 : ℚ)⟩]
-
-/-- Coefficients (low degree first) of the cofactor `q`. -/
-def qlist : List K8 :=
-  [⟨(1 / 80 : ℚ), (0 : ℚ), (0 : ℚ), (0 : ℚ), (0 : ℚ), (0 : ℚ), (0 : ℚ), (0 : ℚ)⟩,
-   ⟨(-110351 / 1280 : ℚ), (397 / 4 : ℚ), (0 : ℚ), (-3203 / 200 : ℚ), (-249 / 80 : ℚ), (0 : ℚ), (0 : ℚ), (0 : ℚ)⟩,
-   ⟨(767307 / 2560 : ℚ), (-12547 / 64 : ℚ), (-6721 / 50 : ℚ), (254253 / 3200 : ℚ), (-116351 / 1280 : ℚ), (347 / 4 : ℚ), (0 : ℚ), (-2453 / 200 : ℚ)⟩,
-   ⟨(209691 / 2560 : ℚ), (-66153 / 3200 : ℚ), (-50929 / 800 : ℚ), (169439 / 6400 : ℚ), (727691 / 2560 : ℚ), (-13747 / 64 : ℚ), (-6471 / 50 : ℚ), (272253 / 3200 : ℚ)⟩,
-   ⟨(186889 / 5120 : ℚ), (-45767 / 3200 : ℚ), (-8943 / 320 : ℚ), (89867 / 6400 : ℚ), (134321 / 1280 : ℚ), (-238953 / 3200 : ℚ), (-44929 / 800 : ℚ), (227487 / 6400 : ℚ)⟩,
-   ⟨(12003 / 512 : ℚ), (-30249 / 1280 : ℚ), (-14513 / 1600 : ℚ), (116313 / 12800 : ℚ), (-288201 / 2560 : ℚ), (71727 / 800 : ℚ), (62421 / 1600 : ℚ), (-89093 / 3200 : ℚ)⟩,
-   ⟨(-261531 / 5120 : ℚ), (54769 / 1600 : ℚ), (66021 / 3200 : ℚ), (-15549 / 1280 : ℚ), (-31703 / 1280 : ℚ), (22827 / 1600 : ℚ), (3477 / 200 : ℚ), (-57387 / 6400 : ℚ)⟩,
-   ⟨(-33603 / 2560 : ℚ), (19227 / 3200 : ℚ), (222 / 25 : ℚ), (-53787 / 12800 : ℚ), (4323 / 512 : ℚ), (-1701 / 200 : ℚ), (0 : ℚ), (981 / 800 : ℚ)⟩,
-   ⟨(4179 / 1024 : ℚ), (-111 / 25 : ℚ), (0 : ℚ), (33 / 50 : ℚ), (3 / 64 : ℚ), (0 : ℚ), (0 : ℚ), (0 : ℚ)⟩]
-
-/-- `H(1 - s²/2)` as a polynomial in `s`. -/
-def Hs : List K8 := Pl.comp Hlist [K8.one, K8.zero, K8.ofRat (-1 / 2)]
-
-/-- `1 - s H(1 - s²/2)`. -/
-def Qs : List K8 := Pl.add [K8.one] (Pl.scale (K8.ofRat (-1)) (Pl.mul [K8.zero, K8.one] Hs))
-
-/-- `((s - b)(s - s₂)(s - a))² (2 - s)³`. -/
-def P0 : List K8 :=
-  Pl.mul (Pl.pow (Pl.mul (Pl.mul [K8.neg kB, K8.one] [K8.neg kS2, K8.one]) [K8.neg kA, K8.one]) 2)
-    (Pl.pow [K8.ofRat 2, K8.ofRat (-1)] 3)
-
-theorem Qs_eq :
-    Pl.allZero (Pl.add Qs (Pl.scale (K8.ofRat (-1)) (Pl.mul P0 qlist))) = true := by
-  decide +kernel
-
-
-lemma qlist_pos : qlist.all (fun c => decide (0 < c.lb)) = true := by decide +kernel
-
-lemma qlist_coeff_pos : ∀ c ∈ qlist, 0 < c.toReal := by
-  intro c hc
-  have := List.all_eq_true.1 qlist_pos c hc
-  exact K8.toReal_pos (of_decide_eq_true this)
-
-lemma eval_qlist_pos {s : ℝ} (hs : 0 ≤ s) : 0 < Pl.eval qlist s := by
-  have hne : qlist ≠ [] := by decide
-  obtain ⟨c, cs, hcs⟩ := List.exists_cons_of_ne_nil hne
-  have hp := qlist_coeff_pos
-  rw [hcs] at hp ⊢
-  exact Pl.eval_pos c cs (hp c (by simp)) (fun d hd => (hp d (by simp [hd])).le) hs
-
-/-- The factorisation, as an identity of real polynomials. -/
-lemma Qs_real (s : ℝ) :
-    1 - s * Pl.eval Hlist (1 - s ^ 2 / 2) =
-      ((s - rb) * (s - rs2) * (s - ra)) ^ 2 * (2 - s) ^ 3 * Pl.eval qlist s := by
-  have h := Pl.eval_eq_zero_of_allZero _ Qs_eq s
-  simp only [Qs, P0, Hs, Pl.eval_add, Pl.eval_scale, Pl.eval_mul, Pl.eval_pow, Pl.eval_comp,
-    Pl.eval, K8.toReal_neg, K8.toReal_one, K8.toReal_zero, K8.toReal_ofRat, toReal_kA,
-    toReal_kB, toReal_kS2] at h
-  push_cast at h
-  have hin : (1 : ℝ) + s * (0 + s * (-1 / 2 + s * 0)) = 1 - s ^ 2 / 2 := by ring
-  rw [hin] at h
-  linear_combination h
 
 
 
 
-/-- The polynomial minorant `H` (multiplicity `3` at `-1`). -/
-noncomputable def H (t : ℝ) : ℝ := Pl.eval Hlist t
 
-lemma phi_sub_H_aux {s : ℝ} (hs : 0 < s) :
-    s⁻¹ - Pl.eval Hlist (1 - s ^ 2 / 2) =
-      ((s - rb) * (s - rs2) * (s - ra)) ^ 2 * (2 - s) ^ 3 * Pl.eval qlist s / s := by
-  have h := Qs_real s
-  rw [eq_div_iff hs.ne', sub_mul, inv_mul_cancel₀ hs.ne']
-  linear_combination h
 
-lemma sqrt_facts {t : ℝ} (h1 : -1 ≤ t) (h2 : t < 1) :
-    0 < Real.sqrt (2 - 2 * t) ∧ Real.sqrt (2 - 2 * t) ≤ 2 ∧
-      1 - Real.sqrt (2 - 2 * t) ^ 2 / 2 = t := by
-  have hp : 0 < 2 - 2 * t := by linarith
-  refine ⟨Real.sqrt_pos.2 hp, ?_, ?_⟩
-  · rw [Real.sqrt_le_left (by norm_num)]
-    linarith
-  · rw [Real.sq_sqrt hp.le]
-    ring
 
-lemma phi_sub_H {t : ℝ} (h1 : -1 ≤ t) (h2 : t < 1) :
-    (Real.sqrt (2 - 2 * t))⁻¹ - H t =
-      ((Real.sqrt (2 - 2 * t) - rb) * (Real.sqrt (2 - 2 * t) - rs2) *
-          (Real.sqrt (2 - 2 * t) - ra)) ^ 2 * (2 - Real.sqrt (2 - 2 * t)) ^ 3 *
-        Pl.eval qlist (Real.sqrt (2 - 2 * t)) / Real.sqrt (2 - 2 * t) := by
-  obtain ⟨hs0, -, hst⟩ := sqrt_facts h1 h2
-  have h := phi_sub_H_aux hs0
-  rw [hst] at h
-  exact h
 
-theorem H_le_phi {t : ℝ} (h1 : -1 ≤ t) (h2 : t < 1) : H t ≤ (Real.sqrt (2 - 2 * t))⁻¹ := by
-  obtain ⟨hs0, hs2, -⟩ := sqrt_facts h1 h2
-  have h := phi_sub_H h1 h2
-  have hq := eval_qlist_pos hs0.le
-  have hnn : 0 ≤ ((Real.sqrt (2 - 2 * t) - rb) * (Real.sqrt (2 - 2 * t) - rs2) *
-          (Real.sqrt (2 - 2 * t) - ra)) ^ 2 * (2 - Real.sqrt (2 - 2 * t)) ^ 3 *
-        Pl.eval qlist (Real.sqrt (2 - 2 * t)) / Real.sqrt (2 - 2 * t) :=
-    div_nonneg (mul_nonneg (mul_nonneg (sq_nonneg _) (pow_nonneg (sub_nonneg.2 hs2) 3)) hq.le)
-      hs0.le
-  linarith
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2850,11 +2459,7 @@ namespace M3
 
 open scoped InnerProductSpace
 
-/-- bit table of the 4-subset colour patterns with vanishing Gram determinant -/
-def tab4 : ℕ := 731840988527822293649784702030272684439369570759052571006566605089774274879842431996863396881917146940881152091340672449484988299954002369977838027057097599007461048513509703590313396883792867377873126380132044206057486362501654179528673494890269812942402304422809258841800386286892463497489653364533125297272206996163653074089035602235598783877646017637638985358769697442065480236004546807628478900954009709293527945622755798729539891734248886875767092393642854083045131122737243943482199751762732337943144082740225223379708019089547765069222096068961810410572819335888539592291751897971186211133619117721786462402615917617372999320255656853902163982182371753952009695757876820626227319690471267771710960643736666613535825923155823580751059997250537612526498767388829734811926866954141969633257505570697128069666979416055376770542378305539319563394563202009135654207012806136560235380347335357571659569536569583282911431898126664814313846521423131247999530569069851286656937799179102424733153661083016429140560789301009437747027453014044689612875385722113520333105532917037469560983929326743517063270334182642818261046918160365728021274175892374665717533995464887397105690474748032581632
 
-def ok4 (a b c d e f : Fin 4) : Bool :=
-  tab4.testBit (a.val + 4 * b.val + 16 * c.val + 64 * d.val + 256 * e.val + 1024 * f.val)
 
 /-- colour of the pair (k,l) in the pentagonal bipyramid (0:-1, 1:a, 2:0, 3:b) -/
 def cP (k l : Fin 7) : Fin 4 :=
@@ -2864,167 +2469,16 @@ def cP (k l : Fin 7) : Fin 4 :=
   else if k.val = 6 ∧ l.val = 5 then 0
   else 2
 
-def firstWhere (p : Fin 7 → Bool) : Fin 7 := ((List.finRange 7).find? p).getD 0
 
-def tau (cc : Fin 7 → Fin 7 → Fin 4) : Fin 7 → Fin 7 :=
-  let p := firstWhere fun i => (List.finRange 7).any fun j => decide (j ≠ i) && (cc i j == 0)
-  let q := firstWhere fun j => decide (j ≠ p) && (cc p j == 0)
-  let u0 := firstWhere fun i => decide (i ≠ p) && decide (i ≠ q)
-  let n1 := firstWhere fun i => decide (i ≠ p ∧ i ≠ q ∧ i ≠ u0) && (cc u0 i == 3)
-  let n4 := firstWhere fun i => decide (i ≠ p ∧ i ≠ q ∧ i ≠ u0 ∧ i ≠ n1) && (cc u0 i == 3)
-  let n2 := firstWhere fun i => decide (i ≠ p ∧ i ≠ q ∧ i ≠ u0 ∧ i ≠ n1 ∧ i ≠ n4) && (cc n1 i == 3)
-  let n3 := firstWhere fun i => decide (i ≠ p ∧ i ≠ q ∧ i ≠ u0 ∧ i ≠ n1 ∧ i ≠ n4 ∧ i ≠ n2)
-  ![u0, n1, n2, n3, n4, p, q]
 
-def leaf (cc : Fin 7 → Fin 7 → Fin 4) : Bool :=
-  decide (∀ k l : Fin 7, k < l → tau cc k ≠ tau cc l) &&
-  decide (∀ k l : Fin 7, k < l → cc (tau cc k) (tau cc l) = cP k l)
 
-def mk21 (c01 c02 c12 c03 c13 c23 c04 c14 c24 c34 c05 c15 c25 c35 c45 c06 c16 c26 c36 c46 c56 : Fin 4) :
-    Fin 7 → Fin 7 → Fin 4 := ![![0, c01, c02, c03, c04, c05, c06], ![c01, 0, c12, c13, c14, c15, c16], ![c02, c12, 0, c23, c24, c25, c26], ![c03, c13, c23, 0, c34, c35, c36], ![c04, c14, c24, c34, 0, c45, c46], ![c05, c15, c25, c35, c45, 0, c56], ![c06, c16, c26, c36, c46, c56, 0]]
 
-def all4 (p : Fin 4 → Bool) : Bool := p 0 && p 1 && p 2 && p 3
 
-def imp (a b : Bool) : Bool := !a || b
 
-lemma all4_eq_true {p : Fin 4 → Bool} : all4 p = true ↔ ∀ c, p c = true := by
-  constructor
-  · intro h c
-    simp only [all4, Bool.and_eq_true] at h
-    fin_cases c
-    · exact h.1.1.1
-    · exact h.1.1.2
-    · exact h.1.2
-    · exact h.2
-  · intro h
-    simp [all4, h]
 
-lemma imp_eq_true {a b : Bool} : imp a b = true ↔ (a = true → b = true) := by
-  cases a <;> cases b <;> simp [imp]
 
-def search : Bool :=
-  all4 fun c01 =>
-  all4 fun c02 =>
-  all4 fun c12 =>
-  all4 fun c03 =>
-  all4 fun c13 =>
-  all4 fun c23 =>
-  imp (ok4 c01 c02 c03 c12 c13 c23) <|
-  all4 fun c04 =>
-  all4 fun c14 =>
-  all4 fun c24 =>
-  imp (ok4 c01 c02 c04 c12 c14 c24) <|
-  all4 fun c34 =>
-  imp (ok4 c01 c03 c04 c13 c14 c34) <|
-  imp (ok4 c02 c03 c04 c23 c24 c34) <|
-  imp (ok4 c12 c13 c14 c23 c24 c34) <|
-  all4 fun c05 =>
-  all4 fun c15 =>
-  all4 fun c25 =>
-  imp (ok4 c01 c02 c05 c12 c15 c25) <|
-  all4 fun c35 =>
-  imp (ok4 c01 c03 c05 c13 c15 c35) <|
-  imp (ok4 c02 c03 c05 c23 c25 c35) <|
-  imp (ok4 c12 c13 c15 c23 c25 c35) <|
-  all4 fun c45 =>
-  imp (ok4 c01 c04 c05 c14 c15 c45) <|
-  imp (ok4 c02 c04 c05 c24 c25 c45) <|
-  imp (ok4 c03 c04 c05 c34 c35 c45) <|
-  imp (ok4 c12 c14 c15 c24 c25 c45) <|
-  imp (ok4 c13 c14 c15 c34 c35 c45) <|
-  imp (ok4 c23 c24 c25 c34 c35 c45) <|
-  all4 fun c06 =>
-  all4 fun c16 =>
-  all4 fun c26 =>
-  imp (ok4 c01 c02 c06 c12 c16 c26) <|
-  all4 fun c36 =>
-  imp (ok4 c01 c03 c06 c13 c16 c36) <|
-  imp (ok4 c02 c03 c06 c23 c26 c36) <|
-  imp (ok4 c12 c13 c16 c23 c26 c36) <|
-  all4 fun c46 =>
-  imp (ok4 c01 c04 c06 c14 c16 c46) <|
-  imp (ok4 c02 c04 c06 c24 c26 c46) <|
-  imp (ok4 c03 c04 c06 c34 c36 c46) <|
-  imp (ok4 c12 c14 c16 c24 c26 c46) <|
-  imp (ok4 c13 c14 c16 c34 c36 c46) <|
-  imp (ok4 c23 c24 c26 c34 c36 c46) <|
-  all4 fun c56 =>
-  imp (ok4 c01 c05 c06 c15 c16 c56) <|
-  imp (ok4 c02 c05 c06 c25 c26 c56) <|
-  imp (ok4 c03 c05 c06 c35 c36 c56) <|
-  imp (ok4 c04 c05 c06 c45 c46 c56) <|
-  imp (ok4 c12 c15 c16 c25 c26 c56) <|
-  imp (ok4 c13 c15 c16 c35 c36 c56) <|
-  imp (ok4 c14 c15 c16 c45 c46 c56) <|
-  imp (ok4 c23 c25 c26 c35 c36 c56) <|
-  imp (ok4 c24 c25 c26 c45 c46 c56) <|
-  imp (ok4 c34 c35 c36 c45 c46 c56) <|
-  leaf (mk21 c01 c02 c12 c03 c13 c23 c04 c14 c24 c34 c05 c15 c25 c35 c45 c06 c16 c26 c36 c46 c56)
 
-theorem search_eq : search = true := by
-  decide +kernel
 
-theorem search_spec :
-  ∀ c01 : Fin 4,
-  ∀ c02 : Fin 4,
-  ∀ c12 : Fin 4,
-  ∀ c03 : Fin 4,
-  ∀ c13 : Fin 4,
-  ∀ c23 : Fin 4,
-  ok4 c01 c02 c03 c12 c13 c23 = true →
-  ∀ c04 : Fin 4,
-  ∀ c14 : Fin 4,
-  ∀ c24 : Fin 4,
-  ok4 c01 c02 c04 c12 c14 c24 = true →
-  ∀ c34 : Fin 4,
-  ok4 c01 c03 c04 c13 c14 c34 = true →
-  ok4 c02 c03 c04 c23 c24 c34 = true →
-  ok4 c12 c13 c14 c23 c24 c34 = true →
-  ∀ c05 : Fin 4,
-  ∀ c15 : Fin 4,
-  ∀ c25 : Fin 4,
-  ok4 c01 c02 c05 c12 c15 c25 = true →
-  ∀ c35 : Fin 4,
-  ok4 c01 c03 c05 c13 c15 c35 = true →
-  ok4 c02 c03 c05 c23 c25 c35 = true →
-  ok4 c12 c13 c15 c23 c25 c35 = true →
-  ∀ c45 : Fin 4,
-  ok4 c01 c04 c05 c14 c15 c45 = true →
-  ok4 c02 c04 c05 c24 c25 c45 = true →
-  ok4 c03 c04 c05 c34 c35 c45 = true →
-  ok4 c12 c14 c15 c24 c25 c45 = true →
-  ok4 c13 c14 c15 c34 c35 c45 = true →
-  ok4 c23 c24 c25 c34 c35 c45 = true →
-  ∀ c06 : Fin 4,
-  ∀ c16 : Fin 4,
-  ∀ c26 : Fin 4,
-  ok4 c01 c02 c06 c12 c16 c26 = true →
-  ∀ c36 : Fin 4,
-  ok4 c01 c03 c06 c13 c16 c36 = true →
-  ok4 c02 c03 c06 c23 c26 c36 = true →
-  ok4 c12 c13 c16 c23 c26 c36 = true →
-  ∀ c46 : Fin 4,
-  ok4 c01 c04 c06 c14 c16 c46 = true →
-  ok4 c02 c04 c06 c24 c26 c46 = true →
-  ok4 c03 c04 c06 c34 c36 c46 = true →
-  ok4 c12 c14 c16 c24 c26 c46 = true →
-  ok4 c13 c14 c16 c34 c36 c46 = true →
-  ok4 c23 c24 c26 c34 c36 c46 = true →
-  ∀ c56 : Fin 4,
-  ok4 c01 c05 c06 c15 c16 c56 = true →
-  ok4 c02 c05 c06 c25 c26 c56 = true →
-  ok4 c03 c05 c06 c35 c36 c56 = true →
-  ok4 c04 c05 c06 c45 c46 c56 = true →
-  ok4 c12 c15 c16 c25 c26 c56 = true →
-  ok4 c13 c15 c16 c35 c36 c56 = true →
-  ok4 c14 c15 c16 c45 c46 c56 = true →
-  ok4 c23 c25 c26 c35 c36 c56 = true →
-  ok4 c24 c25 c26 c45 c46 c56 = true →
-  ok4 c34 c35 c36 c45 c46 c56 = true →
-  leaf (mk21 c01 c02 c12 c03 c13 c23 c04 c14 c24 c34 c05 c15 c25 c35 c45 c06 c16 c26 c36 c46 c56) = true := by
-  have h := search_eq
-  simp only [search, all4_eq_true, imp_eq_true] at h
-  exact h
 
 
 /-- The Gram determinant of four unit vectors, written with a free diagonal entry `δ` so that it
@@ -3040,12 +2494,6 @@ lemma det4h_scale {R : Type*} [CommRing R] (s δ p01 p02 p03 p12 p13 p23 : R) :
       s ^ 4 * det4h δ p01 p02 p03 p12 p13 p23 := by
   unfold det4h; ring
 
-lemma map_det4h {R S : Type*} [CommRing R] [CommRing S] (f : R →+* S)
-    (δ p01 p02 p03 p12 p13 p23 : R) :
-    f (det4h δ p01 p02 p03 p12 p13 p23) =
-      det4h (f δ) (f p01) (f p02) (f p03) (f p12) (f p13) (f p23) := by
-  have h2 : f 2 = 2 := map_ofNat f 2
-  simp only [det4h, map_add, map_sub, map_mul, map_pow, h2]
 
 lemma det_fin_four_unit (p01 p02 p03 p12 p13 p23 : ℝ) :
     Matrix.det !![1, p01, p02, p03; p01, 1, p12, p13; p02, p12, 1, p23; p03, p13, p23, 1] =
@@ -3080,47 +2528,13 @@ noncomputable def cosB : ℝ := (√5 - 1) / 4
 /-- The four contact values `-1, cos (4π/5), 0, cos (2π/5)` indexed by `Fin 4`. -/
 noncomputable def val : Fin 4 → ℝ := ![-1, cosA, 0, cosB]
 
-/-- The four contact values, multiplied by `4`, as elements of `ℤ[√5]`. -/
-def val4 : Fin 4 → ℤ√5 := ![⟨-4, 0⟩, ⟨-1, -1⟩, ⟨0, 0⟩, ⟨-1, 1⟩]
 
-/-- `√5` as a root of `X ^ 2 - 5` in `ℝ`. -/
-noncomputable def sqrt5' : { r : ℝ // r * r = ((5 : ℤ) : ℝ) } :=
-  ⟨√5, by rw [Real.mul_self_sqrt (by norm_num)]; norm_num⟩
 
-/-- The embedding `ℤ[√5] → ℝ`. -/
-noncomputable def emb : ℤ√5 →+* ℝ := Zsqrtd.lift sqrt5'
 
-lemma emb_apply (z : ℤ√5) : emb z = z.re + z.im * √5 := by
-  simp [emb, sqrt5']
 
-lemma emb_injective : Function.Injective emb := by
-  refine Zsqrtd.lift_injective sqrt5' ?_
-  intro n h
-  have h1 : n ≤ 3 := by nlinarith
-  have h2 : -3 ≤ n := by nlinarith
-  interval_cases n <;> omega
 
-lemma emb_val4 (c : Fin 4) : emb (val4 c) = 4 * val c := by
-  fin_cases c <;> simp [val4, val, emb_apply, cosA, cosB] <;> ring
 
-/-- Exact table check: the bit table `tab4` records exactly which colour patterns of a
-4-subset have vanishing Gram determinant, computed in `ℤ[√5]`. -/
-theorem tab4_correct : ∀ a b c d e f : Fin 4, ok4 a b c d e f = true ↔
-    det4h (⟨4, 0⟩ : ℤ√5) (val4 a) (val4 b) (val4 c) (val4 d) (val4 e) (val4 f) = 0 := by
-  decide +kernel
 
-/-- If the Gram determinant of four unit vectors with the given contact values vanishes, the
-colour pattern is in the table. -/
-lemma ok4_of_det4h (a b c d e f : Fin 4)
-    (h : det4h (1 : ℝ) (val a) (val b) (val c) (val d) (val e) (val f) = 0) :
-    ok4 a b c d e f = true := by
-  rw [tab4_correct]
-  apply emb_injective
-  rw [map_det4h, map_zero]
-  have h4 : emb (⟨4, 0⟩ : ℤ√5) = 4 * 1 := by simp [emb_apply]
-  rw [h4]
-  simp only [emb_val4]
-  rw [det4h_scale, h, mul_zero]
 
 lemma inner_cyl (ρ θ h ρ' θ' h' : ℝ) :
     ⟪cyl ρ θ h, cyl ρ' θ' h'⟫_ℝ = ρ * ρ' * cos (θ - θ') + h * h' := by
@@ -3228,273 +2642,17 @@ lemma inner_P (k l : Fin 7) :
     simp [val]
   · rw [pent_six, inner_cyl, ite_eq_left rfl]; norm_num
 
-/-- Three vectors of the pentagonal bipyramid that form a basis of `ℝ³`: the north pole and two
-adjacent equatorial points. -/
-lemma P_indep : LinearIndependent ℝ ![pentBipyramid 5, pentBipyramid 0, pentBipyramid 1] := by
-  apply Matrix.linearIndependent_of_det_gram_ne_zero
-  have e55 : ⟪pentBipyramid 5, pentBipyramid 5⟫_ℝ = 1 := by rw [inner_P]; simp
-  have e00 : ⟪pentBipyramid 0, pentBipyramid 0⟫_ℝ = 1 := by rw [inner_P]; simp
-  have e11 : ⟪pentBipyramid 1, pentBipyramid 1⟫_ℝ = 1 := by rw [inner_P]; simp
-  have e50 : ⟪pentBipyramid 5, pentBipyramid 0⟫_ℝ = 0 := by
-    have : cP 5 0 = 2 := by decide
-    rw [inner_P, ite_eq_right (by decide), this]; simp [val]
-  have e51 : ⟪pentBipyramid 5, pentBipyramid 1⟫_ℝ = 0 := by
-    have : cP 5 1 = 2 := by decide
-    rw [inner_P, ite_eq_right (by decide), this]; simp [val]
-  have e01 : ⟪pentBipyramid 0, pentBipyramid 1⟫_ℝ = cosB := by
-    have : cP 0 1 = 3 := by decide
-    rw [inner_P, ite_eq_right (by decide), this]; simp [val]
-  have e05 : ⟪pentBipyramid 0, pentBipyramid 5⟫_ℝ = 0 := (real_inner_comm _ _).symm.trans e50
-  have e15 : ⟪pentBipyramid 1, pentBipyramid 5⟫_ℝ = 0 := (real_inner_comm _ _).symm.trans e51
-  have e10 : ⟪pentBipyramid 1, pentBipyramid 0⟫_ℝ = cosB := (real_inner_comm _ _).symm.trans e01
-  have hG : Matrix.gram ℝ ![pentBipyramid 5, pentBipyramid 0, pentBipyramid 1] =
-      !![1, 0, 0; 0, 1, cosB; 0, cosB, 1] := by
-    ext i j
-    fin_cases i <;> fin_cases j
-    · exact e55
-    · exact e50
-    · exact e51
-    · exact e05
-    · exact e00
-    · exact e01
-    · exact e15
-    · exact e10
-    · exact e11
-  have hpos : 0 < 1 - cosB * cosB := by
-    have hs : √5 ^ 2 = 5 := Real.sq_sqrt (by norm_num)
-    unfold cosB
-    nlinarith [Real.sqrt_nonneg 5]
-  have hdet : Matrix.det !![(1 : ℝ), 0, 0; 0, 1, cosB; 0, cosB, 1] = 1 - cosB * cosB := by
-    rw [Matrix.det_fin_three]
-    simp
-  rw [hG, hdet]
-  exact hpos.ne'
 
-lemma eq_of_inner_eq (v : Fin 3 → R3) (hv : LinearIndependent ℝ v) (w₁ w₂ : R3)
-    (h : ∀ i, ⟪w₁, v i⟫_ℝ = ⟪w₂, v i⟫_ℝ) : w₁ = w₂ := by
-  have hcard : Fintype.card (Fin 3) = Module.finrank ℝ R3 := by simp
-  let bv := basisOfLinearIndependentOfCardEqFinrank hv hcard
-  have h0 : ∀ z : R3, ⟪w₁ - w₂, z⟫_ℝ = 0 := by
-    intro z
-    rw [← bv.sum_repr z, inner_sum]
-    apply Finset.sum_eq_zero
-    intro i _
-    have hb : bv i = v i := by simp [bv]
-    rw [inner_smul_right, hb, inner_sub_left, h i, sub_self, mul_zero]
-  have := h0 (w₁ - w₂)
-  rw [inner_self_eq_zero] at this
-  exact sub_eq_zero.mp this
 
-/-- Two triples of vectors of `ℝ³` with the same Gram matrix, the first being a basis, are related
-by a linear isometry equivalence of `ℝ³`. -/
-lemma isometry_of_gram_fin3 (u v : Fin 3 → R3) (hu : LinearIndependent ℝ u)
-    (h : ∀ i j, ⟪u i, u j⟫_ℝ = ⟪v i, v j⟫_ℝ) :
-    LinearIndependent ℝ v ∧ ∃ g : R3 ≃ₗᵢ[ℝ] R3, ∀ i, g (u i) = v i := by
-  have hgram : Matrix.gram ℝ v = Matrix.gram ℝ u := by
-    ext i j; simp [h]
-  have hv : LinearIndependent ℝ v := by
-    apply Matrix.linearIndependent_of_det_gram_ne_zero
-    rw [hgram]
-    exact Matrix.det_gram_ne_zero_iff_linearIndependent.mpr hu
-  refine ⟨hv, ?_⟩
-  have hcard : Fintype.card (Fin 3) = Module.finrank ℝ R3 := by simp
-  let bu := basisOfLinearIndependentOfCardEqFinrank hu hcard
-  let bv := basisOfLinearIndependentOfCardEqFinrank hv hcard
-  let f : R3 ≃ₗ[ℝ] R3 := bu.equiv bv (Equiv.refl _)
-  have hf : ∀ i, f (u i) = v i := by
-    intro i
-    have := bu.equiv_apply (b' := bv) (e := Equiv.refl _) (i := i)
-    simpa [f, bu, bv] using this
-  have key : ∀ a b : R3, ⟪f a, f b⟫_ℝ = ⟪a, b⟫_ℝ := by
-    intro a b
-    conv_rhs => rw [← bu.sum_repr a, ← bu.sum_repr b]
-    conv_lhs => rw [← bu.sum_repr a, ← bu.sum_repr b]
-    simp [map_sum, map_smul, sum_inner, inner_sum, inner_smul_left, inner_smul_right, hf, h,
-      bu]
-  exact ⟨f.isometryOfInner key, fun i => by simpa using hf i⟩
 
-/-- **Gram rigidity.** If two families of vectors of `ℝ³` have the same Gram matrix and the first
-contains a basis (indices `a b c`), then they differ by a linear isometry equivalence of `ℝ³`. -/
-lemma exists_isometry_of_gram {n : ℕ} (x y : Fin n → R3) (a b c : Fin n)
-    (hli : LinearIndependent ℝ ![y a, y b, y c])
-    (h : ∀ i j, ⟪y i, y j⟫_ℝ = ⟪x i, x j⟫_ℝ) :
-    ∃ g : R3 ≃ₗᵢ[ℝ] R3, ∀ i, g (y i) = x i := by
-  have huv : ∀ i j, ⟪(![y a, y b, y c] : Fin 3 → R3) i, (![y a, y b, y c] : Fin 3 → R3) j⟫_ℝ =
-      ⟪(![x a, x b, x c] : Fin 3 → R3) i, (![x a, x b, x c] : Fin 3 → R3) j⟫_ℝ := by
-    intro i j
-    fin_cases i <;> fin_cases j
-    · exact h a a
-    · exact h a b
-    · exact h a c
-    · exact h b a
-    · exact h b b
-    · exact h b c
-    · exact h c a
-    · exact h c b
-    · exact h c c
-  obtain ⟨hvli, g, hg⟩ := isometry_of_gram_fin3 (![y a, y b, y c]) (![x a, x b, x c]) hli huv
-  refine ⟨g, fun i => ?_⟩
-  apply eq_of_inner_eq (![x a, x b, x c]) hvli
-  intro j
-  have h1 : ⟪g (y i), (![x a, x b, x c] : Fin 3 → R3) j⟫_ℝ =
-      ⟪y i, (![y a, y b, y c] : Fin 3 → R3) j⟫_ℝ := by
-    rw [← hg j, LinearIsometryEquiv.inner_map_map]
-  rw [h1]
-  fin_cases j
-  · exact h i a
-  · exact h i b
-  · exact h i c
 
-/-- The colour (an element of `Fin 4`) of a real number among the four contact values. -/
-noncomputable def colorOf (r : ℝ) : Fin 4 :=
-  if r = -1 then 0 else if r = cosA then 1 else if r = 0 then 2 else 3
 
-lemma val_colorOf {r : ℝ} (h : r = -1 ∨ r = cosA ∨ r = 0 ∨ r = cosB) : val (colorOf r) = r := by
-  unfold colorOf
-  split_ifs with h1 h2 h3
-  · simp [val, h1]
-  · simp [val, h2]
-  · simp [val, h3]
-  · rcases h with h | h | h | h
-    · exact absurd h h1
-    · exact absurd h h2
-    · exact absurd h h3
-    · simp [val, h]
 
-/-- The colour matrix of a configuration (diagonal entries are set to `0`). -/
-noncomputable def ccOf (x : Fin 7 → R3) (i j : Fin 7) : Fin 4 :=
-  if i = j then 0 else colorOf ⟪x i, x j⟫_ℝ
 
-lemma ccOf_self (x : Fin 7 → R3) (i : Fin 7) : ccOf x i i = 0 := by simp [ccOf]
 
-lemma ccOf_comm (x : Fin 7 → R3) (i j : Fin 7) : ccOf x i j = ccOf x j i := by
-  unfold ccOf
-  by_cases h : i = j
-  · subst h; rfl
-  · rw [ite_eq_right h, ite_eq_right (Ne.symm h), real_inner_comm]
 
-lemma val_ccOf (x : Fin 7 → R3)
-    (hT : ∀ i j, i ≠ j → ⟪x i, x j⟫_ℝ = -1 ∨ ⟪x i, x j⟫_ℝ = cosA ∨ ⟪x i, x j⟫_ℝ = 0 ∨
-      ⟪x i, x j⟫_ℝ = cosB)
-    (i j : Fin 7) (hij : i ≠ j) : ⟪x i, x j⟫_ℝ = val (ccOf x i j) := by
-  unfold ccOf
-  rw [ite_eq_right hij]
-  exact (val_colorOf (hT i j hij)).symm
 
-lemma ok4_ccOf (x : Fin 7 → R3) (hx : ∀ i, ‖x i‖ = 1)
-    (hT : ∀ i j, i ≠ j → ⟪x i, x j⟫_ℝ = -1 ∨ ⟪x i, x j⟫_ℝ = cosA ∨ ⟪x i, x j⟫_ℝ = 0 ∨
-      ⟪x i, x j⟫_ℝ = cosB)
-    (i j k l : Fin 7) (hij : i ≠ j) (hik : i ≠ k) (hil : i ≠ l) (hjk : j ≠ k) (hjl : j ≠ l)
-    (hkl : k ≠ l) :
-    ok4 (ccOf x i j) (ccOf x i k) (ccOf x i l) (ccOf x j k) (ccOf x j l) (ccOf x k l) = true := by
-  apply ok4_of_det4h
-  have := det4h_inner_eq_zero ![x i, x j, x k, x l] (by intro m; fin_cases m <;> simp [hx])
-  simpa [val_ccOf x hT i j hij, val_ccOf x hT i k hik, val_ccOf x hT i l hil,
-    val_ccOf x hT j k hjk, val_ccOf x hT j l hjl, val_ccOf x hT k l hkl] using this
 
-/-- **Contact rigidity for seven points.** Seven unit vectors of `ℝ³` whose pairwise inner products
-all lie in `{-1, -(1+√5)/4, 0, (√5-1)/4}` form a pentagonal bipyramid: they are the image of
-`pentBipyramid` under a linear isometry equivalence and a relabelling. -/
-theorem contact_rigidity (x : Fin 7 → R3) (hx : ∀ i, ‖x i‖ = 1)
-    (hT : ∀ i j, i ≠ j → ⟪x i, x j⟫_ℝ = -1 ∨ ⟪x i, x j⟫_ℝ = -(1 + √5) / 4 ∨
-      ⟪x i, x j⟫_ℝ = 0 ∨ ⟪x i, x j⟫_ℝ = (√5 - 1) / 4) :
-    ∃ (g : R3 ≃ₗᵢ[ℝ] R3) (σ : Equiv.Perm (Fin 7)), ∀ i, x i = g (pentBipyramid (σ i)) := by
-  have hq : ∀ i j k l : Fin 7, i < j → j < k → k < l →
-      ok4 (ccOf x i j) (ccOf x i k) (ccOf x i l) (ccOf x j k) (ccOf x j l) (ccOf x k l) = true := by
-    intro i j k l hij hjk hkl
-    exact ok4_ccOf x hx hT i j k l hij.ne (hij.trans hjk).ne (hij.trans (hjk.trans hkl)).ne
-      hjk.ne (hjk.trans hkl).ne hkl.ne
-  have hleaf : leaf (mk21 (ccOf x 0 1) (ccOf x 0 2) (ccOf x 1 2) (ccOf x 0 3) (ccOf x 1 3) (ccOf x 2 3) (ccOf x 0 4) (ccOf x 1 4) (ccOf x 2 4) (ccOf x 3 4) (ccOf x 0 5) (ccOf x 1 5) (ccOf x 2 5) (ccOf x 3 5) (ccOf x 4 5) (ccOf x 0 6) (ccOf x 1 6) (ccOf x 2 6) (ccOf x 3 6) (ccOf x 4 6) (ccOf x 5 6)) = true :=
-    search_spec (ccOf x 0 1)
-      (ccOf x 0 2)
-      (ccOf x 1 2)
-      (ccOf x 0 3)
-      (ccOf x 1 3)
-      (ccOf x 2 3)
-      (hq 0 1 2 3 (by decide) (by decide) (by decide))
-      (ccOf x 0 4)
-      (ccOf x 1 4)
-      (ccOf x 2 4)
-      (hq 0 1 2 4 (by decide) (by decide) (by decide))
-      (ccOf x 3 4)
-      (hq 0 1 3 4 (by decide) (by decide) (by decide))
-      (hq 0 2 3 4 (by decide) (by decide) (by decide))
-      (hq 1 2 3 4 (by decide) (by decide) (by decide))
-      (ccOf x 0 5)
-      (ccOf x 1 5)
-      (ccOf x 2 5)
-      (hq 0 1 2 5 (by decide) (by decide) (by decide))
-      (ccOf x 3 5)
-      (hq 0 1 3 5 (by decide) (by decide) (by decide))
-      (hq 0 2 3 5 (by decide) (by decide) (by decide))
-      (hq 1 2 3 5 (by decide) (by decide) (by decide))
-      (ccOf x 4 5)
-      (hq 0 1 4 5 (by decide) (by decide) (by decide))
-      (hq 0 2 4 5 (by decide) (by decide) (by decide))
-      (hq 0 3 4 5 (by decide) (by decide) (by decide))
-      (hq 1 2 4 5 (by decide) (by decide) (by decide))
-      (hq 1 3 4 5 (by decide) (by decide) (by decide))
-      (hq 2 3 4 5 (by decide) (by decide) (by decide))
-      (ccOf x 0 6)
-      (ccOf x 1 6)
-      (ccOf x 2 6)
-      (hq 0 1 2 6 (by decide) (by decide) (by decide))
-      (ccOf x 3 6)
-      (hq 0 1 3 6 (by decide) (by decide) (by decide))
-      (hq 0 2 3 6 (by decide) (by decide) (by decide))
-      (hq 1 2 3 6 (by decide) (by decide) (by decide))
-      (ccOf x 4 6)
-      (hq 0 1 4 6 (by decide) (by decide) (by decide))
-      (hq 0 2 4 6 (by decide) (by decide) (by decide))
-      (hq 0 3 4 6 (by decide) (by decide) (by decide))
-      (hq 1 2 4 6 (by decide) (by decide) (by decide))
-      (hq 1 3 4 6 (by decide) (by decide) (by decide))
-      (hq 2 3 4 6 (by decide) (by decide) (by decide))
-      (ccOf x 5 6)
-      (hq 0 1 5 6 (by decide) (by decide) (by decide))
-      (hq 0 2 5 6 (by decide) (by decide) (by decide))
-      (hq 0 3 5 6 (by decide) (by decide) (by decide))
-      (hq 0 4 5 6 (by decide) (by decide) (by decide))
-      (hq 1 2 5 6 (by decide) (by decide) (by decide))
-      (hq 1 3 5 6 (by decide) (by decide) (by decide))
-      (hq 1 4 5 6 (by decide) (by decide) (by decide))
-      (hq 2 3 5 6 (by decide) (by decide) (by decide))
-      (hq 2 4 5 6 (by decide) (by decide) (by decide))
-      (hq 3 4 5 6 (by decide) (by decide) (by decide))
-  have hmk : mk21 (ccOf x 0 1) (ccOf x 0 2) (ccOf x 1 2) (ccOf x 0 3) (ccOf x 1 3) (ccOf x 2 3) (ccOf x 0 4) (ccOf x 1 4) (ccOf x 2 4) (ccOf x 3 4) (ccOf x 0 5) (ccOf x 1 5) (ccOf x 2 5) (ccOf x 3 5) (ccOf x 4 5) (ccOf x 0 6) (ccOf x 1 6) (ccOf x 2 6) (ccOf x 3 6) (ccOf x 4 6) (ccOf x 5 6) = ccOf x := by
-    funext i j
-    fin_cases i <;> fin_cases j <;>
-      first | rfl | exact (ccOf_self x _).symm | (refine Eq.trans ?_ (ccOf_comm x _ _); rfl)
-  rw [hmk] at hleaf
-  simp only [leaf, Bool.and_eq_true, decide_eq_true_eq] at hleaf
-  obtain ⟨hinj, hcol⟩ := hleaf
-  set τ := tau (ccOf x) with hτ
-  have hτinj : Function.Injective τ := by
-    intro k l hkl
-    by_contra hne
-    rcases lt_or_gt_of_ne hne with hlt | hlt
-    · exact hinj k l hlt hkl
-    · exact hinj l k hlt hkl.symm
-  have hbij : Function.Bijective τ := Finite.injective_iff_bijective.mp hτinj
-  have hlt : ∀ k l : Fin 7, k < l →
-      ⟪pentBipyramid k, pentBipyramid l⟫_ℝ = ⟪x (τ k), x (τ l)⟫_ℝ := by
-    intro k l hkl
-    rw [inner_P, ite_eq_right hkl.ne, val_ccOf x hT (τ k) (τ l) (hinj k l hkl), hcol k l hkl]
-  have hgram : ∀ k l : Fin 7,
-      ⟪pentBipyramid k, pentBipyramid l⟫_ℝ = ⟪x (τ k), x (τ l)⟫_ℝ := by
-    intro k l
-    rcases lt_trichotomy k l with h | rfl | h
-    · exact hlt k l h
-    · rw [inner_P, ite_eq_left rfl]; simp [hx]
-    · rw [real_inner_comm (pentBipyramid l) (pentBipyramid k), hlt l k h,
-        real_inner_comm (x (τ k)) (x (τ l))]
-  obtain ⟨g, hg⟩ := exists_isometry_of_gram (fun i => x (τ i)) pentBipyramid 5 0 1 P_indep hgram
-  refine ⟨g, (Equiv.ofBijective τ hbij).symm, fun i => ?_⟩
-  have hj : τ ((Equiv.ofBijective τ hbij).symm i) = i :=
-    (Equiv.ofBijective τ hbij).apply_symm_apply i
-  have := hg ((Equiv.ofBijective τ hbij).symm i)
-  simp only [hj] at this
-  exact this.symm
 
 end M3
 
@@ -4274,8 +3432,6 @@ namespace RegB
 open Base Finset
 
 
-/-- The reference Gram value `⟪P i, P j⟫` of the pentagonal bipyramid. -/
-noncomputable def t0 (i j : Fin 7) : ℝ := inner ℝ (pentBipyramid i) (pentBipyramid j)
 
 
 
@@ -4497,20 +3653,6 @@ lemma inner_cols (a b c d e f : ℝ) :
   simp
 
 
-lemma eq_of_inner_eq (v : Fin 3 → R3) (hv : LinearIndependent ℝ v) (w₁ w₂ : R3)
-    (h : ∀ i, ⟪w₁, v i⟫_ℝ = ⟪w₂, v i⟫_ℝ) : w₁ = w₂ := by
-  have hcard : Fintype.card (Fin 3) = Module.finrank ℝ R3 := by simp
-  let bv := basisOfLinearIndependentOfCardEqFinrank hv hcard
-  have h0 : ∀ z : R3, ⟪w₁ - w₂, z⟫_ℝ = 0 := by
-    intro z
-    rw [← bv.sum_repr z, inner_sum]
-    apply Finset.sum_eq_zero
-    intro i _
-    have hb : bv i = v i := by simp [bv]
-    rw [inner_smul_right, hb, inner_sub_left, h i, sub_self, mul_zero]
-  have := h0 (w₁ - w₂)
-  rw [inner_self_eq_zero] at this
-  exact sub_eq_zero.mp this
 
 lemma isometry_of_gram_fin3 (u v : Fin 3 → R3) (hu : LinearIndependent ℝ u)
     (h : ∀ i j, ⟪u i, u j⟫_ℝ = ⟪v i, v j⟫_ℝ) :
@@ -5034,18 +4176,10 @@ namespace Interfaces
 
 open Finset Base
 
-/-- (M2) the polynomial minorant of `phi`. -/
-noncomputable def H : ℝ → ℝ := M2.H
-
-lemma H_le_phi {t : ℝ} (h1 : -1 ≤ t) (h2 : t < 1) : H t ≤ phi t := M2.H_le_phi h1 h2
 
 
 
-/-- (M1 + M4) the sharp three-point inequality: this is the only missing ingredient of the
-Hermite-minorant route. It is stated here as a `Prop` (not proved). -/
-def SumHGe : Prop :=
-  ∀ y : Fin 7 → R3, (∀ i, ‖y i‖ = 1) →
-    coulombEnergy pentBipyramid ≤ ∑ i, ∑ j ∈ Finset.Ioi i, H (inner ℝ (y i) (y j))
+
 
 
 end Interfaces
@@ -5056,18 +4190,7 @@ namespace Glue
 
 open Finset Base Interfaces
 
-lemma pair_bounds {x : Fin 7 → R3} (hx : x ∈ SphereConfig 7) {i j : Fin 7} (hij : i < j) :
-    -1 ≤ inner ℝ (x i) (x j) ∧ inner ℝ (x i) (x j) < 1 :=
-  ⟨neg_one_le_inner_of_unit (hx.1 i) (hx.1 j),
-    inner_lt_one_of_ne (hx.1 i) (hx.1 j) (fun h => hij.ne (hx.2 h))⟩
 
-theorem seven (hH : SumHGe) {x : Fin 7 → R3} (hx : x ∈ SphereConfig 7) :
-    coulombEnergy pentBipyramid ≤ coulombEnergy x := by
-  rw [coulombEnergy_eq_sum_phi hx.1]
-  refine (hH x hx.1).trans ?_
-  refine Finset.sum_le_sum fun i _ => Finset.sum_le_sum fun j hj => ?_
-  obtain ⟨h1, h2⟩ := pair_bounds hx (Finset.mem_Ioi.1 hj)
-  exact H_le_phi h1 h2
 
 
 end Glue
@@ -9626,28 +8749,6 @@ theorem typed7_bound_lo (K : ℕ) (m : ℕ → ℕ)
       (fun i j => real_inner_comm _ _)
       (fun i j l _ _ _ => gramOK_inner (x i) (x j) (x l) (hx i) (hx j) (hx l)) hmin hcut hα hβ hγ
 
-/-- **Typed three-point bound for `n = 7`** (two poles `0, 1`, five ring points `2..6`), without
-a lower cut: the case `amin = -1` of `typed7_bound_lo`. -/
-theorem typed7_bound (K : ℕ) (m : ℕ → ℕ)
-    (FP FR : (k : ℕ) → Matrix (Fin (m k)) (Fin (m k)) ℝ)
-    (hFP : ∀ k, k < K → (FP k).PosSemidef) (hFR : ∀ k, k < K → (FR k).PosSemidef)
-    (HA HB HC ψBa ψCb : ℝ → ℝ) (e cal cbe alo ahi : ℝ)
-    (x : Fin 7 → R3) (hx : ∀ i, ‖x i‖ = 1)
-    (hcut : alo ≤ ⟪x 0, x 1⟫ ∧ ⟪x 0, x 1⟫ ≤ ahi)
-    (hα : ∀ u v t, GramOK u v t → alo ≤ u → u ≤ ahi →
-      0 ≤ lamA (Sk K m FP) (Sk K m FR) HA ψBa cal u v t)
-    (hβ : ∀ u v t, GramOK u v t → 0 ≤ lamB (Sk K m FP) (Sk K m FR) HB ψBa ψCb cbe u v t)
-    (hγ : ∀ u v t, GramOK u v t →
-      0 ≤ lamG (Sk K m FR) HC ψCb
-        ((e + 2 * Sk K m FP 1 1 1 + 5 * Sk K m FR 1 1 1 - 5 * cal - 20 * cbe) / 10) u v t) :
-    e ≤ ∑ i, ∑ j ∈ Finset.Ioi i, H7 HA HB HC i j ⟪x i, x j⟫ :=
-  typed7_bound_lo K m FP FR hFP hFR HA HB HC ψBa ψCb e cal cbe alo ahi (-1) x hx
-    (fun i j _ => by
-      have h := abs_real_inner_le_norm (x i) (x j)
-      rw [hx i, hx j, mul_one] at h
-      exact (abs_le.1 h).1)
-    hcut (fun u v t hG h1 h2 _ _ => hα u v t hG h1 h2) (fun u v t hG _ _ _ => hβ u v t hG)
-    (fun u v t hG _ _ _ => hγ u v t hG)
 
 
 end Typed7
@@ -10528,67 +9629,6 @@ theorem slab_of_typed {lo hi e : ℝ} (HA HB HC : ℝ → ℝ) (he : coulombEner
       (fun t h1 h2 => ⟨hC t h1 h2, fun _ => trivial⟩) i j (Finset.mem_Ioi.1 hj)).1
   linarith
 
-/-- **Cap claim from a sharp typed minorant bound.** The typed sum is bounded below by `E(P)` on
-the cap `⟪y 0, y 1⟫ ≤ a0` (for minimal-pair configurations); the class minorants lie below `phi`
-with contact exactly at the nodes `-1` (poles), `0` (pole--ring), `c1, c2` (ring--ring). Then
-`E(y) ≥ E(P)` on the cap, and equality forces a pentagonal bipyramid. -/
-theorem cap_of_typed {a0 : ℝ} (HA HB HC : ℝ → ℝ)
-    (hTB : ∀ y ∈ SphereConfig 7, ⟪y 0, y 1⟫_ℝ ≤ a0 →
-      (∀ i j, i ≠ j → ⟪y 0, y 1⟫_ℝ ≤ ⟪y i, y j⟫_ℝ) →
-      coulombEnergy pentBipyramid ≤
-        ∑ i : Fin 7, ∑ j ∈ Finset.Ioi i, cls3 HA HB HC i j ⟪y i, y j⟫_ℝ)
-    (hA : ∀ t, -1 ≤ t → t ≤ a0 → HA t ≤ phi t ∧ (HA t = phi t → t = -1))
-    (hB : ∀ t, -1 ≤ t → t < 1 → HB t ≤ phi t ∧ (HB t = phi t → t = 0))
-    (hC : ∀ t, -1 ≤ t → t < 1 → HC t ≤ phi t ∧ (HC t = phi t → t = c1 ∨ t = c2)) :
-    ∀ y ∈ SphereConfig 7, ⟪y 0, y 1⟫_ℝ ≤ a0 →
-      (∀ i j, i ≠ j → ⟪y 0, y 1⟫_ℝ ≤ ⟪y i, y j⟫_ℝ) → Concl y := by
-  intro y hy hle hmin
-  have hlo : -1 ≤ ⟪y 0, y 1⟫_ℝ := neg_one_le_inner_of_unit (hy.1 0) (hy.1 1)
-  have hP := hTB y hy hle hmin
-  have hpf := fun i j hij => pair_facts hy HA HB HC (fun t => t = -1) (fun t => t = 0)
-    (fun t => t = c1 ∨ t = c2) hmin hlo hle hA hB hC i j hij
-  have hnn : ∀ i j, j ∈ Finset.Ioi i →
-      0 ≤ phi ⟪y i, y j⟫_ℝ - cls3 HA HB HC i j ⟪y i, y j⟫_ℝ := fun i j hj =>
-    sub_nonneg.2 (hpf i j (Finset.mem_Ioi.1 hj)).1
-  have hsplit : ∑ i : Fin 7, ∑ j ∈ Finset.Ioi i,
-      (phi ⟪y i, y j⟫_ℝ - cls3 HA HB HC i j ⟪y i, y j⟫_ℝ)
-      = coulombEnergy y
-        - ∑ i : Fin 7, ∑ j ∈ Finset.Ioi i, cls3 HA HB HC i j ⟪y i, y j⟫_ℝ := by
-    rw [energy_eq_sum hy, ← Finset.sum_sub_distrib]
-    exact Finset.sum_congr rfl fun i _ => Finset.sum_sub_distrib ..
-  have hge : 0 ≤ ∑ i : Fin 7, ∑ j ∈ Finset.Ioi i,
-      (phi ⟪y i, y j⟫_ℝ - cls3 HA HB HC i j ⟪y i, y j⟫_ℝ) :=
-    Finset.sum_nonneg fun i _ => Finset.sum_nonneg fun j hj => hnn i j hj
-  refine ⟨by linarith, fun hE => ?_⟩
-  have hsum0 : ∑ i : Fin 7, ∑ j ∈ Finset.Ioi i,
-      (phi ⟪y i, y j⟫_ℝ - cls3 HA HB HC i j ⟪y i, y j⟫_ℝ) = 0 := by
-    linarith
-  have hz := (Finset.sum_eq_zero_iff_of_nonneg
-    (fun i _ => Finset.sum_nonneg fun j hj => hnn i j hj)).1 hsum0
-  have hz2 : ∀ i j, i < j → cls3 HA HB HC i j ⟪y i, y j⟫_ℝ = phi ⟪y i, y j⟫_ℝ := by
-    intro i j hij
-    have := (Finset.sum_eq_zero_iff_of_nonneg (fun j hj => hnn i j hj)).1
-      (hz i (Finset.mem_univ i)) j (Finset.mem_Ioi.2 hij)
-    linarith
-  have hnode : ∀ i j, i < j → ⟪y i, y j⟫_ℝ = -1 ∨ ⟪y i, y j⟫_ℝ = -(1 + √5) / 4 ∨
-      ⟪y i, y j⟫_ℝ = 0 ∨ ⟪y i, y j⟫_ℝ = (√5 - 1) / 4 := by
-    intro i j hij
-    have h := (hpf i j hij).2 (hz2 i j hij)
-    unfold cls3 at h
-    by_cases h1 : i.val ≤ 1 ∧ j.val ≤ 1
-    · simp only [h1] at h
-      exact Or.inl h
-    · by_cases h2 : i.val ≤ 1 ∨ j.val ≤ 1
-      · simp only [h1, h2, ite_false, ite_true] at h
-        exact Or.inr (Or.inr (Or.inl h))
-      · simp only [h1, h2, ite_false] at h
-        rcases h with h | h
-        · exact Or.inr (Or.inr (Or.inr h))
-        · exact Or.inr (Or.inl h)
-  exact M3.contact_rigidity y hy.1 fun i j hij => by
-    rcases lt_or_gt_of_ne hij with h | h
-    · exact hnode i j h
-    · rw [real_inner_comm]; exact hnode j i h
 
 /-- **Top-level assembly from a cap certificate and slab certificates**, both stated in the
 minimal-pair normal form. -/
@@ -10836,26 +9876,6 @@ lemma sum_H7_eq_sum_cls3 (HA HB HC : ℝ → ℝ) (g : Fin 7 → Fin 7 → ℝ) 
   refine Finset.sum_congr rfl fun i _ => Finset.sum_congr rfl fun j _ => ?_
   exact H7_eq_cls3 HA HB HC i j _
 
-/-- **Typed bound, in the shape of the cap / slab glue.** For unit vectors whose pole--pole
-inner product lies in `[alo, ahi]`, the typed positivity conditions give `e ≤` the `cls3` sum. -/
-theorem typed7_cls3 (K : ℕ) (m : ℕ → ℕ)
-    (FP FR : (k : ℕ) → Matrix (Fin (m k)) (Fin (m k)) ℝ)
-    (hFP : ∀ k, k < K → (FP k).PosSemidef) (hFR : ∀ k, k < K → (FR k).PosSemidef)
-    (HA HB HC ψBa ψCb : ℝ → ℝ) (e cal cbe alo ahi : ℝ)
-    (hα : ∀ u v t, ThreePoint.GramOK u v t → alo ≤ u → u ≤ ahi →
-      0 ≤ ThreePoint.lamA (ThreePoint.Sk K m FP) (ThreePoint.Sk K m FR) HA ψBa cal u v t)
-    (hβ : ∀ u v t, ThreePoint.GramOK u v t →
-      0 ≤ ThreePoint.lamB (ThreePoint.Sk K m FP) (ThreePoint.Sk K m FR) HB ψBa ψCb cbe u v t)
-    (hγ : ∀ u v t, ThreePoint.GramOK u v t →
-      0 ≤ ThreePoint.lamG (ThreePoint.Sk K m FR) HC ψCb
-        ((e + 2 * ThreePoint.Sk K m FP 1 1 1 + 5 * ThreePoint.Sk K m FR 1 1 1
-          - 5 * cal - 20 * cbe) / 10) u v t) :
-    ∀ y ∈ SphereConfig 7, alo ≤ ⟪y 0, y 1⟫_ℝ → ⟪y 0, y 1⟫_ℝ ≤ ahi →
-      e ≤ ∑ i : Fin 7, ∑ j ∈ Finset.Ioi i, cls3 HA HB HC i j ⟪y i, y j⟫_ℝ := by
-  intro y hy hlo hhi
-  rw [← sum_H7_eq_sum_cls3 HA HB HC (fun i j => ⟪y i, y j⟫_ℝ)]
-  exact ThreePoint.typed7_bound K m FP FR hFP hFR HA HB HC ψBa ψCb e cal cbe alo ahi y hy.1
-    ⟨hlo, hhi⟩ hα hβ hγ
 
 
 end Bridge
@@ -10865,59 +9885,7 @@ section Assembly
 open scoped InnerProductSpace
 open Base
 
-/-- **Sharp cap from the typed bound.** The typed positivity conditions with `e = E(P)` on the
-cap `⟪y 0, y 1⟫ ≤ a0`, together with class minorants `HA, HB, HC ≤ phi` whose contact sets are
-exactly the nodes, give `E ≥ E(P)` (and the rigidity conclusion) for minimal-pair
-configurations in the cap. -/
-theorem cap_of_typed7 {a0 : ℝ} (K : ℕ) (m : ℕ → ℕ)
-    (FP FR : (k : ℕ) → Matrix (Fin (m k)) (Fin (m k)) ℝ)
-    (hFP : ∀ k, k < K → (FP k).PosSemidef) (hFR : ∀ k, k < K → (FR k).PosSemidef)
-    (HA HB HC ψBa ψCb : ℝ → ℝ) (cal cbe : ℝ)
-    (hα : ∀ u v t, ThreePoint.GramOK u v t → -1 ≤ u → u ≤ a0 →
-      0 ≤ ThreePoint.lamA (ThreePoint.Sk K m FP) (ThreePoint.Sk K m FR) HA ψBa cal u v t)
-    (hβ : ∀ u v t, ThreePoint.GramOK u v t →
-      0 ≤ ThreePoint.lamB (ThreePoint.Sk K m FP) (ThreePoint.Sk K m FR) HB ψBa ψCb cbe u v t)
-    (hγ : ∀ u v t, ThreePoint.GramOK u v t →
-      0 ≤ ThreePoint.lamG (ThreePoint.Sk K m FR) HC ψCb
-        ((coulombEnergy pentBipyramid + 2 * ThreePoint.Sk K m FP 1 1 1
-          + 5 * ThreePoint.Sk K m FR 1 1 1 - 5 * cal - 20 * cbe) / 10) u v t)
-    (hA : ∀ t, -1 ≤ t → t ≤ a0 → HA t ≤ phi t ∧ (HA t = phi t → t = -1))
-    (hB : ∀ t, -1 ≤ t → t < 1 → HB t ≤ phi t ∧ (HB t = phi t → t = 0))
-    (hC : ∀ t, -1 ≤ t → t < 1 → HC t ≤ phi t ∧ (HC t = phi t → t = c1 ∨ t = c2)) :
-    ∀ y ∈ SphereConfig 7, ⟪y 0, y 1⟫_ℝ ≤ a0 →
-      (∀ i j, i ≠ j → ⟪y 0, y 1⟫_ℝ ≤ ⟪y i, y j⟫_ℝ) → Concl y := by
-  refine cap_of_typed HA HB HC (fun y hy hle _ => ?_) hA hB hC
-  exact typed7_cls3 K m FP FR hFP hFR HA HB HC ψBa ψCb (coulombEnergy pentBipyramid) cal cbe (-1)
-    a0 hα hβ hγ y hy (neg_one_le_inner_of_unit (hy.1 0) (hy.1 1)) hle
 
-/-- **Near-sharp cap from the typed bound (tube route).** As `cap_of_typed7`, but with a bound
-`e` that only satisfies `E(P) ≤ e + δ`; the minorants then have to be `δ`-tight only in the
-sense that slack `≤ δ` forces the pair value into a `τ`-tube around the nodes, and the
-tube-rigidity `TubeRigid τ` together with the local window `LocalGramA τ τ` closes the argument. -/
-theorem cap_of_typed_tube7 {a0 e δ τ : ℝ} (K : ℕ) (m : ℕ → ℕ)
-    (FP FR : (k : ℕ) → Matrix (Fin (m k)) (Fin (m k)) ℝ)
-    (hFP : ∀ k, k < K → (FP k).PosSemidef) (hFR : ∀ k, k < K → (FR k).PosSemidef)
-    (HA HB HC ψBa ψCb : ℝ → ℝ) (cal cbe : ℝ)
-    (hL : TwoRegime.LocalGramA (fun _ => τ) (fun _ => τ)) (hrig : TubeRigid τ)
-    (hα : ∀ u v t, ThreePoint.GramOK u v t → -1 ≤ u → u ≤ a0 →
-      0 ≤ ThreePoint.lamA (ThreePoint.Sk K m FP) (ThreePoint.Sk K m FR) HA ψBa cal u v t)
-    (hβ : ∀ u v t, ThreePoint.GramOK u v t →
-      0 ≤ ThreePoint.lamB (ThreePoint.Sk K m FP) (ThreePoint.Sk K m FR) HB ψBa ψCb cbe u v t)
-    (hγ : ∀ u v t, ThreePoint.GramOK u v t →
-      0 ≤ ThreePoint.lamG (ThreePoint.Sk K m FR) HC ψCb
-        ((e + 2 * ThreePoint.Sk K m FP 1 1 1 + 5 * ThreePoint.Sk K m FR 1 1 1
-          - 5 * cal - 20 * cbe) / 10) u v t)
-    (hEδ : coulombEnergy pentBipyramid ≤ e + δ)
-    (hA : ∀ t, -1 ≤ t → t ≤ a0 → HA t ≤ phi t ∧ (phi t - HA t ≤ δ → |t + 1| ≤ τ))
-    (hB : ∀ t, -1 ≤ t → t < 1 → HB t ≤ phi t ∧ (phi t - HB t ≤ δ → |t| ≤ τ))
-    (hC : ∀ t, -1 ≤ t → t < 1 →
-      HC t ≤ phi t ∧ (phi t - HC t ≤ δ → |t - c1| ≤ τ ∨ |t - c2| ≤ τ)) :
-    ∀ y ∈ SphereConfig 7, ⟪y 0, y 1⟫_ℝ ≤ a0 →
-      (∀ i j, i ≠ j → ⟪y 0, y 1⟫_ℝ ≤ ⟪y i, y j⟫_ℝ) → Concl y := by
-  refine cap_of_typed_tube (a0 := a0) (e := e) (δ := δ) (τ := τ) HA HB HC hL hrig
-    (fun y hy hle _ => ?_) hEδ hA hB hC
-  exact typed7_cls3 K m FP FR hFP hFR HA HB HC ψBa ψCb e cal cbe (-1) a0 hα hβ hγ y hy
-    (neg_one_le_inner_of_unit (hy.1 0) (hy.1 1)) hle
 
 
 end Assembly
@@ -11307,15 +10275,7 @@ theorem F_le_of_slack {Q : List ℤ} {Dq : ℕ} (hD : 0 < Dq) {t δ : ℝ} (h : 
 
 /-! ## C. Plain certificates: `H ≤ phi` on a `y`-interval -/
 
-/-- Certificate for `Q/Dq ≤ phi` on `y ∈ [a1/a2, b1/b2]` (`F ≥ 0` by Bernstein pieces). -/
-structure PlainCert where
-  Dq : ℕ
-  Q : List ℤ
-  pieces : List BPiece
 
-/-- The check of a plain certificate on the `y`-interval `[a1/a2, b1/b2]`. -/
-def PlainCert.check (c : PlainCert) (a1 : ℤ) (a2 : ℕ) (b1 : ℤ) (b2 : ℕ) : Bool :=
-  0 < c.Dq && 0 < a2 && 0 < b2 && chainOK (Fpoly c.Q c.Dq) c.pieces a1 a2 b1 b2
 
 
 /-! ## D. Contact certificates with coercivity -/
@@ -11339,17 +10299,6 @@ theorem abs_t_sub_le {y yn η ν τ : ℝ} (hy : 0 < y) (hyn : 0 ≤ yn) (h : |y
     rwa [e] at this
   linarith
 
-/-- Certificate with one double contact node `y = p/q` (class `B`, pole--ring, node `t ≈ 0`):
-`F = (q y - p)² G` and `G ≥ g0 = g0n/g0d > 0` on `[0, 1]`. -/
-structure Contact1 where
-  Dq : ℕ
-  Q : List ℤ
-  p : ℕ
-  q : ℕ
-  G : List ℤ
-  g0n : ℕ
-  g0d : ℕ
-  pieces : List BPiece
 
 /-- The linear factor `q y - p`. -/
 def lin (p q : ℕ) : List ℤ := [-(p : ℤ), (q : ℤ)]
@@ -11357,66 +10306,9 @@ def lin (p q : ℕ) : List ℤ := [-(p : ℤ), (q : ℤ)]
 theorem peval_lin (p q : ℕ) (y : ℝ) : peval (lin p q) y = q * y - p := by
   simp only [lin, peval]; push_cast; ring
 
-/-- The check of a one-node certificate. -/
-def Contact1.check (c : Contact1) : Bool :=
-  0 < c.Dq && 0 < c.q && 0 < c.g0n && 0 < c.g0d &&
-    (padd (Fpoly c.Q c.Dq) (pneg (pmul (pmul (lin c.p c.q) (lin c.p c.q)) c.G))).all (· == 0) &&
-    chainOK (padd (pscale (c.g0d : ℤ) c.G) (pneg [(c.g0n : ℤ)])) c.pieces 0 1 1 1
 
-theorem Contact1.factor (c : Contact1) (hc : c.check = true) (y : ℝ) :
-    peval (Fpoly c.Q c.Dq) y = (c.q * y - c.p) ^ 2 * peval c.G y := by
-  simp only [Contact1.check, Bool.and_eq_true, decide_eq_true_eq] at hc
-  have h := peval_eq_zero_of_all _ hc.1.2 y
-  simp only [peval_padd, peval_pneg, peval_pmul, peval_lin] at h
-  nlinarith [h]
 
-theorem Contact1.G_ge (c : Contact1) (hc : c.check = true) {y : ℝ} (h0 : 0 ≤ y) (h1 : y ≤ 1) :
-    (c.g0n : ℝ) / c.g0d ≤ peval c.G y := by
-  simp only [Contact1.check, Bool.and_eq_true, decide_eq_true_eq] at hc
-  obtain ⟨⟨⟨⟨-, -⟩, hg0d⟩, -⟩, hch⟩ := hc
-  have := chainOK_nonneg _ c.pieces 0 1 1 1 one_pos one_pos hch y (by simpa using h0)
-    (by simpa using h1)
-  simp only [peval_padd, peval_pscale, peval_pneg, peval] at this
-  have hd : (0 : ℝ) < c.g0d := by exact_mod_cast hg0d
-  rw [div_le_iff₀ hd]
-  push_cast at this
-  linarith
 
-/-- **Coercivity, one node.**  If `G ≥ g0` then `H ≤ phi` on `[-1, 1)`, and a slack `≤ δ` with
-`2 Dq δ ≤ g0 (q η)²` puts `t` within `τ` of `ν`, where `τ` absorbs both `2η(2 y_ν + η)` and the
-distance of the rational node `1 - 2 y_ν²` from `ν`. -/
-theorem Contact1.tube (c : Contact1) (hc : c.check = true) {δ η ν τ : ℝ} (hη : 0 ≤ η)
-    (hδ : 2 * c.Dq * δ ≤ ((c.g0n : ℝ) / c.g0d) * (c.q * η) ^ 2)
-    (hτ : |1 - 2 * ((c.p : ℝ) / c.q) ^ 2 - ν| + 2 * η * (2 * ((c.p : ℝ) / c.q) + η) ≤ τ)
-    {t : ℝ} (h1 : -1 ≤ t) (h2 : t < 1) :
-    peval c.Q t / c.Dq ≤ phi t ∧ (phi t - peval c.Q t / c.Dq ≤ δ → |t - ν| ≤ τ) := by
-  have hc' := hc
-  simp only [Contact1.check, Bool.and_eq_true, decide_eq_true_eq] at hc'
-  obtain ⟨⟨⟨⟨⟨hD, hq⟩, hg0n⟩, hg0d⟩, -⟩, -⟩ := hc'
-  have hy := yOf_pos h2
-  have hy1 := yOf_le_one h1 h2
-  have hG := c.G_ge hc hy.le hy1
-  have hg0 : (0 : ℝ) < (c.g0n : ℝ) / c.g0d := by positivity
-  have hqR : (0 : ℝ) < c.q := by exact_mod_cast hq
-  have hF : 0 ≤ peval (Fpoly c.Q c.Dq) (yOf t) := by
-    rw [c.factor hc]; exact mul_nonneg (sq_nonneg _) (hg0.le.trans hG)
-  refine ⟨H_le_phi_of_F hD h2 hF, fun hs => ?_⟩
-  have hFle := F_le_of_slack hD h2 hy1 hF hs
-  rw [c.factor hc] at hFle
-  have h3 : ((c.g0n : ℝ) / c.g0d) * (c.q * yOf t - c.p) ^ 2 ≤
-      ((c.g0n : ℝ) / c.g0d) * (c.q * η) ^ 2 := by
-    calc ((c.g0n : ℝ) / c.g0d) * (c.q * yOf t - c.p) ^ 2
-        ≤ (c.q * yOf t - c.p) ^ 2 * peval c.G (yOf t) := by nlinarith [sq_nonneg (c.q * yOf t - c.p)]
-      _ ≤ 2 * c.Dq * δ := hFle
-      _ ≤ _ := hδ
-  have h4 : (c.q * yOf t - c.p) ^ 2 ≤ (c.q * η) ^ 2 := le_of_mul_le_mul_left h3 hg0
-  have h5 : |c.q * yOf t - c.p| ≤ c.q * η := abs_le_of_sq_le_sq h4 (by positivity)
-  have h6 : |yOf t - (c.p : ℝ) / c.q| ≤ η := by
-    have e : (c.q : ℝ) * yOf t - c.p = c.q * (yOf t - (c.p : ℝ) / c.q) := by field_simp
-    rw [e, abs_mul, abs_of_pos hqR] at h5
-    exact le_of_mul_le_mul_left h5 hqR
-  have := abs_t_sub_le hy (by positivity) h6 hτ
-  rwa [one_sub_two_yOf_sq h2.le] at this
 
 /-- Two nodes: if `|(y - y1)(y - y2)| ≤ η |y1 - y2| / 2` then `y` is within `η` of a node. -/
 theorem two_node_alt {y y1 y2 η : ℝ} (hη : 0 ≤ η)
@@ -11434,97 +10326,10 @@ theorem two_node_alt {y y1 y2 η : ℝ} (hη : 0 ≤ η)
   · nlinarith [mul_lt_mul_of_pos_right ha hb0]
   · nlinarith [mul_lt_mul_of_pos_left hb ha0]
 
-/-- Certificate with two double contact nodes `y1 = p1/q1`, `y2 = p2/q2` (class `C`, ring--ring):
-`F = (q1 y - p1)² (q2 y - p2)² G` and `G ≥ g0 = g0n/g0d > 0` on `[0, 1]`. -/
-structure Contact2 where
-  Dq : ℕ
-  Q : List ℤ
-  p1 : ℕ
-  q1 : ℕ
-  p2 : ℕ
-  q2 : ℕ
-  G : List ℤ
-  g0n : ℕ
-  g0d : ℕ
-  pieces : List BPiece
 
-/-- The check of a two-node certificate. -/
-def Contact2.check (c : Contact2) : Bool :=
-  0 < c.Dq && 0 < c.q1 && 0 < c.q2 && 0 < c.g0n && 0 < c.g0d &&
-    (padd (Fpoly c.Q c.Dq)
-      (pneg (pmul (pmul (pmul (lin c.p1 c.q1) (lin c.p1 c.q1))
-        (pmul (lin c.p2 c.q2) (lin c.p2 c.q2))) c.G))).all (· == 0) &&
-    chainOK (padd (pscale (c.g0d : ℤ) c.G) (pneg [(c.g0n : ℤ)])) c.pieces 0 1 1 1
 
-theorem Contact2.factor (c : Contact2) (hc : c.check = true) (y : ℝ) :
-    peval (Fpoly c.Q c.Dq) y =
-      ((c.q1 * y - c.p1) * (c.q2 * y - c.p2)) ^ 2 * peval c.G y := by
-  simp only [Contact2.check, Bool.and_eq_true, decide_eq_true_eq] at hc
-  have h := peval_eq_zero_of_all _ hc.1.2 y
-  simp only [peval_padd, peval_pneg, peval_pmul, peval_lin] at h
-  nlinarith [h]
 
-theorem Contact2.G_ge (c : Contact2) (hc : c.check = true) {y : ℝ} (h0 : 0 ≤ y) (h1 : y ≤ 1) :
-    (c.g0n : ℝ) / c.g0d ≤ peval c.G y := by
-  simp only [Contact2.check, Bool.and_eq_true, decide_eq_true_eq] at hc
-  obtain ⟨⟨⟨⟨⟨⟨-, -⟩, -⟩, -⟩, hg0d⟩, -⟩, hch⟩ := hc
-  have := chainOK_nonneg _ c.pieces 0 1 1 1 one_pos one_pos hch y (by simpa using h0)
-    (by simpa using h1)
-  simp only [peval_padd, peval_pscale, peval_pneg, peval] at this
-  have hd : (0 : ℝ) < c.g0d := by exact_mod_cast hg0d
-  rw [div_le_iff₀ hd]
-  push_cast at this
-  linarith
 
-/-- **Coercivity, two nodes.** -/
-theorem Contact2.tube (c : Contact2) (hc : c.check = true) {δ η ν1 ν2 τ : ℝ} (hη : 0 ≤ η)
-    (hδ : 2 * c.Dq * δ ≤ ((c.g0n : ℝ) / c.g0d) *
-      (c.q1 * c.q2 * η * ((c.p1 : ℝ) / c.q1 - (c.p2 : ℝ) / c.q2) / 2) ^ 2)
-    (hτ1 : |1 - 2 * ((c.p1 : ℝ) / c.q1) ^ 2 - ν1| + 2 * η * (2 * ((c.p1 : ℝ) / c.q1) + η) ≤ τ)
-    (hτ2 : |1 - 2 * ((c.p2 : ℝ) / c.q2) ^ 2 - ν2| + 2 * η * (2 * ((c.p2 : ℝ) / c.q2) + η) ≤ τ)
-    {t : ℝ} (h1 : -1 ≤ t) (h2 : t < 1) :
-    peval c.Q t / c.Dq ≤ phi t ∧
-      (phi t - peval c.Q t / c.Dq ≤ δ → |t - ν1| ≤ τ ∨ |t - ν2| ≤ τ) := by
-  have hc' := hc
-  simp only [Contact2.check, Bool.and_eq_true, decide_eq_true_eq] at hc'
-  obtain ⟨⟨⟨⟨⟨⟨hD, hq1⟩, hq2⟩, hg0n⟩, hg0d⟩, -⟩, -⟩ := hc'
-  have hy := yOf_pos h2
-  have hy1 := yOf_le_one h1 h2
-  have hG := c.G_ge hc hy.le hy1
-  have hg0 : (0 : ℝ) < (c.g0n : ℝ) / c.g0d := by positivity
-  have hq1R : (0 : ℝ) < c.q1 := by exact_mod_cast hq1
-  have hq2R : (0 : ℝ) < c.q2 := by exact_mod_cast hq2
-  have hF : 0 ≤ peval (Fpoly c.Q c.Dq) (yOf t) := by
-    rw [c.factor hc]; exact mul_nonneg (sq_nonneg _) (hg0.le.trans hG)
-  refine ⟨H_le_phi_of_F hD h2 hF, fun hs => ?_⟩
-  have hFle := F_le_of_slack hD h2 hy1 hF hs
-  rw [c.factor hc] at hFle
-  set A := (c.q1 * yOf t - c.p1) * (c.q2 * yOf t - c.p2) with hA
-  set B := c.q1 * c.q2 * η * ((c.p1 : ℝ) / c.q1 - (c.p2 : ℝ) / c.q2) / 2 with hB
-  have h3 : ((c.g0n : ℝ) / c.g0d) * A ^ 2 ≤ ((c.g0n : ℝ) / c.g0d) * B ^ 2 := by
-    calc ((c.g0n : ℝ) / c.g0d) * A ^ 2 ≤ A ^ 2 * peval c.G (yOf t) := by
-          nlinarith [sq_nonneg A]
-      _ ≤ 2 * c.Dq * δ := hFle
-      _ ≤ _ := hδ
-  have h4 : A ^ 2 ≤ B ^ 2 := le_of_mul_le_mul_left h3 hg0
-  have h5 : |A| ≤ |B| := sq_le_sq.1 h4
-  have hA' : A = c.q1 * c.q2 * ((yOf t - (c.p1 : ℝ) / c.q1) * (yOf t - (c.p2 : ℝ) / c.q2)) := by
-    rw [hA]; field_simp
-  have hB' : |B| = c.q1 * c.q2 * (η * |(c.p1 : ℝ) / c.q1 - (c.p2 : ℝ) / c.q2| / 2) := by
-    rw [hB]
-    have : c.q1 * c.q2 * η * ((c.p1 : ℝ) / c.q1 - (c.p2 : ℝ) / c.q2) / 2 =
-        (c.q1 * c.q2 * η / 2) * ((c.p1 : ℝ) / c.q1 - (c.p2 : ℝ) / c.q2) := by ring
-    rw [this, abs_mul, abs_of_nonneg (by positivity : (0 : ℝ) ≤ c.q1 * c.q2 * η / 2)]
-    ring
-  rw [hA', hB', abs_mul, abs_of_pos (by positivity : (0 : ℝ) < c.q1 * c.q2)] at h5
-  have h6 := le_of_mul_le_mul_left h5 (by positivity : (0 : ℝ) < c.q1 * c.q2)
-  rcases two_node_alt hη h6 with h7 | h7
-  · left
-    have := abs_t_sub_le hy (by positivity) h7 hτ1
-    rwa [one_sub_two_yOf_sq h2.le] at this
-  · right
-    have := abs_t_sub_le hy (by positivity) h7 hτ2
-    rwa [one_sub_two_yOf_sq h2.le] at this
 
 /-- Certificate with a simple contact at the boundary node `y = 1` (`t = -1`, class `A`,
 pole--pole): `F = (1 - y) G` and `G ≥ g0 > 0` on `[ya1/ya2, 1]`. -/
@@ -11599,30 +10404,7 @@ theorem ContactA.tube (c : ContactA) (hc : c.check = true) {δ τ a0 : ℝ}
 
 /-! ## E. Shapes of the hypotheses `hA hB hC` of `cap_of_typed_tube7` and closeness of the nodes -/
 
-/-- `hB` (pole--ring class, node `0`) from a one-node certificate. -/
-theorem Contact1.hB (c : Contact1) (hc : c.check = true) {δ η τ : ℝ} (hη : 0 ≤ η)
-    (hδ : 2 * c.Dq * δ ≤ ((c.g0n : ℝ) / c.g0d) * (c.q * η) ^ 2)
-    (hτ : |1 - 2 * ((c.p : ℝ) / c.q) ^ 2| + 2 * η * (2 * ((c.p : ℝ) / c.q) + η) ≤ τ) :
-    ∀ t, -1 ≤ t → t < 1 →
-      peval c.Q t / c.Dq ≤ phi t ∧ (phi t - peval c.Q t / c.Dq ≤ δ → |t| ≤ τ) := by
-  intro t h1 h2
-  have := c.tube hc (ν := 0) hη hδ (by simpa using hτ) h1 h2
-  simpa using this
 
-/-- `hC` (ring--ring class, nodes `c1, c2`) from a two-node certificate; `ε1, ε2` bound the
-distance of the rational nodes `1 - 2 y_i²` from `c1, c2`. -/
-theorem Contact2.hC (c : Contact2) (hc : c.check = true) {δ η τ ε1 ε2 : ℝ} (hη : 0 ≤ η)
-    (hδ : 2 * c.Dq * δ ≤ ((c.g0n : ℝ) / c.g0d) *
-      (c.q1 * c.q2 * η * ((c.p1 : ℝ) / c.q1 - (c.p2 : ℝ) / c.q2) / 2) ^ 2)
-    (hn1 : |1 - 2 * ((c.p1 : ℝ) / c.q1) ^ 2 - c1| ≤ ε1)
-    (hn2 : |1 - 2 * ((c.p2 : ℝ) / c.q2) ^ 2 - c2| ≤ ε2)
-    (hτ1 : ε1 + 2 * η * (2 * ((c.p1 : ℝ) / c.q1) + η) ≤ τ)
-    (hτ2 : ε2 + 2 * η * (2 * ((c.p2 : ℝ) / c.q2) + η) ≤ τ) :
-    ∀ t, -1 ≤ t → t < 1 →
-      peval c.Q t / c.Dq ≤ phi t ∧
-        (phi t - peval c.Q t / c.Dq ≤ δ → |t - c1| ≤ τ ∨ |t - c2| ≤ τ) := by
-  intro t h1 h2
-  exact c.tube hc hη hδ (by linarith) (by linarith) h1 h2
 
 /-- `hA` (pole--pole class, node `-1`) from a boundary-node certificate. -/
 theorem ContactA.hA (c : ContactA) (hc : c.check = true) {δ τ a0 : ℝ}
@@ -13929,44 +12711,6 @@ lemma node_c2_of {tn ε lo hi : ℝ} (hlo : lo ^ 2 ≤ 5) (h0 : 0 ≤ hi) (hhi :
     (h1 : -4 * tn - 1 - 4 * ε ≤ lo) (h2 : hi ≤ -4 * tn - 1 + 4 * ε) : |tn - c2| ≤ ε :=
   Coerce.abs_node_sub_c2_le (le_sqrt5_of hlo) (sqrt5_le_of h0 hhi) h1 h2
 
-/-- **Cap specification from a certificate and three contact factorisations.**  The numbers
-`δ, η, τ, ε1, ε2` only have to satisfy the (rational) side conditions of `Coerce`. -/
-theorem capSpec_of_contacts (cf : Cert.TCert) (hm : cf.checkMeta = true)
-    (hA : cf.chkA = true) (hB : cf.chkB = true) (hG : cf.chkG = true)
-    (halo : cf.alo = -1)
-    (cA : Coerce.ContactA) (cB : Coerce.Contact1) (cC : Coerce.Contact2)
-    (hcA : cA.check = true) (hcB : cB.check = true) (hcC : cC.check = true)
-    (hQA : cA.Q = cf.HA) (hDA : cA.Dq = cf.Lam)
-    (hQB : cB.Q = cf.HB) (hDB : cB.Dq = cf.Lam)
-    (hQC : cC.Q = cf.HC) (hDC : cC.Dq = cf.Lam)
-    {δ η τ ε1 ε2 : ℝ} (hτ : τ ≤ 1 / 165000)
-    (hE : (144529774142213429350444915306029287904779 : ℝ) / 10 ^ 40 ≤ cf.ef + δ)
-    (hη : 0 ≤ η)
-    (hya : 0 ≤ (cA.ya1 : ℝ) / cA.ya2)
-    (ha0 : ((cA.ya1 : ℝ) / cA.ya2) ^ 2 ≤ (1 - cf.ahi) / 2) (ha1 : cf.ahi < 1)
-    (hδA : 8 * cA.Dq * δ ≤ ((cA.g0n : ℝ) / cA.g0d) * τ)
-    (hδB : 2 * cB.Dq * δ ≤ ((cB.g0n : ℝ) / cB.g0d) * (cB.q * η) ^ 2)
-    (hτB : |1 - 2 * ((cB.p : ℝ) / cB.q) ^ 2| + 2 * η * (2 * ((cB.p : ℝ) / cB.q) + η) ≤ τ)
-    (hδC : 2 * cC.Dq * δ ≤ ((cC.g0n : ℝ) / cC.g0d) *
-      (cC.q1 * cC.q2 * η * ((cC.p1 : ℝ) / cC.q1 - (cC.p2 : ℝ) / cC.q2) / 2) ^ 2)
-    (hn1 : |1 - 2 * ((cC.p1 : ℝ) / cC.q1) ^ 2 - c1| ≤ ε1)
-    (hn2 : |1 - 2 * ((cC.p2 : ℝ) / cC.q2) ^ 2 - c2| ≤ ε2)
-    (hτ1 : ε1 + 2 * η * (2 * ((cC.p1 : ℝ) / cC.q1) + η) ≤ τ)
-    (hτ2 : ε2 + 2 * η * (2 * ((cC.p2 : ℝ) / cC.q2) + η) ≤ τ) :
-    CapSpec cf.ahi := by
-  refine capSpec_of_tcert cf hm hA hB hG halo hτ hE ?_ ?_ ?_
-  · intro t h1 h2
-    have := Coerce.ContactA.hA cA hcA hya ha0 ha1 hδA t h1 h2
-    rw [hQA, hDA] at this
-    rwa [Cert.TCert.HAf, polyR_eq_cut]
-  · intro t h1 h2
-    have := Coerce.Contact1.hB cB hcB hη hδB hτB t h1 h2
-    rw [hQB, hDB] at this
-    rwa [Cert.TCert.HBf, polyR_eq_cut]
-  · intro t h1 h2
-    have := Coerce.Contact2.hC cC hcC hη hδC hn1 hn2 hτ1 hτ2 t h1 h2
-    rw [hQC, hDC] at this
-    rwa [Cert.TCert.HCf, polyR_eq_cut]
 
 end Bridge2
 
