@@ -326,9 +326,6 @@ lemma norm_sub_inv_eq_phi {x y : R3} (hx : ‖x‖ = 1) (hy : ‖y‖ = 1) :
   unfold phi
   rw [← norm_sub_sq_of_unit hx hy, Real.sqrt_sq (norm_nonneg _)]
 
-lemma inner_le_one_of_unit {x y : R3} (hx : ‖x‖ = 1) (hy : ‖y‖ = 1) : inner ℝ x y ≤ 1 := by
-  have := real_inner_le_norm x y
-  simpa [hx, hy] using this
 
 lemma neg_one_le_inner_of_unit {x y : R3} (hx : ‖x‖ = 1) (hy : ‖y‖ = 1) :
     -1 ≤ inner ℝ x y := by
@@ -438,36 +435,7 @@ lemma cos_8pi5 : cos (8 * π / 5) = c1 := by
     rw [← cos_neg (2 * π / 5), ← cos_add_two_pi (-(2 * π / 5))]; congr 1; ring
   rw [h, cos_2pi5]
 
-lemma cos_fifth (m : ℤ) (h5 : ¬ (5 : ℤ) ∣ m) :
-    cos (2 * π * m / 5) = c1 ∨ cos (2 * π * m / 5) = c2 := by
-  have hr : m % 5 = 1 ∨ m % 5 = 2 ∨ m % 5 = 3 ∨ m % 5 = 4 := by omega
-  have hm : (m : ℝ) = ((m % 5 : ℤ) : ℝ) + 5 * ((m / 5 : ℤ) : ℝ) := by
-    have : m = m % 5 + 5 * (m / 5) := by omega
-    exact_mod_cast this
-  have e : cos (2 * π * m / 5) = cos (2 * π * ((m % 5 : ℤ) : ℝ) / 5) := by
-    rw [← Real.cos_add_int_mul_two_pi (2 * π * ((m % 5 : ℤ) : ℝ) / 5) (m / 5)]
-    congr 1
-    rw [hm]; ring
-  rw [e]
-  rcases hr with h | h | h | h <;> rw [h]
-  · left; push_cast; rw [mul_one]; exact cos_2pi5
-  · right; push_cast; rw [← cos_4pi5]; congr 1; ring
-  · right; push_cast; rw [← cos_6pi5]; congr 1; ring
-  · left; push_cast; rw [← cos_8pi5]; congr 1; ring
 
-lemma pent_inner_pent {i j : Fin 7} (hi : (i : ℕ) < 5) (hj : (j : ℕ) < 5) (hij : i ≠ j) :
-    inner ℝ (pentBipyramid i) (pentBipyramid j) = c1 ∨
-      inner ℝ (pentBipyramid i) (pentBipyramid j) = c2 := by
-  rw [pent_of_lt hi, pent_of_lt hj, inner_cyl]
-  have hne : ¬ (5 : ℤ) ∣ ((i : ℕ) : ℤ) - ((j : ℕ) : ℤ) := by
-    have : (i : ℕ) ≠ (j : ℕ) := fun h => hij (Fin.ext h)
-    omega
-  have := cos_fifth (((i : ℕ) : ℤ) - ((j : ℕ) : ℤ)) hne
-  have e : (2 * π * ((i : ℕ) : ℝ) / 5 - 2 * π * ((j : ℕ) : ℝ) / 5)
-      = 2 * π * ((((i : ℕ) : ℤ) - ((j : ℕ) : ℤ) : ℤ) : ℝ) / 5 := by
-    push_cast; ring
-  rw [e]
-  simpa using this
 
 lemma pent_inner_north {i : Fin 7} (hi : (i : ℕ) < 5) :
     inner ℝ (pentBipyramid i) (pentBipyramid 5) = 0 := by
@@ -480,33 +448,10 @@ lemma pent_inner_south {i : Fin 7} (hi : (i : ℕ) < 5) :
 lemma pent_inner_poles : inner ℝ (pentBipyramid 5) (pentBipyramid 6) = -1 := by
   rw [pent_five, pent_six, inner_cyl]; simp
 
-/-- The nodes: the possible inner products of distinct points of the bipyramid. -/
-def IsNode (t : ℝ) : Prop := t = -1 ∨ t = 0 ∨ t = c1 ∨ t = c2
 
-lemma pent_inner_isNode (i j : Fin 7) (hij : i ≠ j) :
-    IsNode (inner ℝ (pentBipyramid i) (pentBipyramid j)) := by
-  rcases pent_cases i with hi | rfl | rfl <;> rcases pent_cases j with hj | rfl | rfl
-  · rcases pent_inner_pent hi hj hij with h | h
-    · exact Or.inr (Or.inr (Or.inl h))
-    · exact Or.inr (Or.inr (Or.inr h))
-  · exact Or.inr (Or.inl (pent_inner_north hi))
-  · exact Or.inr (Or.inl (pent_inner_south hi))
-  · rw [real_inner_comm]; exact Or.inr (Or.inl (pent_inner_north hj))
-  · exact absurd rfl hij
-  · exact Or.inl pent_inner_poles
-  · rw [real_inner_comm]; exact Or.inr (Or.inl (pent_inner_south hj))
-  · rw [real_inner_comm]; exact Or.inl pent_inner_poles
-  · exact absurd rfl hij
 
 lemma pent_norm (i : Fin 7) : ‖pentBipyramid i‖ = 1 := pentBipyramid_mem.1 i
 
-/-- If `H` agrees with `phi` at the nodes, then `∑_{i<j} H ⟪P i, P j⟫` is the energy of `P`. -/
-lemma pent_sum_eq (H : ℝ → ℝ) (hH : ∀ t, IsNode t → H t = phi t) :
-    ∑ i : Fin 7, ∑ j ∈ Finset.Ioi i, H (inner ℝ (pentBipyramid i) (pentBipyramid j))
-      = coulombEnergy pentBipyramid := by
-  rw [coulombEnergy_eq_sum_phi pent_norm]
-  refine Finset.sum_congr rfl fun i _ => Finset.sum_congr rfl fun j hj => ?_
-  exact hH _ (pent_inner_isNode i j (Finset.mem_Ioi.1 hj).ne)
 
 end Base
 /- END M0 -/
@@ -775,13 +720,6 @@ section Comb2
 
 variable {n : ℕ}
 
-theorem dsum_mono {f g : Fin n → Fin n → Fin n → ℝ}
-    (h : ∀ i j l, i ≠ j → i ≠ l → j ≠ l → f i j l ≤ g i j l) : dsum f ≤ dsum g := by
-  unfold dsum
-  refine Finset.sum_le_sum fun i _ => Finset.sum_le_sum fun j _ => Finset.sum_le_sum fun l _ => ?_
-  split_ifs with hc
-  · exact h i j l hc.1 hc.2.1 hc.2.2
-  · exact le_rfl
 
 theorem dsum_add (f g : Fin n → Fin n → Fin n → ℝ) :
     dsum (fun i j l => f i j l + g i j l) = dsum f + dsum g := by
@@ -1155,68 +1093,13 @@ end Final
 
 /-! ### The kernels at the diagonal `(1,1,1)` -/
 
-theorem Q3_one_succ (k : ℕ) : Q3 (k + 1) 1 1 1 = 0 := by
-  rcases k with _ | k
-  · simp [Q3]
-  · simp [Q3]
 
-theorem S3_one_succ (m k : ℕ) : S3 m (k + 1) 1 1 1 = 0 := by
-  ext a b
-  simp [S3, Y3, Q3_one_succ]
 
-theorem S3_one_zero (m : ℕ) : S3 m 0 1 1 1 = Matrix.of fun _ _ => 1 := by
-  ext a b
-  simp [S3, Y3, Q3]
-  ring
 
 section FinalZ
 
 variable {n : ℕ}
 
-/-- **Three-point bound with an extra zero-sum term.**  Same as `three_point_bound`, but the
-pointwise inequality may use an additional function `Z` whose ordered-triple sum vanishes on `x`
-(for instance the stationarity identities of a critical configuration). -/
-theorem three_point_bound_Z (hn : 3 ≤ n) (K : ℕ) (m : ℕ → ℕ)
-    (F : (k : ℕ) → Matrix (Fin (m k)) (Fin (m k)) ℝ) (hF : ∀ k, k < K → (F k).PosSemidef)
-    (H : ℝ → ℝ) (e : ℝ) (Z : ℝ → ℝ → ℝ → ℝ)
-    (hpt : ∀ u v t : ℝ, GramOK u v t →
-      ∑ k ∈ Finset.range K, matDot (F k) (Rk n (m k) k u v t) + Z u v t
-        ≤ (H u + H v + H t) / 3 - e / (n.choose 2 : ℝ))
-    (x : Fin n → R3) (hx : ∀ i, ‖x i‖ = 1)
-    (hZ : dsum (fun i j l => Z ⟪x i, x j⟫ ⟪x i, x l⟫ ⟪x j, x l⟫) = 0) :
-    e ≤ ∑ i, ∑ j ∈ Finset.Ioi i, H ⟪x i, x j⟫ := by
-  set s : ℝ → ℝ → ℝ → ℝ := fun u v t => ∑ k ∈ Finset.range K, matDot (F k) (S3 (m k) k u v t)
-    with hs
-  have hs12 : ∀ u v t, s u v t = s v u t := fun u v t => by
-    simp only [hs, S3_swap12 _ _ u v t]
-  have hs23 : ∀ u v t, s u v t = s u t v := fun u v t => by
-    simp only [hs, S3_swap23 _ _ u v t]
-  have hid := three_point_identity hn s hs12 hs23 H e x hx
-  have hBV : 0 ≤ ∑ i, ∑ j, ∑ l, s ⟪x i, x j⟫ ⟪x i, x l⟫ ⟪x j, x l⟫ := by
-    simp only [hs]
-    rw [sum4_swap]
-    exact Finset.sum_nonneg fun k hk =>
-      matDot_moment_nonneg (m k) k x hx (F k) (hF k (Finset.mem_range.mp hk))
-  have hslack : 0 ≤ dsum (fun i j l => ((H ⟪x i, x j⟫ + H ⟪x i, x l⟫ + H ⟪x j, x l⟫) / 3
-        - e / (n.choose 2 : ℝ)) - Rs s n ⟪x i, x j⟫ ⟪x i, x l⟫ ⟪x j, x l⟫) := by
-    have h1 : 0 ≤ dsum (fun i j l => (((H ⟪x i, x j⟫ + H ⟪x i, x l⟫ + H ⟪x j, x l⟫) / 3
-        - e / (n.choose 2 : ℝ)) - Rs s n ⟪x i, x j⟫ ⟪x i, x l⟫ ⟪x j, x l⟫)
-        - Z ⟪x i, x j⟫ ⟪x i, x l⟫ ⟪x j, x l⟫) := by
-      refine dsum_nonneg fun i j l _ _ _ => ?_
-      have := hpt _ _ _ (gramOK_inner (x i) (x j) (x l) (hx i) (hx j) (hx l))
-      rw [sum_matDot_Rk] at this
-      linarith
-    rw [dsum_sub, hZ] at h1
-    linarith
-  have h3 : (3 : ℝ) ≤ n := by exact_mod_cast hn
-  have hpos : (0 : ℝ) < 2 * ((n : ℝ) - 2) := by linarith
-  have hprod : 0 ≤ 2 * ((n : ℝ) - 2) * (∑ i, ∑ j ∈ Finset.Ioi i, H ⟪x i, x j⟫ - e) := by
-    rw [← hid]
-    have : 0 ≤ ((n : ℝ) - 2) * ∑ i, ∑ j, ∑ l, s ⟪x i, x j⟫ ⟪x i, x l⟫ ⟪x j, x l⟫ :=
-      mul_nonneg (by linarith) hBV
-    linarith
-  have := nonneg_of_mul_nonneg_right hprod hpos
-  linarith
 
 end FinalZ
 
@@ -1224,171 +1107,22 @@ end FinalZ
 /- BEGIN M5 -/
 section Critical
 
-/-- The pair-potential energy `Σ_{i<j} H⟨y_i,y_j⟩` of `n` vectors. -/
-noncomputable def EH {n : ℕ} (H : ℝ → ℝ) (y : Fin n → R3) : ℝ :=
-  ∑ i, ∑ j ∈ Finset.Ioi i, H ⟪y i, y j⟫
 
-theorem continuous_EH {n : ℕ} (H : ℝ → ℝ) (hH : Continuous H) : Continuous (EH (n := n) H) := by
-  unfold EH
-  refine continuous_finsetSum _ fun i _ => continuous_finsetSum _ fun j _ => ?_
-  exact hH.comp (by fun_prop)
 
-/-- Compactness: the polynomial (or any continuous) pair energy has a global minimiser on the
-product of unit spheres. -/
-theorem exists_min_EH {n : ℕ} (H : ℝ → ℝ) (hH : Continuous H) :
-    ∃ y : Fin n → R3, (∀ i, ‖y i‖ = 1) ∧
-      ∀ z : Fin n → R3, (∀ i, ‖z i‖ = 1) → EH H y ≤ EH H z := by
-  let K : Set (Fin n → R3) := Set.univ.pi (fun _ => Metric.sphere (0 : R3) 1)
-  have hK : IsCompact K := isCompact_univ_pi fun _ => isCompact_sphere 0 1
-  have hne : K.Nonempty := ⟨fun _ => EuclideanSpace.single 0 1, fun i _ => by simp⟩
-  obtain ⟨y, hy, hmin⟩ := hK.exists_isMinOn hne (continuous_EH H hH).continuousOn
-  refine ⟨y, fun i => by simpa using hy i (Set.mem_univ i), fun z hz => ?_⟩
-  exact hmin (fun i _ => by simpa using hz i)
 
 end Critical
 
 section Critical
 
-theorem EH_eq_half {n : ℕ} (H : ℝ → ℝ) (y : Fin n → R3) :
-    EH H y = (1 / 2) * ∑ k, ∑ j ∈ Finset.univ.erase k, H ⟪y k, y j⟫ := by
-  have h := sum_ne_eq_two_sum_Ioi (fun i j => H ⟪y i, y j⟫) (fun i j => by rw [real_inner_comm])
-  have h2 : ∀ k : Fin n, ∑ j, (if k ≠ j then H ⟪y k, y j⟫ else 0)
-      = ∑ j ∈ Finset.univ.erase k, H ⟪y k, y j⟫ := by
-    intro k
-    rw [← Finset.sum_erase Finset.univ (a := k)
-      (f := fun j => if k ≠ j then H ⟪y k, y j⟫ else 0) (by simp)]
-    refine Finset.sum_congr rfl fun j hj => ?_
-    have : k ≠ j := (Finset.ne_of_mem_erase hj).symm
-    simp [this]
-  simp only [h2] at h
-  unfold EH
-  linarith
 
-/-- Replacing the `i`-th vector by `a` only changes the terms containing `i`. -/
-theorem EH_update {n : ℕ} (H : ℝ → ℝ) (y : Fin n → R3) (i : Fin n) (a : R3) :
-    EH H (Function.update y i a)
-      = ∑ j ∈ Finset.univ.erase i, H ⟪a, y j⟫
-        + (1 / 2) * ∑ k ∈ Finset.univ.erase i,
-            ∑ j ∈ (Finset.univ.erase i).erase k, H ⟪y k, y j⟫ := by
-  rw [EH_eq_half, ← Finset.add_sum_erase _ _ (Finset.mem_univ i)]
-  have hi : ∑ j ∈ Finset.univ.erase i, H ⟪Function.update y i a i, Function.update y i a j⟫
-      = ∑ j ∈ Finset.univ.erase i, H ⟪a, y j⟫ := by
-    refine Finset.sum_congr rfl fun j hj => ?_
-    rw [Function.update_self, Function.update_of_ne (Finset.ne_of_mem_erase hj)]
-  have hk : ∀ k ∈ Finset.univ.erase i,
-      ∑ j ∈ Finset.univ.erase k, H ⟪Function.update y i a k, Function.update y i a j⟫
-      = H ⟪y k, a⟫ + ∑ j ∈ (Finset.univ.erase i).erase k, H ⟪y k, y j⟫ := by
-    intro k hk
-    have hki : k ≠ i := Finset.ne_of_mem_erase hk
-    rw [← Finset.add_sum_erase _ _ (Finset.mem_erase.mpr ⟨hki.symm, Finset.mem_univ i⟩)]
-    rw [Function.update_of_ne hki, Function.update_self, Finset.erase_right_comm]
-    congr 1
-    refine Finset.sum_congr rfl fun j hj => ?_
-    have hji : j ≠ i := Finset.ne_of_mem_erase (Finset.mem_of_mem_erase hj)
-    rw [Function.update_of_ne hji]
-  rw [hi, Finset.sum_congr rfl hk, Finset.sum_add_distrib]
-  have hsym : ∑ k ∈ Finset.univ.erase i, H ⟪y k, a⟫ = ∑ j ∈ Finset.univ.erase i, H ⟪a, y j⟫ :=
-    Finset.sum_congr rfl fun k _ => by rw [real_inner_comm]
-  rw [hsym]
-  ring
 
-/-- The great circle through `xi` in the direction `v` stays on the unit sphere. -/
-theorem norm_greatCircle' {xi v : R3} (hx : ‖xi‖ = 1) (hv : ‖v‖ = 1) (hxv : ⟪xi, v⟫ = 0)
-    (t : ℝ) : ‖Real.cos t • xi + Real.sin t • v‖ = 1 := by
-  have hsq : ‖Real.cos t • xi + Real.sin t • v‖ ^ 2 = 1 := by
-    rw [norm_add_sq_real, norm_smul, norm_smul, real_inner_smul_left, real_inner_smul_right, hxv,
-      hx, hv, Real.norm_eq_abs, Real.norm_eq_abs, mul_one, mul_one, sq_abs, sq_abs]
-    simp [Real.cos_sq_add_sin_sq]
-  rw [← Real.sqrt_sq (norm_nonneg _), hsq, Real.sqrt_one]
 
 end Critical
 
 section Critical
 
-/-- First variation of the pair energy at a minimiser along a unit tangent vector. -/
-theorem first_variation {n : ℕ} (H H' : ℝ → ℝ) (hH : ∀ t, HasDerivAt H (H' t) t)
-    (y : Fin n → R3) (hy : ∀ i, ‖y i‖ = 1)
-    (hmin : ∀ z : Fin n → R3, (∀ i, ‖z i‖ = 1) → EH H y ≤ EH H z)
-    (i : Fin n) (v : R3) (hv : ‖v‖ = 1) (hvy : ⟪y i, v⟫ = 0) :
-    ∑ j ∈ Finset.univ.erase i, H' ⟪y i, y j⟫ * ⟪v, y j⟫ = 0 := by
-  set γ : ℝ → R3 := fun t => Real.cos t • y i + Real.sin t • v with hγ
-  have hγn : ∀ t, ‖γ t‖ = 1 := fun t => norm_greatCircle' (hy i) hv hvy t
-  have hγ0 : γ 0 = y i := by simp [hγ]
-  have hloc : IsLocalMin (fun t => EH H (Function.update y i (γ t))) 0 := by
-    refine Filter.Eventually.of_forall fun t => ?_
-    show EH H (Function.update y i (γ 0)) ≤ EH H (Function.update y i (γ t))
-    rw [hγ0, Function.update_eq_self]
-    refine hmin _ fun k => ?_
-    by_cases hk : k = i
-    · subst hk; rw [Function.update_self]; exact hγn t
-    · rw [Function.update_of_ne hk]; exact hy k
-  have hin : ∀ (j : Fin n) (t : ℝ), ⟪γ t, y j⟫ = Real.cos t * ⟪y i, y j⟫ + Real.sin t * ⟪v, y j⟫ := by
-    intro j t
-    simp only [hγ, inner_add_left, real_inner_smul_left]
-  have hterm : ∀ j : Fin n, HasDerivAt (fun t => H ⟪γ t, y j⟫)
-      (H' ⟪y i, y j⟫ * ⟪v, y j⟫) 0 := by
-    intro j
-    have h1 : HasDerivAt (fun t => ⟪γ t, y j⟫) ⟪v, y j⟫ 0 := by
-      have e : (fun t => ⟪γ t, y j⟫) = fun t => Real.cos t * ⟪y i, y j⟫ + Real.sin t * ⟪v, y j⟫ :=
-        funext (hin j)
-      rw [e]
-      have := ((Real.hasDerivAt_cos 0).mul_const ⟪y i, y j⟫).add
-        ((Real.hasDerivAt_sin 0).mul_const ⟪v, y j⟫)
-      refine this.congr_deriv ?_
-      simp
-    have h0 : ⟪γ 0, y j⟫ = ⟪y i, y j⟫ := by rw [hγ0]
-    have h2 : HasDerivAt H (H' ⟪y i, y j⟫) (⟪γ 0, y j⟫) := by rw [h0]; exact hH _
-    exact h2.comp 0 h1
-  have hderiv : HasDerivAt (fun t => EH H (Function.update y i (γ t)))
-      (∑ j ∈ Finset.univ.erase i, H' ⟪y i, y j⟫ * ⟪v, y j⟫) 0 := by
-    have hfun : (fun t => EH H (Function.update y i (γ t)))
-        = fun t => (∑ j ∈ Finset.univ.erase i, H ⟪γ t, y j⟫)
-          + (1 / 2) * ∑ k ∈ Finset.univ.erase i,
-            ∑ j ∈ (Finset.univ.erase i).erase k, H ⟪y k, y j⟫ :=
-      funext fun t => EH_update H y i (γ t)
-    rw [hfun]
-    exact (HasDerivAt.fun_sum fun j _ => hterm j).add_const _
-  exact hloc.hasDerivAt_eq_zero hderiv
 
-/-- First variation along an arbitrary tangent vector. -/
-theorem first_variation' {n : ℕ} (H H' : ℝ → ℝ) (hH : ∀ t, HasDerivAt H (H' t) t)
-    (y : Fin n → R3) (hy : ∀ i, ‖y i‖ = 1)
-    (hmin : ∀ z : Fin n → R3, (∀ i, ‖z i‖ = 1) → EH H y ≤ EH H z)
-    (i : Fin n) (v : R3) (hvy : ⟪y i, v⟫ = 0) :
-    ∑ j ∈ Finset.univ.erase i, H' ⟪y i, y j⟫ * ⟪v, y j⟫ = 0 := by
-  by_cases hv0 : v = 0
-  · subst hv0; simp
-  · have hn : 0 < ‖v‖ := norm_pos_iff.mpr hv0
-    have hu : ‖‖v‖⁻¹ • v‖ = 1 := by
-      rw [norm_smul, norm_inv, norm_norm, inv_mul_cancel₀ hn.ne']
-    have hux : ⟪y i, ‖v‖⁻¹ • v⟫ = 0 := by rw [real_inner_smul_right, hvy, mul_zero]
-    have h := first_variation H H' hH y hy hmin i _ hu hux
-    simp only [real_inner_smul_left, ← Finset.mul_sum] at h
-    have : ∑ j ∈ Finset.univ.erase i, H' ⟪y i, y j⟫ * ⟪v, y j⟫ = 0 := by
-      have h' : ‖v‖⁻¹ * ∑ j ∈ Finset.univ.erase i, H' ⟪y i, y j⟫ * ⟪v, y j⟫ = 0 := by
-        rw [← h]
-        simp only [Finset.mul_sum]
-        refine Finset.sum_congr rfl fun j _ => by ring
-      rcases mul_eq_zero.mp h' with h1 | h1
-      · exact absurd h1 (inv_ne_zero hn.ne')
-      · exact h1
-    exact this
 
-/-- **Force balance** at a minimiser of the pair energy: for all `i, k`,
-`Σ_{j≠i} H'(t_ij) (t_jk − t_ij t_ik) = 0`. -/
-theorem critical_of_min {n : ℕ} (H H' : ℝ → ℝ) (hH : ∀ t, HasDerivAt H (H' t) t)
-    (y : Fin n → R3) (hy : ∀ i, ‖y i‖ = 1)
-    (hmin : ∀ z : Fin n → R3, (∀ i, ‖z i‖ = 1) → EH H y ≤ EH H z) (i k : Fin n) :
-    ∑ j ∈ Finset.univ.erase i,
-      H' ⟪y i, y j⟫ * (⟪y j, y k⟫ - ⟪y i, y j⟫ * ⟪y i, y k⟫) = 0 := by
-  have hi1 : ⟪y i, y i⟫ = 1 := by rw [real_inner_self_eq_norm_sq, hy i]; norm_num
-  have hvy : ⟪y i, y k - ⟪y i, y k⟫ • y i⟫ = 0 := by
-    rw [inner_sub_right, real_inner_smul_right, hi1]; ring
-  have h := first_variation' H H' hH y hy hmin i _ hvy
-  rw [← h]
-  refine Finset.sum_congr rfl fun j _ => ?_
-  rw [inner_sub_left, real_inner_smul_left, real_inner_comm (y k) (y j)]
-  ring
 
 end Critical
 
@@ -1396,84 +1130,8 @@ section CriticalZ
 
 variable {n : ℕ}
 
-/-- The stationarity multiplier kernel: `w(v) (a(u)(t − uv) + a(v)(1 − v²)/(n − 2))`,
-where `a = H'` and `(u, v, t) = (t_ij, t_il, t_jl)`. -/
-noncomputable def Zw (n : ℕ) (a w : ℝ → ℝ) (u v t : ℝ) : ℝ :=
-  w v * (a u * (t - u * v) + a v * (1 - v ^ 2) / ((n : ℝ) - 2))
 
-theorem sum_third_eq (i l : Fin n) (hil : i ≠ l) (f : Fin n → ℝ) :
-    ∑ j, (if i ≠ j ∧ i ≠ l ∧ j ≠ l then f j else 0)
-      = ∑ j ∈ (Finset.univ.erase i).erase l, f j := by
-  rw [← Finset.sum_filter]
-  congr 1
-  ext j
-  simp only [Finset.mem_filter, Finset.mem_univ, true_and, and_true, Finset.mem_erase, ne_eq]
-  constructor
-  · rintro ⟨h1, _, h3⟩
-    exact ⟨h3, fun h => h1 h.symm⟩
-  · rintro ⟨h3, h1⟩
-    exact ⟨fun h => h1 h.symm, hil, h3⟩
 
-/-- **Zero-sum identity for critical configurations.** If the Gram data `τ` satisfies the force
-balance conditions `Σ_{j≠i} a(τ_ij)(τ_jl − τ_ij τ_il) = 0`, then the multiplier kernel `Zw`
-sums to zero over ordered triples of distinct indices. -/
-theorem dsum_Zw_eq_zero (hn : 3 ≤ n) (a w : ℝ → ℝ) (τ : Fin n → Fin n → ℝ)
-    (hdiag : ∀ i, τ i i = 1)
-    (hcrit : ∀ i l, ∑ j ∈ Finset.univ.erase i, a (τ i j) * (τ j l - τ i j * τ i l) = 0) :
-    dsum (fun i j l => Zw n a w (τ i j) (τ i l) (τ j l)) = 0 := by
-  have hn2 : 2 ≤ n := by omega
-  have h3 : (3 : ℝ) ≤ n := by exact_mod_cast hn
-  have hne : ((n : ℝ) - 2) ≠ 0 := by intro h; linarith
-  set G : Fin n → Fin n → ℝ := fun i l => w (τ i l) * (a (τ i l) * (1 - τ i l ^ 2) / ((n : ℝ) - 2))
-    with hG
-  have hsplit : (fun i j l => Zw n a w (τ i j) (τ i l) (τ j l))
-      = fun i j l => (fun i j l => w (τ i l) * (a (τ i j) * (τ j l - τ i j * τ i l))) i j l
-          + (fun i _ l => G i l) i j l := by
-    funext i j l
-    simp only [Zw, hG]
-    ring
-  rw [hsplit, dsum_add, dsum_pair13 hn2 G]
-  -- the first part
-  have hV : ∀ i l : Fin n, ∑ j, (if i ≠ j ∧ i ≠ l ∧ j ≠ l then
-        w (τ i l) * (a (τ i j) * (τ j l - τ i j * τ i l)) else 0)
-      = if i ≠ l then - (w (τ i l) * (a (τ i l) * (1 - τ i l ^ 2))) else 0 := by
-    intro i l
-    by_cases hil : i = l
-    · subst hil; simp
-    · rw [sum_third_eq i l hil, ite_eq_left hil, ← Finset.mul_sum]
-      have hc := hcrit i l
-      rw [← Finset.add_sum_erase _ _ (Finset.mem_erase.mpr ⟨fun h => hil h.symm, Finset.mem_univ l⟩),
-        hdiag l] at hc
-      have : ∑ j ∈ (Finset.univ.erase i).erase l, a (τ i j) * (τ j l - τ i j * τ i l)
-          = - (a (τ i l) * (1 - τ i l ^ 2)) := by
-        have h' : a (τ i l) * (1 - τ i l * τ i l) = a (τ i l) * (1 - τ i l ^ 2) := by ring
-        linarith
-      rw [this]
-      ring
-  have hd1 : dsum (fun i j l => w (τ i l) * (a (τ i j) * (τ j l - τ i j * τ i l)))
-      = ∑ i, ∑ l, (if i ≠ l then - (w (τ i l) * (a (τ i l) * (1 - τ i l ^ 2))) else 0) := by
-    unfold dsum
-    refine Finset.sum_congr rfl fun i _ => ?_
-    rw [Finset.sum_comm]
-    exact Finset.sum_congr rfl fun l _ => hV i l
-  rw [hd1]
-  have hd2 : ((n : ℝ) - 2) * ∑ i, ∑ j, (if i ≠ j then G i j else 0)
-      = ∑ i, ∑ l, (if i ≠ l then w (τ i l) * (a (τ i l) * (1 - τ i l ^ 2)) else 0) := by
-    rw [Finset.mul_sum]
-    refine Finset.sum_congr rfl fun i _ => ?_
-    rw [Finset.mul_sum]
-    refine Finset.sum_congr rfl fun l _ => ?_
-    by_cases hil : i ≠ l
-    · rw [ite_eq_left hil, ite_eq_left hil]
-      simp only [hG]
-      field_simp
-    · rw [ite_eq_right hil, ite_eq_right hil]
-      ring
-  rw [hd2, ← Finset.sum_add_distrib]
-  refine Finset.sum_eq_zero fun i _ => ?_
-  rw [← Finset.sum_add_distrib]
-  refine Finset.sum_eq_zero fun l _ => ?_
-  by_cases hil : i ≠ l <;> simp [hil]
 
 end CriticalZ
 
@@ -1499,33 +1157,10 @@ variable (τ : Fin n → Fin n → ℝ) (hτ : ∀ i j, τ j i = τ i j) (f : �
 
 include hτ
 
-/-- The six permutations of the three pair variables leave the ordered-triple sum unchanged
-(for a symmetric Gram array `τ`). -/
-theorem dsum_perm_vut :
-    dsum (fun i j l => f (τ i l) (τ i j) (τ j l)) = dsum (fun i j l => f (τ i j) (τ i l) (τ j l)) := by
-  rw [← dsum_swap23 (fun i j l => f (τ i j) (τ i l) (τ j l))]
-  congr 1; funext i j l; rw [hτ l j]
 
-theorem dsum_perm_utv :
-    dsum (fun i j l => f (τ i j) (τ j l) (τ i l)) = dsum (fun i j l => f (τ i j) (τ i l) (τ j l)) := by
-  rw [← dsum_swap12 (fun i j l => f (τ i j) (τ i l) (τ j l))]
-  congr 1; funext i j l; rw [hτ j i]
 
-theorem dsum_perm_tuv :
-    dsum (fun i j l => f (τ j l) (τ i j) (τ i l)) = dsum (fun i j l => f (τ i j) (τ i l) (τ j l)) := by
-  rw [← dsum_cyc (fun i j l => f (τ i j) (τ i l) (τ j l))]
-  congr 1; funext i j l; rw [hτ j i, hτ l i]
 
-theorem dsum_perm_vtu :
-    dsum (fun i j l => f (τ i l) (τ j l) (τ i j)) = dsum (fun i j l => f (τ i j) (τ i l) (τ j l)) := by
-  rw [← dsum_cyc (fun i j l => f (τ i j) (τ i l) (τ j l)), ← dsum_cyc
-    (fun i j l => f (τ j l) (τ j i) (τ l i))]
-  congr 1; funext i j l; rw [hτ i l, hτ j l]
 
-theorem dsum_perm_tvu :
-    dsum (fun i j l => f (τ j l) (τ i l) (τ i j)) = dsum (fun i j l => f (τ i j) (τ i l) (τ j l)) := by
-  rw [← dsum_perm_tuv τ hτ f, ← dsum_swap23 (fun i j l => f (τ j l) (τ i j) (τ i l))]
-  congr 1; funext i j l; rw [hτ l j]
 
 end Perm
 
@@ -1535,45 +1170,8 @@ section CriticalFinal
 
 variable {n : ℕ}
 
-/-- The symmetrised stationarity multiplier kernel (average of `Zw` over the six permutations
-of its three arguments). -/
-noncomputable def Zsym (n : ℕ) (a w : ℝ → ℝ) (u v t : ℝ) : ℝ :=
-  (1 / 6 : ℝ) * (Zw n a w u v t + Zw n a w u t v + Zw n a w v u t
-    + Zw n a w v t u + Zw n a w t u v + Zw n a w t v u)
 
-theorem dsum_Zsym_eq_zero (hn : 3 ≤ n) (a w : ℝ → ℝ) (τ : Fin n → Fin n → ℝ)
-    (hτ : ∀ i j, τ j i = τ i j) (hdiag : ∀ i, τ i i = 1)
-    (hcrit : ∀ i l, ∑ j ∈ Finset.univ.erase i, a (τ i j) * (τ j l - τ i j * τ i l) = 0) :
-    dsum (fun i j l => Zsym n a w (τ i j) (τ i l) (τ j l)) = 0 := by
-  have h0 := dsum_Zw_eq_zero hn a w τ hdiag hcrit
-  simp only [Zsym]
-  rw [dsum_mul_left, dsum_add, dsum_add, dsum_add, dsum_add, dsum_add,
-    dsum_perm_utv τ hτ (Zw n a w), dsum_perm_vut τ hτ (Zw n a w), dsum_perm_vtu τ hτ (Zw n a w),
-    dsum_perm_tuv τ hτ (Zw n a w), dsum_perm_tvu τ hτ (Zw n a w)]
-  rw [h0]
-  ring
 
-/-- **Three-point bound with stationarity multipliers.**  A certificate consisting of PSD blocks
-`F k` and one weight function `w` (the stationarity multiplier, of either sign) proves
-`e ≤ Σ_{i<j} H⟨y_i,y_j⟩` for *every* configuration of unit vectors, provided the pointwise
-inequality holds on the Gram region.  The proof takes a global minimiser of the pair energy
-(which exists by compactness), which is critical, and applies the three-point bound to it. -/
-theorem bound_of_critical (hn : 3 ≤ n) (K : ℕ) (m : ℕ → ℕ)
-    (F : (k : ℕ) → Matrix (Fin (m k)) (Fin (m k)) ℝ) (hF : ∀ k, k < K → (F k).PosSemidef)
-    (H H' : ℝ → ℝ) (hH : ∀ t, HasDerivAt H (H' t) t) (e : ℝ) (w : ℝ → ℝ)
-    (hpt : ∀ u v t : ℝ, GramOK u v t →
-      ∑ k ∈ Finset.range K, matDot (F k) (Rk n (m k) k u v t) + Zsym n H' w u v t
-        ≤ (H u + H v + H t) / 3 - e / (n.choose 2 : ℝ))
-    (y : Fin n → R3) (hy : ∀ i, ‖y i‖ = 1) : e ≤ EH H y := by
-  have hcont : Continuous H := continuous_iff_continuousAt.2 fun t => (hH t).continuousAt
-  obtain ⟨y0, hy0, hmin⟩ := exists_min_EH (n := n) H hcont
-  have hτ : ∀ i j, ⟪y0 j, y0 i⟫ = ⟪y0 i, y0 j⟫ := fun i j => real_inner_comm _ _
-  have hdiag : ∀ i, ⟪y0 i, y0 i⟫ = 1 := fun i => by
-    rw [real_inner_self_eq_norm_sq, hy0 i]; norm_num
-  have hZ := dsum_Zsym_eq_zero hn H' w (fun i j => ⟪y0 i, y0 j⟫) hτ hdiag
-    (fun i l => critical_of_min H H' hH y0 hy0 hmin i l)
-  have := three_point_bound_Z hn K m F hF H e (Zsym n H' w) hpt y0 hy0 hZ
-  exact this.trans (hmin y hy)
 
 end CriticalFinal
 
@@ -2039,12 +1637,6 @@ def varVal : ℕ → ℝ
   | 2 => t
   | _ => 1
 
-lemma ev_pw (i a : ℕ) : (pw i a).ev u v t = varVal u v t i ^ a := by
-  match i with
-  | 0 => simp [pw, varVal]
-  | 1 => simp [pw, varVal]
-  | 2 => simp [pw, varVal]
-  | i + 3 => simp [pw, varVal]
 
 /-- Substitute the variables `(u, v, t)` by the variables with codes `(i, j, k)`. -/
 def subst (i j k : ℕ) : Ex → Ex
@@ -2053,13 +1645,6 @@ def subst (i j k : ℕ) : Ex → Ex
   | add p q => add (subst i j k p) (subst i j k q)
   | mul p q => mul (subst i j k p) (subst i j k q)
 
-lemma ev_subst (i j k : ℕ) (e : Ex) :
-    (subst i j k e).ev u v t = e.ev (varVal u v t i) (varVal u v t j) (varVal u v t k) := by
-  induction e with
-  | c n => simp [subst]
-  | mon a b d => simp [subst, ev_pw]
-  | add p q ihp ihq => simp [subst, ihp, ihq]
-  | mul p q ihp ihq => simp [subst, ihp, ihq]
 
 end Ex
 end Kron
@@ -3210,18 +2795,7 @@ lemma Qs_real (s : ℝ) :
   linear_combination h
 
 
-lemma rs2_sq : rs2 ^ 2 = (5 + Real.sqrt 5) / 2 := by
-  have h5 := Real.sq_sqrt (show (0 : ℝ) ≤ 5 by norm_num)
-  have e : rs2 ^ 2 = rb ^ 2 * (3 - rb ^ 2) ^ 2 := by unfold rs2; ring
-  rw [e, rb_sq]
-  linear_combination ((3 - Real.sqrt 5) / 8) * h5
 
-lemma rs2_pos : 0 < rs2 := by
-  have e : rs2 = rb * (3 - rb ^ 2) := by unfold rs2; ring
-  rw [e]
-  refine mul_pos rb_pos ?_
-  rw [rb_sq]
-  linarith [Real.sqrt_nonneg 5]
 
 /-- The polynomial minorant `H` (multiplicity `3` at `-1`). -/
 noncomputable def H (t : ℝ) : ℝ := Pl.eval Hlist t
@@ -3265,70 +2839,8 @@ theorem H_le_phi {t : ℝ} (h1 : -1 ≤ t) (h2 : t < 1) : H t ≤ (Real.sqrt (2 
   linarith
 
 
-lemma H_eq_phi_of_factor {t : ℝ} (h1 : -1 ≤ t) (h2 : t < 1)
-    (hz : Real.sqrt (2 - 2 * t) = rb ∨ Real.sqrt (2 - 2 * t) = rs2 ∨
-      Real.sqrt (2 - 2 * t) = ra ∨ Real.sqrt (2 - 2 * t) = 2) :
-    H t = (Real.sqrt (2 - 2 * t))⁻¹ := by
-  have h := phi_sub_H h1 h2
-  have h0 : ((Real.sqrt (2 - 2 * t) - rb) * (Real.sqrt (2 - 2 * t) - rs2) *
-          (Real.sqrt (2 - 2 * t) - ra)) ^ 2 * (2 - Real.sqrt (2 - 2 * t)) ^ 3 *
-        Pl.eval qlist (Real.sqrt (2 - 2 * t)) / Real.sqrt (2 - 2 * t) = 0 := by
-    rcases hz with hz | hz | hz | hz <;> rw [hz] <;> simp
-  linarith
 
-theorem H_eq_phi_of_node {t : ℝ}
-    (h : t = -1 ∨ t = 0 ∨ t = (Real.sqrt 5 - 1) / 4 ∨ t = -(1 + Real.sqrt 5) / 4) :
-    H t = (Real.sqrt (2 - 2 * t))⁻¹ := by
-  have h5a : 2 < Real.sqrt 5 := (Real.lt_sqrt (by norm_num)).2 (by norm_num)
-  have h5b : Real.sqrt 5 < 3 := (Real.sqrt_lt' (by norm_num)).2 (by norm_num)
-  rcases h with rfl | rfl | rfl | rfl
-  · refine H_eq_phi_of_factor (by norm_num) (by norm_num) (Or.inr (Or.inr (Or.inr ?_)))
-    rw [show (2 : ℝ) - 2 * (-1) = 2 ^ 2 by norm_num]
-    exact Real.sqrt_sq (by norm_num)
-  · refine H_eq_phi_of_factor (by norm_num) (by norm_num) (Or.inr (Or.inr (Or.inl ?_)))
-    simp [ra]
-  · refine H_eq_phi_of_factor (by linarith) (by linarith) (Or.inl ?_)
-    rw [show (2 : ℝ) - 2 * ((Real.sqrt 5 - 1) / 4) = rb ^ 2 by rw [rb_sq]; ring]
-    exact Real.sqrt_sq rb_pos.le
-  · refine H_eq_phi_of_factor (by linarith) (by linarith) (Or.inr (Or.inl ?_))
-    rw [show (2 : ℝ) - 2 * (-(1 + Real.sqrt 5) / 4) = rs2 ^ 2 by rw [rs2_sq]; ring]
-    exact Real.sqrt_sq rs2_pos.le
 
-theorem node_of_H_eq_phi {t : ℝ} (h1 : -1 ≤ t) (h2 : t < 1)
-    (h : H t = (Real.sqrt (2 - 2 * t))⁻¹) :
-    t = -1 ∨ t = 0 ∨ t = (Real.sqrt 5 - 1) / 4 ∨ t = -(1 + Real.sqrt 5) / 4 := by
-  obtain ⟨hs0, hs2, hst⟩ := sqrt_facts h1 h2
-  have e := phi_sub_H h1 h2
-  rw [h, sub_self] at e
-  have hq := eval_qlist_pos hs0.le
-  generalize Real.sqrt (2 - 2 * t) = s at hs0 hs2 hst e hq
-  have hnum : ((s - rb) * (s - rs2) * (s - ra)) ^ 2 * (2 - s) ^ 3 * Pl.eval qlist s = 0 := by
-    have := e.symm
-    rwa [div_eq_zero_iff, or_iff_left hs0.ne'] at this
-  rcases mul_eq_zero.1 hnum with hA | hq0
-  · rcases mul_eq_zero.1 hA with hB | hC
-    · have hB' := pow_eq_zero_iff (two_ne_zero) |>.1 hB
-      rcases mul_eq_zero.1 hB' with h12 | h3
-      · rcases mul_eq_zero.1 h12 with h1' | h2'
-        · have hs' : s ^ 2 = (5 - Real.sqrt 5) / 2 := by
-            rw [show s = rb by linarith, rb_sq]
-          right; right; left
-          linarith
-        · have hs' : s ^ 2 = (5 + Real.sqrt 5) / 2 := by
-            rw [show s = rs2 by linarith, rs2_sq]
-          right; right; right
-          linarith
-      · have hs' : s ^ 2 = 2 := by
-          rw [show s = ra by linarith, ra_sq]
-        right; left
-        linarith
-    · have hs' : s = 2 := by
-        have := pow_eq_zero_iff (by norm_num : (3 : ℕ) ≠ 0) |>.1 hC
-        linarith
-      left
-      rw [hs'] at hst
-      linarith
-  · exact absurd hq0 hq.ne'
 
 end M2
 /- END M2 -/
@@ -4039,59 +3551,7 @@ lemma phi_bregman_cubic {t0 t : ℝ} (h0 : t0 < 1) (h : t < 1) :
     positivity
   linarith
 
-/-- **Bregman quintic bound**: the order-5 Taylor polynomial of `phi` at `t0` is a lower bound
-for `phi t`, for every `t0, t < 1` (either sign of `τ = t - t0`).  The gap is
-`(a-b)^6 (63a^5 + 378a^4 b + 938a^3 b^2 + 1218a^2 b^3 + 843 a b^4 + 256 b^5) / (256 b^10)`. -/
-lemma phi_bregman_quintic {t0 t : ℝ} (h0 : t0 < 1) (h : t < 1) :
-    phi t0 + phi t0 ^ 3 * (t - t0) + 3 / 2 * phi t0 ^ 5 * (t - t0) ^ 2
-      + 5 / 2 * phi t0 ^ 7 * (t - t0) ^ 3 + 35 / 8 * phi t0 ^ 9 * (t - t0) ^ 4
-      + 63 / 8 * phi t0 ^ 11 * (t - t0) ^ 5 ≤ phi t := by
-  have ha := phi_pos h0
-  have hb := phi_pos h
-  have hτ := phi_tau_eq h0 h
-  generalize phi t0 = a at *
-  generalize phi t = b at *
-  have key : b - (a + a ^ 3 * (t - t0) + 3 / 2 * a ^ 5 * (t - t0) ^ 2
-      + 5 / 2 * a ^ 7 * (t - t0) ^ 3 + 35 / 8 * a ^ 9 * (t - t0) ^ 4
-      + 63 / 8 * a ^ 11 * (t - t0) ^ 5)
-      = (a - b) ^ 6 * (63 * a ^ 5 + 378 * a ^ 4 * b + 938 * a ^ 3 * b ^ 2 + 1218 * a ^ 2 * b ^ 3
-          + 843 * a * b ^ 4 + 256 * b ^ 5) / (256 * b ^ 10) := by
-    rw [hτ]
-    field_simp
-    ring
-  have : 0 ≤ (a - b) ^ 6 * (63 * a ^ 5 + 378 * a ^ 4 * b + 938 * a ^ 3 * b ^ 2
-      + 1218 * a ^ 2 * b ^ 3 + 843 * a * b ^ 4 + 256 * b ^ 5) / (256 * b ^ 10) := by
-    positivity
-  linarith
 
-/-- **Bregman septic bound**: the order-7 Taylor polynomial of `phi` at `t0` is a lower bound
-for `phi t`, for every `t0, t < 1`.  The gap is `(a-b)^8 (429a^7 + 3432a^6 b + 11979a^5 b^2
-+ 23760a^4 b^3 + 29115a^3 b^4 + 22248a^2 b^5 + 9949 a b^6 + 2048 b^7) / (2048 b^14)`. -/
-lemma phi_bregman_septic {t0 t : ℝ} (h0 : t0 < 1) (h : t < 1) :
-    phi t0 + phi t0 ^ 3 * (t - t0) + 3 / 2 * phi t0 ^ 5 * (t - t0) ^ 2
-      + 5 / 2 * phi t0 ^ 7 * (t - t0) ^ 3 + 35 / 8 * phi t0 ^ 9 * (t - t0) ^ 4
-      + 63 / 8 * phi t0 ^ 11 * (t - t0) ^ 5 + 231 / 16 * phi t0 ^ 13 * (t - t0) ^ 6
-      + 429 / 16 * phi t0 ^ 15 * (t - t0) ^ 7 ≤ phi t := by
-  have ha := phi_pos h0
-  have hb := phi_pos h
-  have hτ := phi_tau_eq h0 h
-  generalize phi t0 = a at *
-  generalize phi t = b at *
-  have key : b - (a + a ^ 3 * (t - t0) + 3 / 2 * a ^ 5 * (t - t0) ^ 2
-      + 5 / 2 * a ^ 7 * (t - t0) ^ 3 + 35 / 8 * a ^ 9 * (t - t0) ^ 4
-      + 63 / 8 * a ^ 11 * (t - t0) ^ 5 + 231 / 16 * a ^ 13 * (t - t0) ^ 6
-      + 429 / 16 * a ^ 15 * (t - t0) ^ 7)
-      = (a - b) ^ 8 * (429 * a ^ 7 + 3432 * a ^ 6 * b + 11979 * a ^ 5 * b ^ 2
-          + 23760 * a ^ 4 * b ^ 3 + 29115 * a ^ 3 * b ^ 4 + 22248 * a ^ 2 * b ^ 5
-          + 9949 * a * b ^ 6 + 2048 * b ^ 7) / (2048 * b ^ 14) := by
-    rw [hτ]
-    field_simp
-    ring
-  have : 0 ≤ (a - b) ^ 8 * (429 * a ^ 7 + 3432 * a ^ 6 * b + 11979 * a ^ 5 * b ^ 2
-      + 23760 * a ^ 4 * b ^ 3 + 29115 * a ^ 3 * b ^ 4 + 22248 * a ^ 2 * b ^ 5
-      + 9949 * a * b ^ 6 + 2048 * b ^ 7) / (2048 * b ^ 14) := by
-    positivity
-  linarith
 
 end Base
 
@@ -4597,29 +4057,9 @@ theorem pent_critical (i : Fin 7) :
   · exact pent_critical_5
   · exact pent_critical_6
 
-/-- Force balance in the tangent form: `∑_j φ'(t_ij) (P_j - t_ij P_i) = 0`. -/
-theorem pent_force_balance (i : Fin 7) :
-    ∑ j, W i j • (pentBipyramid j - inner ℝ (pentBipyramid i) (pentBipyramid j) • pentBipyramid i)
-      = 0 := by
-  have h : ∑ j, W i j • (pentBipyramid j - inner ℝ (pentBipyramid i) (pentBipyramid j) •
-      pentBipyramid i) = ∑ j, W i j • pentBipyramid j - muP i • pentBipyramid i := by
-    simp only [smul_sub, Finset.sum_sub_distrib, smul_smul, muP, Finset.sum_smul]
-  rw [h, pent_critical i, sub_self]
 
 
 
-/-- `φ(t) = (2 - 2t)^(-1/2)` has derivative `φ(t)³` at every `t < 1`. -/
-lemma hasDerivAt_phi {t : ℝ} (ht : t < 1) : HasDerivAt phi (phi t ^ 3) t := by
-  have h2 : 0 < 2 - 2 * t := by linarith
-  have hs : 0 < √(2 - 2 * t) := Real.sqrt_pos.2 h2
-  have hne : √(2 - 2 * t) ≠ 0 := hs.ne'
-  have h1 : HasDerivAt (fun y : ℝ => 2 - 2 * y) (-2) t := by
-    simpa using ((hasDerivAt_id t).const_mul 2).const_sub 2
-  have h4 := (h1.sqrt h2.ne').inv hne
-  have h5 : -(-2 / (2 * √(2 - 2 * t))) / √(2 - 2 * t) ^ 2 = phi t ^ 3 := by
-    unfold phi
-    field_simp
-  exact h4.congr_deriv h5
 
 lemma W_symm (i j : Fin 7) : W i j = W j i := by
   by_cases h : i = j
@@ -4640,60 +4080,7 @@ lemma sum_Ioi_add_swap {n : ℕ} (F : Fin n → Fin n → ℝ) (hd : ∀ i, F i 
   simp only [h3, h4] at h2
   linarith
 
-/-- Tangent form of criticality: the first variation of `∑_{i<j} φ⟪x_i, x_j⟫` at the bipyramid
-vanishes along every `v` with `⟪v_i, P_i⟫ = 0`. -/
-lemma pent_dE_zero (v : Fin 7 → R3) (hv : ∀ i, inner ℝ (v i) (pentBipyramid i) = 0) :
-    ∑ i, ∑ j ∈ Finset.Ioi i,
-      W i j * (inner ℝ (pentBipyramid i) (v j) + inner ℝ (v i) (pentBipyramid j)) = 0 := by
-  have hG : ∀ i j, W i j * (inner ℝ (pentBipyramid i) (v j) + inner ℝ (v i) (pentBipyramid j))
-      = W i j * inner ℝ (v i) (pentBipyramid j) + W j i * inner ℝ (v j) (pentBipyramid i) := by
-    intro i j
-    rw [W_symm j i, real_inner_comm (v j) (pentBipyramid i)]
-    ring
-  simp only [hG]
-  rw [sum_Ioi_add_swap (fun i j => W i j * inner ℝ (v i) (pentBipyramid j))
-    (fun i => by simp [W_diag])]
-  refine Finset.sum_eq_zero fun i _ => ?_
-  calc ∑ j, W i j * inner ℝ (v i) (pentBipyramid j)
-      = inner ℝ (v i) (∑ j, W i j • pentBipyramid j) := by
-        simp only [inner_sum, real_inner_smul_right]
-    _ = 0 := by rw [pent_critical i, real_inner_smul_right, hv i, mul_zero]
 
-/-- **The bipyramid is a critical point of the Coulomb energy on the constraint set**:
-along any curve of unit 7-tuples through `pentBipyramid` that is differentiable at `0`,
-the energy has derivative `0`. -/
-theorem pent_hasDerivAt_energy (γ : ℝ → Fin 7 → R3) (v : Fin 7 → R3)
-    (h0 : γ 0 = pentBipyramid) (hn : ∀ᶠ s in nhds (0 : ℝ), ∀ i, ‖γ s i‖ = 1)
-    (hd : ∀ i, HasDerivAt (fun s => γ s i) (v i) 0) :
-    HasDerivAt (fun s => coulombEnergy (γ s)) 0 0 := by
-  -- the velocities are tangent to the spheres
-  have htan : ∀ i, inner ℝ (v i) (pentBipyramid i) = 0 := by
-    intro i
-    have h1 := (hd i).inner ℝ (hd i)
-    have h2 : HasDerivAt (fun s => inner ℝ (γ s i) (γ s i)) 0 0 :=
-      (hasDerivAt_const (0 : ℝ) (1 : ℝ)).congr_of_eventuallyEq
-        (hn.mono fun s hs => by simp [hs i])
-    have h3 := h1.unique h2
-    rw [h0, real_inner_comm (v i) (pentBipyramid i)] at h3
-    linarith
-  -- derivative of each pair term
-  have hpair : ∀ i j, i ≠ j → HasDerivAt (fun s => phi (inner ℝ (γ s i) (γ s j)))
-      (W i j * (inner ℝ (pentBipyramid i) (v j) + inner ℝ (v i) (pentBipyramid j))) 0 := by
-    intro i j hij
-    have hlt : inner ℝ (γ 0 i) (γ 0 j) < 1 := by
-      rw [h0]
-      exact inner_lt_one_of_ne (pent_norm i) (pent_norm j) (pentBipyramid_injective.ne hij)
-    have h1 := (hd i).inner ℝ (hd j)
-    have h2 := (hasDerivAt_phi hlt).comp (0 : ℝ) h1
-    rw [h0, ← W_ne hij] at h2
-    exact h2
-  have hE : (fun s => ∑ i, ∑ j ∈ Finset.Ioi i, phi (inner ℝ (γ s i) (γ s j)))
-      =ᶠ[nhds (0 : ℝ)] fun s => coulombEnergy (γ s) :=
-    hn.mono fun s hs => (coulombEnergy_eq_sum_phi hs).symm
-  refine HasDerivAt.congr_of_eventuallyEq ?_ hE.symm
-  refine HasDerivAt.congr_deriv (HasDerivAt.fun_sum fun i _ =>
-    HasDerivAt.fun_sum fun j hj => hpair i j (Finset.mem_Ioi.1 hj).ne) ?_
-  exact pent_dE_zero v htan
 
 
 end Reg
@@ -4886,61 +4273,13 @@ namespace RegB
 
 open Base Finset
 
-/-- Bregman remainder of `phi` at `t0`: `phi (t0 + τ) - phi t0 - phi'(t0) τ`, where
-`phi'(t) = (phi t)^3`. -/
-noncomputable def breg (t0 τ : ℝ) : ℝ := phi (t0 + τ) - phi t0 - phi t0 ^ 3 * τ
 
 /-- The reference Gram value `⟪P i, P j⟫` of the pentagonal bipyramid. -/
 noncomputable def t0 (i j : Fin 7) : ℝ := inner ℝ (pentBipyramid i) (pentBipyramid j)
 
-lemma sum_pairs_seven (f : Fin 7 → Fin 7 → ℝ) :
-    ∑ i, ∑ j ∈ Finset.Ioi i, f i j =
-      f 0 1 + f 0 2 + f 0 3 + f 0 4 + f 0 5 + f 0 6
-      + f 1 2 + f 1 3 + f 1 4 + f 1 5 + f 1 6
-      + f 2 3 + f 2 4 + f 2 5 + f 2 6
-      + f 3 4 + f 3 5 + f 3 6
-      + f 4 5 + f 4 6 + f 5 6 := by
-  have hI : ∀ i : Fin 7, ∑ j ∈ Finset.Ioi i, f i j = ∑ j, if i < j then f i j else 0 := by
-    intro i
-    rw [← Finset.sum_filter]
-    congr 1
-    ext j; simp
-  simp only [hI, Fin.sum_univ_seven]
-  simp
-  ring
 
-lemma t0_ring_lt (i j : Fin 7) (hi : (i : ℕ) < 5) (hj : (j : ℕ) < 5) (d : ℕ)
-    (hd : (i : ℕ) + d = j) : t0 i j = cos (2 * π * (d : ℝ) / 5) := by
-  unfold t0
-  rw [pent_of_lt hi, pent_of_lt hj, inner_cyl, mul_one, one_mul, mul_zero, add_zero, ← cos_neg]
-  congr 1
-  have : ((j : ℕ) : ℝ) = (i : ℕ) + d := by rw [← hd]; push_cast; ring
-  rw [this]; ring
 
-lemma t0_north {i : Fin 7} (hi : (i : ℕ) < 5) : t0 i 5 = 0 := pent_inner_north hi
-lemma t0_south {i : Fin 7} (hi : (i : ℕ) < 5) : t0 i 6 = 0 := pent_inner_south hi
-lemma t0_poles : t0 5 6 = -1 := pent_inner_poles
 
-lemma t0_01 : t0 0 1 = c1 := by
-  rw [t0_ring_lt 0 1 (by decide) (by decide) 1 (by decide), ← cos_2pi5]; congr 1; push_cast; ring
-lemma t0_02 : t0 0 2 = c2 := by
-  rw [t0_ring_lt 0 2 (by decide) (by decide) 2 (by decide), ← cos_4pi5]; congr 1; push_cast; ring
-lemma t0_03 : t0 0 3 = c2 := by
-  rw [t0_ring_lt 0 3 (by decide) (by decide) 3 (by decide), ← cos_6pi5]; congr 1; push_cast; ring
-lemma t0_04 : t0 0 4 = c1 := by
-  rw [t0_ring_lt 0 4 (by decide) (by decide) 4 (by decide), ← cos_8pi5]; congr 1; push_cast; ring
-lemma t0_12 : t0 1 2 = c1 := by
-  rw [t0_ring_lt 1 2 (by decide) (by decide) 1 (by decide), ← cos_2pi5]; congr 1; push_cast; ring
-lemma t0_13 : t0 1 3 = c2 := by
-  rw [t0_ring_lt 1 3 (by decide) (by decide) 2 (by decide), ← cos_4pi5]; congr 1; push_cast; ring
-lemma t0_14 : t0 1 4 = c2 := by
-  rw [t0_ring_lt 1 4 (by decide) (by decide) 3 (by decide), ← cos_6pi5]; congr 1; push_cast; ring
-lemma t0_23 : t0 2 3 = c1 := by
-  rw [t0_ring_lt 2 3 (by decide) (by decide) 1 (by decide), ← cos_2pi5]; congr 1; push_cast; ring
-lemma t0_24 : t0 2 4 = c2 := by
-  rw [t0_ring_lt 2 4 (by decide) (by decide) 2 (by decide), ← cos_4pi5]; congr 1; push_cast; ring
-lemma t0_34 : t0 3 4 = c1 := by
-  rw [t0_ring_lt 3 4 (by decide) (by decide) 1 (by decide), ← cos_2pi5]; congr 1; push_cast; ring
 
 
 
@@ -4948,244 +4287,38 @@ section vectors
 
 variable (y : Fin 7 → R3)
 
-/-- The sum of the two pole vectors `y 5 + y 6`. -/
-noncomputable def poleSum : R3 := y 5 + y 6
 
-/-- The sum of the five ring vectors `y 0 + ⋯ + y 4`. -/
-noncomputable def ringSum : R3 := y 0 + y 1 + y 2 + y 3 + y 4
 
-/-- Real part of the second Fourier mode of the ring: `∑ₖ cos (4πk/5) • y k`. -/
-noncomputable def phiCos : R3 :=
-  y 0 + cos (4 * π / 5) • y 1 + cos (8 * π / 5) • y 2 + cos (12 * π / 5) • y 3
-    + cos (16 * π / 5) • y 4
 
-/-- Imaginary part of the second Fourier mode of the ring: `∑ₖ sin (4πk/5) • y k`. -/
-noncomputable def phiSin : R3 :=
-  sin (4 * π / 5) • y 1 + sin (8 * π / 5) • y 2 + sin (12 * π / 5) • y 3
-    + sin (16 * π / 5) • y 4
 
-/-- Sum of the Gram entries of ring-adjacent pairs. -/
-noncomputable def ringA1 : ℝ :=
-  inner ℝ (y 0) (y 1) + inner ℝ (y 1) (y 2) + inner ℝ (y 2) (y 3) + inner ℝ (y 3) (y 4)
-    + inner ℝ (y 0) (y 4)
 
-/-- Sum of the Gram entries of ring next-to-adjacent pairs. -/
-noncomputable def ringA2 : ℝ :=
-  inner ℝ (y 0) (y 2) + inner ℝ (y 1) (y 3) + inner ℝ (y 2) (y 4) + inner ℝ (y 0) (y 3)
-    + inner ℝ (y 1) (y 4)
 
 end vectors
 
-lemma cos_12pi5 : cos (12 * π / 5) = c1 := by
-  rw [← cos_2pi5, ← cos_add_two_pi (2 * π / 5)]; congr 1; ring
-
-lemma cos_16pi5 : cos (16 * π / 5) = c2 := by
-  rw [← cos_6pi5, ← cos_add_two_pi (6 * π / 5)]; congr 1; ring
-
-lemma cc_ss_eq {a b d v : ℝ} (h : b - a = d) (hv : cos d = v) :
-    cos a * cos b + sin a * sin b = v := by
-  rw [← hv, ← h, cos_sub]; ring
-
-lemma norm_poleSum_sq {y : Fin 7 → R3} (hy : ∀ i, ‖y i‖ = 1) :
-    ‖poleSum y‖ ^ 2 = 2 + 2 * inner ℝ (y 5) (y 6) := by
-  rw [← real_inner_self_eq_norm_sq]
-  simp only [poleSum, inner_add_left, inner_add_right, real_inner_self_eq_norm_sq, hy,
-    real_inner_comm (y 5) (y 6)]
-  ring
-
-lemma inner_poleSum_ringSum (y : Fin 7 → R3) :
-    inner ℝ (poleSum y) (ringSum y) =
-      inner ℝ (y 0) (y 5) + inner ℝ (y 1) (y 5) + inner ℝ (y 2) (y 5) + inner ℝ (y 3) (y 5)
-      + inner ℝ (y 4) (y 5) + inner ℝ (y 0) (y 6) + inner ℝ (y 1) (y 6) + inner ℝ (y 2) (y 6)
-      + inner ℝ (y 3) (y 6) + inner ℝ (y 4) (y 6) := by
-  simp only [poleSum, ringSum, inner_add_left, inner_add_right,
-    real_inner_comm (y 0) (y 5), real_inner_comm (y 1) (y 5), real_inner_comm (y 2) (y 5),
-    real_inner_comm (y 3) (y 5), real_inner_comm (y 4) (y 5), real_inner_comm (y 0) (y 6),
-    real_inner_comm (y 1) (y 6), real_inner_comm (y 2) (y 6), real_inner_comm (y 3) (y 6),
-    real_inner_comm (y 4) (y 6)]
-  ring
-
-lemma norm_ringSum_sq {y : Fin 7 → R3} (hy : ∀ i, ‖y i‖ = 1) :
-    ‖ringSum y‖ ^ 2 = 5 + 2 * (ringA1 y + ringA2 y) := by
-  rw [← real_inner_self_eq_norm_sq]
-  simp only [ringSum, ringA1, ringA2, inner_add_left, inner_add_right,
-    real_inner_self_eq_norm_sq, hy,
-    real_inner_comm (y 0) (y 1), real_inner_comm (y 0) (y 2), real_inner_comm (y 0) (y 3),
-    real_inner_comm (y 0) (y 4), real_inner_comm (y 1) (y 2), real_inner_comm (y 1) (y 3),
-    real_inner_comm (y 1) (y 4), real_inner_comm (y 2) (y 3), real_inner_comm (y 2) (y 4),
-    real_inner_comm (y 3) (y 4)]
-  ring
-
-lemma norm_phi_sq {y : Fin 7 → R3} (hy : ∀ i, ‖y i‖ = 1) :
-    ‖phiCos y‖ ^ 2 + ‖phiSin y‖ ^ 2 = 5 + 2 * c2 * ringA1 y + 2 * c1 * ringA2 y := by
-  have d1 : cos (4 * π / 5) ^ 2 + sin (4 * π / 5) ^ 2 = 1 := by
-    rw [add_comm]; exact sin_sq_add_cos_sq _
-  have d2 : cos (8 * π / 5) ^ 2 + sin (8 * π / 5) ^ 2 = 1 := by
-    rw [add_comm]; exact sin_sq_add_cos_sq _
-  have d3 : cos (12 * π / 5) ^ 2 + sin (12 * π / 5) ^ 2 = 1 := by
-    rw [add_comm]; exact sin_sq_add_cos_sq _
-  have d4 : cos (16 * π / 5) ^ 2 + sin (16 * π / 5) ^ 2 = 1 := by
-    rw [add_comm]; exact sin_sq_add_cos_sq _
-  have p01 : cos (4 * π / 5) = c2 := cos_4pi5
-  have p02 : cos (8 * π / 5) = c1 := cos_8pi5
-  have p03 : cos (12 * π / 5) = c1 := cos_12pi5
-  have p04 : cos (16 * π / 5) = c2 := cos_16pi5
-  have p12 : cos (4 * π / 5) * cos (8 * π / 5) + sin (4 * π / 5) * sin (8 * π / 5) = c2 :=
-    cc_ss_eq (by ring) cos_4pi5
-  have p13 : cos (4 * π / 5) * cos (12 * π / 5) + sin (4 * π / 5) * sin (12 * π / 5) = c1 :=
-    cc_ss_eq (by ring) cos_8pi5
-  have p14 : cos (4 * π / 5) * cos (16 * π / 5) + sin (4 * π / 5) * sin (16 * π / 5) = c1 :=
-    cc_ss_eq (by ring) cos_12pi5
-  have p23 : cos (8 * π / 5) * cos (12 * π / 5) + sin (8 * π / 5) * sin (12 * π / 5) = c2 :=
-    cc_ss_eq (by ring) cos_4pi5
-  have p24 : cos (8 * π / 5) * cos (16 * π / 5) + sin (8 * π / 5) * sin (16 * π / 5) = c1 :=
-    cc_ss_eq (by ring) cos_8pi5
-  have p34 : cos (12 * π / 5) * cos (16 * π / 5) + sin (12 * π / 5) * sin (16 * π / 5) = c2 :=
-    cc_ss_eq (by ring) cos_4pi5
-  rw [← real_inner_self_eq_norm_sq, ← real_inner_self_eq_norm_sq]
-  simp only [phiCos, phiSin, ringA1, ringA2, inner_add_left, inner_add_right,
-    real_inner_smul_left, real_inner_smul_right,
-    real_inner_comm (y 0) (y 1), real_inner_comm (y 0) (y 2), real_inner_comm (y 0) (y 3),
-    real_inner_comm (y 0) (y 4), real_inner_comm (y 1) (y 2), real_inner_comm (y 1) (y 3),
-    real_inner_comm (y 1) (y 4), real_inner_comm (y 2) (y 3), real_inner_comm (y 2) (y 4),
-    real_inner_comm (y 3) (y 4)]
-  simp only [real_inner_self_eq_norm_sq, hy]
-  linear_combination d1 + d2 + d3 + d4
-    + 2 * inner ℝ (y 0) (y 1) * p01 + 2 * inner ℝ (y 0) (y 2) * p02
-    + 2 * inner ℝ (y 0) (y 3) * p03 + 2 * inner ℝ (y 0) (y 4) * p04
-    + 2 * inner ℝ (y 1) (y 2) * p12 + 2 * inner ℝ (y 1) (y 3) * p13
-    + 2 * inner ℝ (y 1) (y 4) * p14 + 2 * inner ℝ (y 2) (y 3) * p23
-    + 2 * inner ℝ (y 2) (y 4) * p24 + 2 * inner ℝ (y 3) (y 4) * p34
 
 
-lemma phi_zero_pow : phi 0 ^ 3 = √2 / 4 := by
-  unfold phi
-  have h2 : (0 : ℝ) < √2 := by positivity
-  have h3 : √2 ^ 2 = 2 := Real.sq_sqrt (by norm_num)
-  rw [mul_zero, sub_zero]
-  field_simp
-  nlinarith [h3]
-
-lemma phi_neg_one_pow : phi (-1) ^ 3 = 1 / 8 := by
-  unfold phi
-  have : √(2 - 2 * (-1 : ℝ)) = 2 := by
-    rw [show (2 : ℝ) - 2 * (-1) = 2 ^ 2 by norm_num]
-    exact Real.sqrt_sq (by norm_num)
-  rw [this]; norm_num
-
-/-- The second-Fourier-mode coefficient. -/
-noncomputable def lam2 : ℝ := √5 * (phi c2 ^ 3 - phi c1 ^ 3)
-
-/-- The ring-sum coefficient. -/
-noncomputable def lam0 : ℝ := 5 * phi c1 ^ 3 - 2 * c2 * lam2
-
-/-- The quadratic part of the energy identity, written with the four vector sums that vanish at
-the pentagonal bipyramid. -/
-noncomputable def quadPart (y : Fin 7 → R3) : ℝ :=
-  ‖poleSum y‖ ^ 2 / 16 + √2 / 4 * inner ℝ (poleSum y) (ringSum y) + lam0 / 10 * ‖ringSum y‖ ^ 2
-    + lam2 / 5 * (‖phiCos y‖ ^ 2 + ‖phiSin y‖ ^ 2)
-
-lemma t0_05 : t0 0 5 = 0 := t0_north (by decide)
-lemma t0_15 : t0 1 5 = 0 := t0_north (by decide)
-lemma t0_25 : t0 2 5 = 0 := t0_north (by decide)
-lemma t0_35 : t0 3 5 = 0 := t0_north (by decide)
-lemma t0_45 : t0 4 5 = 0 := t0_north (by decide)
-lemma t0_06 : t0 0 6 = 0 := t0_south (by decide)
-lemma t0_16 : t0 1 6 = 0 := t0_south (by decide)
-lemma t0_26 : t0 2 6 = 0 := t0_south (by decide)
-lemma t0_36 : t0 3 6 = 0 := t0_south (by decide)
-lemma t0_46 : t0 4 6 = 0 := t0_south (by decide)
-
-/-- The first-order part of the energy at `P` equals the quadratic part. -/
-lemma linear_part {y : Fin 7 → R3} (hy : ∀ i, ‖y i‖ = 1) :
-    ∑ i, ∑ j ∈ Finset.Ioi i, phi (t0 i j) ^ 3 * (inner ℝ (y i) (y j) - t0 i j) = quadPart y := by
-  rw [sum_pairs_seven]
-  simp only [t0_01, t0_02, t0_03, t0_04, t0_12, t0_13, t0_14, t0_23, t0_24, t0_34,
-    t0_05, t0_15, t0_25, t0_35, t0_45, t0_06, t0_16, t0_26, t0_36, t0_46, t0_poles,
-    phi_zero_pow, phi_neg_one_pow]
-  unfold quadPart lam0 lam2
-  rw [norm_poleSum_sq hy, norm_ringSum_sq hy, norm_phi_sq hy, inner_poleSum_ringSum]
-  simp only [ringA1, ringA2, c1, c2]
-  have hs : √5 ^ 2 = 5 := Real.sq_sqrt (by norm_num)
-  linear_combination ((phi ((√5 - 1) / 4) ^ 3 - phi (-(1 + √5) / 4) ^ 3) *
-    (4 * inner ℝ (y 0) (y 2) + 4 * inner ℝ (y 0) (y 3) + 4 * inner ℝ (y 1) (y 3)
-      + 4 * inner ℝ (y 1) (y 4) + 4 * inner ℝ (y 2) (y 4) + 5) / 20) * hs
 
 
-lemma phi_sub_eq_linear_add_breg (t s : ℝ) :
-    phi s - phi t = phi t ^ 3 * (s - t) + breg t (s - t) := by
-  unfold breg
-  rw [show t + (s - t) = s by ring]
-  ring
-
-/-- **Exact energy identity** (for all unit 7-tuples, ring `0..4`, poles `5, 6`):
-`E(y) - E(P)` is the quadratic part in the four vector sums (which vanish at `P`) plus the sum of
-the Bregman remainders `breg (t0 i j) (⟪y i, y j⟫ - t0 i j) ≥ 0`. -/
-theorem energy_identity {y : Fin 7 → R3} (hy : ∀ i, ‖y i‖ = 1) :
-    coulombEnergy y - coulombEnergy pentBipyramid =
-      quadPart y +
-        ∑ i, ∑ j ∈ Finset.Ioi i, breg (t0 i j) (inner ℝ (y i) (y j) - t0 i j) := by
-  have h1 : coulombEnergy y - coulombEnergy pentBipyramid =
-      ∑ i : Fin 7, ∑ j ∈ Finset.Ioi i,
-        (phi (t0 i j) ^ 3 * (inner ℝ (y i) (y j) - t0 i j)
-          + breg (t0 i j) (inner ℝ (y i) (y j) - t0 i j)) := by
-    rw [coulombEnergy_eq_sum_phi hy, coulombEnergy_eq_sum_phi pent_norm, ← Finset.sum_sub_distrib]
-    refine Finset.sum_congr rfl fun i _ => ?_
-    rw [← Finset.sum_sub_distrib]
-    exact Finset.sum_congr rfl fun j _ => phi_sub_eq_linear_add_breg _ _
-  rw [h1]
-  simp only [Finset.sum_add_distrib]
-  rw [linear_part hy]
 
 
-lemma inv_bregman_nonneg {p q : ℝ} (hp : 0 < p) (hq : 0 < q) :
-    0 ≤ q⁻¹ - p⁻¹ - p⁻¹ ^ 3 * ((p ^ 2 - q ^ 2) / 2) := by
-  have key : q⁻¹ - p⁻¹ - p⁻¹ ^ 3 * ((p ^ 2 - q ^ 2) / 2) =
-      (p - q) ^ 2 * (2 * p + q) / (2 * p ^ 3 * q) := by
-    field_simp
-    ring
-  rw [key]
-  positivity
-
-/-- The Bregman remainder of the (convex) pair potential is nonnegative. -/
-lemma breg_nonneg {t τ : ℝ} (h0 : t < 1) (h1 : t + τ < 1) : 0 ≤ breg t τ := by
-  have hp : 0 < √(2 - 2 * t) := Real.sqrt_pos.2 (by linarith)
-  have hq : 0 < √(2 - 2 * (t + τ)) := Real.sqrt_pos.2 (by linarith)
-  have hτ : τ = ((√(2 - 2 * t)) ^ 2 - (√(2 - 2 * (t + τ))) ^ 2) / 2 := by
-    rw [Real.sq_sqrt (by linarith), Real.sq_sqrt (by linarith)]; ring
-  unfold breg phi
-  generalize √(2 - 2 * (t + τ)) = q at *
-  generalize √(2 - 2 * t) = p at *
-  rw [hτ]
-  exact inv_bregman_nonneg hp hq
 
 
-lemma t0_lt_one {i j : Fin 7} (hij : i ≠ j) : t0 i j < 1 :=
-  inner_lt_one_of_ne (pent_norm i) (pent_norm j) (pentBipyramid_injective.ne hij)
 
-/-- For admissible configurations the energy excess over `P` dominates the quadratic part. -/
-theorem quadPart_le_energy_sub {y : Fin 7 → R3} (hy : y ∈ SphereConfig 7) :
-    quadPart y ≤ coulombEnergy y - coulombEnergy pentBipyramid := by
-  rw [energy_identity hy.1]
-  have h : 0 ≤ ∑ i : Fin 7, ∑ j ∈ Finset.Ioi i,
-      breg (t0 i j) (inner ℝ (y i) (y j) - t0 i j) := by
-    refine Finset.sum_nonneg fun i _ => Finset.sum_nonneg fun j hj => ?_
-    have hij : i ≠ j := (Finset.mem_Ioi.1 hj).ne
-    refine breg_nonneg (t0_lt_one hij) ?_
-    rw [show t0 i j + (inner ℝ (y i) (y j) - t0 i j) = inner ℝ (y i) (y j) by ring]
-    exact inner_lt_one_of_ne (hy.1 i) (hy.1 j) (hy.2.ne hij)
-  linarith
 
-/-- The quadratic part vanishes at the pentagonal bipyramid. -/
-lemma quadPart_pent : quadPart pentBipyramid = 0 := by
-  have h := energy_identity (y := pentBipyramid) pent_norm
-  have h2 : ∑ i : Fin 7, ∑ j ∈ Finset.Ioi i,
-      breg (t0 i j) (inner ℝ (pentBipyramid i) (pentBipyramid j) - t0 i j) = 0 := by
-    refine Finset.sum_eq_zero fun i _ => Finset.sum_eq_zero fun j _ => ?_
-    unfold breg t0
-    simp
-  rw [h2, sub_self] at h
-  linarith
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 end RegB
 /- END RegB -/
@@ -5363,9 +4496,6 @@ lemma inner_cols (a b c d e f : ℝ) :
   rw [inner_coord]
   simp
 
-lemma norm_sq_cols (a b c : ℝ) : ‖(!₂[a, b, c] : R3)‖ ^ 2 = a ^ 2 + b ^ 2 + c ^ 2 := by
-  rw [norm_sq_coord]
-  simp
 
 lemma eq_of_inner_eq (v : Fin 3 → R3) (hv : LinearIndependent ℝ v) (w₁ w₂ : R3)
     (h : ∀ i, ⟪w₁, v i⟫_ℝ = ⟪w₂, v i⟫_ℝ) : w₁ = w₂ := by
@@ -5605,47 +4735,8 @@ theorem exists_iso_close {y : Fin 7 → R3} (hy : ∀ i, ‖y i‖ = 1) {w : ℝ
   refine (sq_le_sq₀ (norm_nonneg _) (by positivity)).1 ?_
   rw [hsq]; exact key
 
-/-- Relabelled version: Gram-closeness to `P ∘ σ` gives an isometry carrying `y i` near `P (σ i)`. -/
-theorem exists_iso_close_perm {y : Fin 7 → R3} (hy : ∀ i, ‖y i‖ = 1) {w : ℝ} (hw : w ≤ 1 / 10)
-    (σ : Equiv.Perm (Fin 7))
-    (hG : ∀ i j, |⟪y i, y j⟫_ℝ - ⟪pentBipyramid (σ i), pentBipyramid (σ j)⟫_ℝ| ≤ w) :
-    ∃ g : R3 ≃ₗᵢ[ℝ] R3, ∀ i, ‖g (y i) - pentBipyramid (σ i)‖ ≤ 11 / 2 * w := by
-  obtain ⟨g, hg⟩ := exists_iso_close (y := fun a => y (σ.symm a)) (fun a => hy _) hw
-    (fun a b => by simpa using hG (σ.symm a) (σ.symm b))
-  exact ⟨g, fun i => by simpa using hg (σ i)⟩
 
-/-- Chart reduction: a unit configuration whose Gram matrix is `w`-close (entrywise) to that of
-`P ∘ σ` is, after an orthogonal map and a relabelling (which preserve the energy), within
-`(11/2) w` of `P` in every vector. -/
-theorem exists_chart {x : Fin 7 → R3} (hx : x ∈ SphereConfig 7) {w : ℝ} (hw : w ≤ 1 / 10)
-    (σ : Equiv.Perm (Fin 7))
-    (hG : ∀ i j, |⟪x i, x j⟫_ℝ - ⟪pentBipyramid (σ i), pentBipyramid (σ j)⟫_ℝ| ≤ w) :
-    ∃ y : Fin 7 → R3, y ∈ SphereConfig 7 ∧ coulombEnergy y = coulombEnergy x ∧
-      ∀ i, ‖y i - pentBipyramid i‖ ≤ 11 / 2 * w := by
-  obtain ⟨g, hg⟩ := exists_iso_close_perm hx.1 hw σ hG
-  refine ⟨fun a => g (x (σ.symm a)), sphereConfig_comp g σ.symm hx, ?_, fun a => ?_⟩
-  · rw [coulombEnergy_comp_isometry g (fun a => x (σ.symm a)), coulombEnergy_comp_perm σ.symm x]
-  · simpa using hg (σ.symm a)
 
-/-- Converse: vector-closeness to `P` gives entrywise Gram-closeness (constant `2`). -/
-lemma gram_close_of_vec_close {y : Fin 7 → R3} (hy : ∀ i, ‖y i‖ = 1) {d : ℝ}
-    (h : ∀ i, ‖y i - pentBipyramid i‖ ≤ d) (i j : Fin 7) :
-    |⟪y i, y j⟫_ℝ - ⟪pentBipyramid i, pentBipyramid j⟫_ℝ| ≤ 2 * d := by
-  have e : ⟪y i, y j⟫_ℝ - ⟪pentBipyramid i, pentBipyramid j⟫_ℝ
-      = ⟪y i - pentBipyramid i, y j⟫_ℝ + ⟪pentBipyramid i, y j - pentBipyramid j⟫_ℝ := by
-    rw [inner_sub_left, inner_sub_right]; ring
-  rw [e]
-  calc |⟪y i - pentBipyramid i, y j⟫_ℝ + ⟪pentBipyramid i, y j - pentBipyramid j⟫_ℝ|
-      ≤ |⟪y i - pentBipyramid i, y j⟫_ℝ| + |⟪pentBipyramid i, y j - pentBipyramid j⟫_ℝ| :=
-        abs_add_le _ _
-    _ ≤ ‖y i - pentBipyramid i‖ * ‖y j‖ + ‖pentBipyramid i‖ * ‖y j - pentBipyramid j‖ :=
-        add_le_add (abs_real_inner_le_norm _ _) (abs_real_inner_le_norm _ _)
-    _ ≤ d * 1 + 1 * d := by
-        rw [hy j, pent_norm i]
-        gcongr
-        · exact h i
-        · exact h j
-    _ = 2 * d := by ring
 
 end GV
 
@@ -5658,47 +4749,9 @@ namespace TwoRegime
 
 open scoped InnerProductSpace
 
-/-- Total coercive weight of a 7-point configuration for a pair weight `W`. -/
-noncomputable def sumW (W : ℝ → ℝ) (y : Fin 7 → R3) : ℝ :=
-  ∑ i, ∑ j ∈ Finset.Ioi i, W ⟪y i, y j⟫_ℝ
 
-/-- **Regime A** (global, coercive, non-sharp): `E(y) ≥ E(P) - g + c * sumW W y` for all
-configurations. -/
-def RegimeA (W : ℝ → ℝ) (g c : ℝ) : Prop :=
-  ∀ y ∈ SphereConfig 7,
-    coulombEnergy pentBipyramid - g + c * sumW W y ≤ coulombEnergy y
 
-/-- **Regime B** (local, sharp): inside the tube `sumW W y ≤ ρ`, the pentagonal bipyramid
-minimises the energy, with equality only on its orbit. -/
-def RegimeB (W : ℝ → ℝ) (ρ : ℝ) : Prop :=
-  ∀ y ∈ SphereConfig 7, sumW W y ≤ ρ →
-    coulombEnergy pentBipyramid ≤ coulombEnergy y ∧
-    (coulombEnergy y = coulombEnergy pentBipyramid →
-      ∃ (g : R3 ≃ₗᵢ[ℝ] R3) (σ : Equiv.Perm (Fin 7)), ∀ i, y i = g (pentBipyramid (σ i)))
 
-/-- The two-regime skeleton: a coercive certificate (A) plus the local statement (B) on the tube
-`sumW W y ≤ g / c` give both `thomson_seven` and `thomson_seven_unique`. -/
-theorem seven_of_AB {W : ℝ → ℝ} {g c : ℝ} (hc : 0 < c) (hA : RegimeA W g c)
-    (hB : RegimeB W (g / c)) :
-    (∀ x ∈ SphereConfig 7, coulombEnergy pentBipyramid ≤ coulombEnergy x) ∧
-    (∀ x ∈ SphereConfig 7, coulombEnergy x = coulombEnergy pentBipyramid →
-      ∃ (g : R3 ≃ₗᵢ[ℝ] R3) (σ : Equiv.Perm (Fin 7)), ∀ i, x i = g (pentBipyramid (σ i))) := by
-  constructor
-  · intro x hx
-    by_cases h : sumW W x ≤ g / c
-    · exact (hB x hx h).1
-    · have h' : g < c * sumW W x := by
-        rw [not_le, div_lt_iff₀ hc] at h
-        linarith
-      linarith [hA x hx]
-  · intro x hx hE
-    have h : sumW W x ≤ g / c := by
-      by_contra h
-      have h' : g < c * sumW W x := by
-        rw [not_le, div_lt_iff₀ hc] at h
-        linarith
-      linarith [hA x hx]
-    exact (hB x hx h).2 hE
 
 end TwoRegime
 
@@ -5708,16 +4761,6 @@ namespace TwoRegime
 open scoped InnerProductSpace
 open Base
 
-/-- Chart reduction with the explicit relation to the original configuration: if the Gram matrix
-of `x` is entrywise `w`-close to that of `P ∘ σ`, then for some orthogonal map `g` and relabelling
-`τ`, the configuration `a ↦ g (x (τ a))` is within `(11/2) w` of `P` in every vector. -/
-theorem exists_chart_explicit {x : Fin 7 → R3} (hx : x ∈ SphereConfig 7) {w : ℝ}
-    (hw : w ≤ 1 / 10) (σ : Equiv.Perm (Fin 7))
-    (hG : ∀ i j, |⟪x i, x j⟫_ℝ - ⟪pentBipyramid (σ i), pentBipyramid (σ j)⟫_ℝ| ≤ w) :
-    ∃ (g : R3 ≃ₗᵢ[ℝ] R3) (τ : Equiv.Perm (Fin 7)),
-      ∀ a, ‖g (x (τ a)) - pentBipyramid a‖ ≤ 11 / 2 * w := by
-  obtain ⟨g, hg⟩ := GV.exists_iso_close_perm hx.1 hw σ hG
-  exact ⟨g, σ.symm, fun a => by simpa using hg (σ.symm a)⟩
 
 /-- **Local statement** (radius `d`, sup-norm): every unit configuration within `d` of the
 labelled `P` has energy at least `E(P)`, with equality only on the `O(3)`-orbit of `P`. -/
@@ -5727,59 +4770,9 @@ def LocalMinAt (d : ℝ) : Prop :=
     (coulombEnergy z = coulombEnergy pentBipyramid →
       ∃ g : R3 ≃ₗᵢ[ℝ] R3, ∀ i, z i = g (pentBipyramid i))
 
-/-- **Rigidity of the tube** (Gram window `w`): a unit configuration with `sumW W y ≤ ρ` has a
-Gram matrix entrywise `w`-close to that of `P ∘ σ` for some relabelling `σ`. -/
-def GramRigid (W : ℝ → ℝ) (ρ w : ℝ) : Prop :=
-  ∀ y ∈ SphereConfig 7, sumW W y ≤ ρ →
-    ∃ σ : Equiv.Perm (Fin 7), ∀ i j,
-      |⟪y i, y j⟫_ℝ - ⟪pentBipyramid (σ i), pentBipyramid (σ j)⟫_ℝ| ≤ w
 
-/-- The local statement in terms of the Euclidean size `∑ ‖z i - P i‖²` of the displacement
-implies the sup-norm one (with radius `d`, `7 d² ≤ r²`). -/
-theorem localMinAt_of_sq {r d : ℝ} (hd : 7 * d ^ 2 ≤ r ^ 2)
-    (hL : ∀ z ∈ SphereConfig 7, ∑ i, ‖z i - pentBipyramid i‖ ^ 2 ≤ r ^ 2 →
-      coulombEnergy pentBipyramid ≤ coulombEnergy z ∧
-      (coulombEnergy z = coulombEnergy pentBipyramid →
-        ∃ g : R3 ≃ₗᵢ[ℝ] R3, ∀ i, z i = g (pentBipyramid i))) :
-    LocalMinAt d := by
-  intro z hz hzd
-  apply hL z hz
-  have h : ∀ i ∈ (Finset.univ : Finset (Fin 7)), ‖z i - pentBipyramid i‖ ^ 2 ≤ d ^ 2 := by
-    intro i _
-    have h0 : 0 ≤ ‖z i - pentBipyramid i‖ := norm_nonneg _
-    nlinarith [hzd i]
-  calc ∑ i, ‖z i - pentBipyramid i‖ ^ 2 ≤ ∑ _i : Fin 7, d ^ 2 := Finset.sum_le_sum h
-    _ = 7 * d ^ 2 := by simp
-    _ ≤ r ^ 2 := hd
 
-/-- Rigidity of the tube plus the local statement gives Regime B. -/
-theorem regimeB_of_rigid_local {W : ℝ → ℝ} {ρ w : ℝ} (hw : w ≤ 1 / 10)
-    (hR : GramRigid W ρ w) (hL : LocalMinAt (11 / 2 * w)) : RegimeB W ρ := by
-  intro y hy hS
-  obtain ⟨σ, hσ⟩ := hR y hy hS
-  obtain ⟨g, τ, hgτ⟩ := exists_chart_explicit hy hw σ hσ
-  have hz : (fun a => g (y (τ a))) ∈ SphereConfig 7 := sphereConfig_comp g τ hy
-  have hE : coulombEnergy (fun a => g (y (τ a))) = coulombEnergy y := by
-    rw [coulombEnergy_comp_isometry g (fun a => y (τ a)), coulombEnergy_comp_perm τ y]
-  obtain ⟨h1, h2⟩ := hL _ hz hgτ
-  refine ⟨hE ▸ h1, fun hEq => ?_⟩
-  obtain ⟨g', hg'⟩ := h2 (hE.trans hEq)
-  refine ⟨g'.trans g.symm, τ.symm, fun j => ?_⟩
-  have := hg' (τ.symm j)
-  simp only [Equiv.apply_symm_apply] at this
-  simp only [LinearIsometryEquiv.trans_apply]
-  rw [← this]
-  simp
 
-/-- **Two-regime theorem**: a coercive certificate (A), rigidity of its tube (Gram window `w`
-around the labelled `P`), and local minimality at radius `(11/2) w` give both `thomson_seven` and
-`thomson_seven_unique`. -/
-theorem seven_of_A_rigid_local {W : ℝ → ℝ} {g c w : ℝ} (hc : 0 < c) (hw : w ≤ 1 / 10)
-    (hA : RegimeA W g c) (hR : GramRigid W (g / c) w) (hL : LocalMinAt (11 / 2 * w)) :
-    (∀ x ∈ SphereConfig 7, coulombEnergy pentBipyramid ≤ coulombEnergy x) ∧
-    (∀ x ∈ SphereConfig 7, coulombEnergy x = coulombEnergy pentBipyramid →
-      ∃ (g : R3 ≃ₗᵢ[ℝ] R3) (σ : Equiv.Perm (Fin 7)), ∀ i, x i = g (pentBipyramid (σ i))) :=
-  seven_of_AB hc hA (regimeB_of_rigid_local hw hR hL)
 
 end TwoRegime
 
@@ -5800,14 +4793,6 @@ def LocalGram (ω : ℝ → ℝ) : Prop :=
     (coulombEnergy y = coulombEnergy pentBipyramid →
       ∃ g : R3 ≃ₗᵢ[ℝ] R3, ∀ i, y i = g (pentBipyramid i))
 
-/-- **Rigidity of the tube, windows depending on the nominal value.** A unit configuration with
-`sumW W y ≤ ρ` has, for some relabelling `σ`, off-diagonal Gram entries within `ω (⟪P σi, P σj⟫)`
-of those of `P ∘ σ`. -/
-def GramRigidW (W : ℝ → ℝ) (ρ : ℝ) (ω : ℝ → ℝ) : Prop :=
-  ∀ y ∈ SphereConfig 7, sumW W y ≤ ρ →
-    ∃ σ : Equiv.Perm (Fin 7), ∀ i j, i ≠ j →
-      |⟪y i, y j⟫_ℝ - ⟪pentBipyramid (σ i), pentBipyramid (σ j)⟫_ℝ|
-        ≤ ω ⟪pentBipyramid (σ i), pentBipyramid (σ j)⟫_ℝ
 
 /-- A uniform Gram window `w ≤ 1/10` around the labelled `P` is controlled by the sup-norm
 statement at radius `(11/2) w` (chart step `GV.exists_iso_close`). -/
@@ -5838,43 +4823,8 @@ theorem localGram_of_localMinAt {w : ℝ} (hw : w ≤ 1 / 10) (hL : LocalMinAt (
   rw [← this]
   simp
 
-/-- A uniform window is a special case of a window depending on the nominal value. -/
-theorem gramRigidW_of_gramRigid {W : ℝ → ℝ} {ρ w : ℝ} (hR : GramRigid W ρ w) :
-    GramRigidW W ρ (fun _ => w) := by
-  intro y hy hS
-  obtain ⟨σ, hσ⟩ := hR y hy hS
-  exact ⟨σ, fun i j _ => hσ i j⟩
 
-/-- **Regime B from rigidity and the Gram-window local statement.** No chart constant appears in
-the interface: the local statement is proved in whatever chart its author prefers. -/
-theorem regimeB_of_rigidW_localGram {W : ℝ → ℝ} {ρ : ℝ} {ω : ℝ → ℝ}
-    (hR : GramRigidW W ρ ω) (hL : LocalGram ω) : RegimeB W ρ := by
-  intro y hy hS
-  obtain ⟨σ, hσ⟩ := hR y hy hS
-  have hz : (fun a => (LinearIsometryEquiv.refl ℝ R3) (y (σ.symm a))) ∈ SphereConfig 7 :=
-    sphereConfig_comp (LinearIsometryEquiv.refl ℝ R3) σ.symm hy
-  have hE : coulombEnergy (fun a => (LinearIsometryEquiv.refl ℝ R3) (y (σ.symm a)))
-      = coulombEnergy y := by
-    rw [coulombEnergy_comp_isometry (LinearIsometryEquiv.refl ℝ R3) (fun a => y (σ.symm a)),
-      coulombEnergy_comp_perm σ.symm y]
-  obtain ⟨h1, h2⟩ := hL _ hz (fun i j hij => by
-    have := hσ (σ.symm i) (σ.symm j) (fun h => hij (σ.symm.injective h))
-    simpa using this)
-  refine ⟨hE ▸ h1, fun hEq => ?_⟩
-  obtain ⟨g', hg'⟩ := h2 (hE.trans hEq)
-  refine ⟨g', σ, fun j => ?_⟩
-  have := hg' (σ j)
-  simpa using this
 
-/-- **Two-regime theorem, Gram-window form**: a coercive certificate (A), rigidity of its tube
-with windows `ω`, and the Gram-window local statement give `thomson_seven` and
-`thomson_seven_unique`. -/
-theorem seven_of_A_rigidW_localGram {W : ℝ → ℝ} {g c : ℝ} {ω : ℝ → ℝ} (hc : 0 < c)
-    (hA : RegimeA W g c) (hR : GramRigidW W (g / c) ω) (hL : LocalGram ω) :
-    (∀ x ∈ SphereConfig 7, coulombEnergy pentBipyramid ≤ coulombEnergy x) ∧
-    (∀ x ∈ SphereConfig 7, coulombEnergy x = coulombEnergy pentBipyramid →
-      ∃ (g : R3 ≃ₗᵢ[ℝ] R3) (σ : Equiv.Perm (Fin 7)), ∀ i, x i = g (pentBipyramid (σ i))) :=
-  seven_of_AB hc hA (regimeB_of_rigidW_localGram hR hL)
 
 end TwoRegime
 
@@ -5886,41 +4836,7 @@ namespace TwoRegime
 open scoped InnerProductSpace
 open Base
 
-/-- **Regime A from a pairwise minorant and a global sum bound.** If `H + c W ≤ φ` on `[-1, 1)`
-and `e ≤ ∑_{i<j} H ⟪y_i, y_j⟫` for all unit 7-tuples, then `RegimeA W (E(P) - e) c`. -/
-theorem regimeA_of_minorant {W H : ℝ → ℝ} {c e : ℝ}
-    (hH : ∀ t : ℝ, -1 ≤ t → t < 1 → H t + c * W t ≤ phi t)
-    (hB : ∀ y : Fin 7 → R3, (∀ i, ‖y i‖ = 1) →
-      e ≤ ∑ i, ∑ j ∈ Finset.Ioi i, H ⟪y i, y j⟫_ℝ) :
-    RegimeA W (coulombEnergy pentBipyramid - e) c := by
-  intro y hy
-  have h1 : coulombEnergy y = ∑ i, ∑ j ∈ Finset.Ioi i, phi ⟪y i, y j⟫_ℝ :=
-    coulombEnergy_eq_sum_phi hy.1
-  have h2 : ∑ i, ∑ j ∈ Finset.Ioi i, (H ⟪y i, y j⟫_ℝ + c * W ⟪y i, y j⟫_ℝ)
-      ≤ ∑ i, ∑ j ∈ Finset.Ioi i, phi ⟪y i, y j⟫_ℝ := by
-    refine Finset.sum_le_sum fun i _ => Finset.sum_le_sum fun j hj => ?_
-    have hij : i ≠ j := (Finset.mem_Ioi.1 hj).ne
-    exact hH _ (neg_one_le_inner_of_unit (hy.1 i) (hy.1 j))
-      (inner_lt_one_of_ne (hy.1 i) (hy.1 j) (fun h => hij (hy.2 h)))
-  have h3 : ∑ i, ∑ j ∈ Finset.Ioi i, (H ⟪y i, y j⟫_ℝ + c * W ⟪y i, y j⟫_ℝ)
-      = ∑ i, ∑ j ∈ Finset.Ioi i, H ⟪y i, y j⟫_ℝ + c * sumW W y := by
-    simp only [sumW, Finset.mul_sum, Finset.sum_add_distrib]
-  have h4 := hB y hy.1
-  linarith
 
-/-- **Regime A from a three-point certificate** (the exact interface of the Kronecker-checked
-certificates): `F_k` positive semidefinite, the pointwise three-point inequality on all admissible
-triples, and the one-dimensional inequality `H + c W ≤ φ` on `[-1, 1)`. -/
-theorem regimeA_of_threePoint {W H : ℝ → ℝ} {c e : ℝ} (K : ℕ) (m : ℕ → ℕ)
-    (F : (k : ℕ) → Matrix (Fin (m k)) (Fin (m k)) ℝ)
-    (hF : ∀ k, k < K → (F k).PosSemidef)
-    (hpt : ∀ u v t : ℝ, ThreePoint.GramOK u v t →
-      ∑ k ∈ Finset.range K, ThreePoint.matDot (F k) (ThreePoint.Rk 7 (m k) k u v t)
-        ≤ (H u + H v + H t) / 3 - e / ((Nat.choose 7 2 : ℕ) : ℝ))
-    (hH : ∀ t : ℝ, -1 ≤ t → t < 1 → H t + c * W t ≤ phi t) :
-    RegimeA W (coulombEnergy pentBipyramid - e) c :=
-  regimeA_of_minorant hH fun y hy =>
-    ThreePoint.three_point_bound (by norm_num) K m F hF H e hpt y hy
 
 end TwoRegime
 
@@ -6007,55 +4923,7 @@ theorem margin_of_threePoint_cut {H : ℝ → ℝ} {a η : ℝ} (K : ℕ) (m : �
     (coulombEnergy pentBipyramid + η) hpt y hy.1 hya
   linarith
 
-/-- **Regime B from two cases.**  Case 1 (all off-diagonal inner products `≥ a`) is covered by a
-margin `η > 0`; in Case 2 (some inner product `< a`) rigidity of the tube is only needed for the
-configurations of that case. -/
-theorem regimeB_of_cases {W : ℝ → ℝ} {ρ a η : ℝ} {ω : ℝ → ℝ} (hη : 0 < η)
-    (hM : ∀ y ∈ SphereConfig 7, (∀ i j, i ≠ j → a ≤ ⟪y i, y j⟫_ℝ) →
-      coulombEnergy pentBipyramid + η ≤ coulombEnergy y)
-    (hR : ∀ y ∈ SphereConfig 7, (∃ i j, i ≠ j ∧ ⟪y i, y j⟫_ℝ < a) → sumW W y ≤ ρ →
-      ∃ σ : Equiv.Perm (Fin 7), ∀ i j, i ≠ j →
-        |⟪y i, y j⟫_ℝ - ⟪pentBipyramid (σ i), pentBipyramid (σ j)⟫_ℝ|
-          ≤ ω ⟪pentBipyramid (σ i), pentBipyramid (σ j)⟫_ℝ)
-    (hL : LocalGram ω) : RegimeB W ρ := by
-  intro y hy hS
-  by_cases h : ∀ i j, i ≠ j → a ≤ ⟪y i, y j⟫_ℝ
-  · have := hM y hy h
-    exact ⟨by linarith, fun hEq => by linarith⟩
-  · push_neg at h
-    obtain ⟨i, j, hij, hlt⟩ := h
-    obtain ⟨σ, hσ⟩ := hR y hy ⟨i, j, hij, hlt⟩ hS
-    have hz : (fun a => (LinearIsometryEquiv.refl ℝ R3) (y (σ.symm a))) ∈ SphereConfig 7 :=
-      sphereConfig_comp (LinearIsometryEquiv.refl ℝ R3) σ.symm hy
-    have hE : coulombEnergy (fun a => (LinearIsometryEquiv.refl ℝ R3) (y (σ.symm a)))
-        = coulombEnergy y := by
-      rw [coulombEnergy_comp_isometry (LinearIsometryEquiv.refl ℝ R3) (fun a => y (σ.symm a)),
-        coulombEnergy_comp_perm σ.symm y]
-    obtain ⟨h1, h2⟩ := hL _ hz (fun i j hij => by
-      have := hσ (σ.symm i) (σ.symm j) (fun h => hij (σ.symm.injective h))
-      simpa using this)
-    refine ⟨hE ▸ h1, fun hEq => ?_⟩
-    obtain ⟨g', hg'⟩ := h2 (hE.trans hEq)
-    refine ⟨g', σ, fun j => ?_⟩
-    have := hg' (σ j)
-    simpa using this
 
-/-- **Two-case two-regime theorem.**  A global coercive certificate (A), a margin on the cut
-(Case 1), rigidity of the tube in Case 2 and the Gram-window local statement give
-`thomson_seven` and `thomson_seven_unique`. -/
-theorem seven_of_cases {W : ℝ → ℝ} {g c a η : ℝ} {ω : ℝ → ℝ} (hc : 0 < c) (hη : 0 < η)
-    (hA : RegimeA W g c)
-    (hM : ∀ y ∈ SphereConfig 7, (∀ i j, i ≠ j → a ≤ ⟪y i, y j⟫_ℝ) →
-      coulombEnergy pentBipyramid + η ≤ coulombEnergy y)
-    (hR : ∀ y ∈ SphereConfig 7, (∃ i j, i ≠ j ∧ ⟪y i, y j⟫_ℝ < a) → sumW W y ≤ g / c →
-      ∃ σ : Equiv.Perm (Fin 7), ∀ i j, i ≠ j →
-        |⟪y i, y j⟫_ℝ - ⟪pentBipyramid (σ i), pentBipyramid (σ j)⟫_ℝ|
-          ≤ ω ⟪pentBipyramid (σ i), pentBipyramid (σ j)⟫_ℝ)
-    (hL : LocalGram ω) :
-    (∀ x ∈ SphereConfig 7, coulombEnergy pentBipyramid ≤ coulombEnergy x) ∧
-    (∀ x ∈ SphereConfig 7, coulombEnergy x = coulombEnergy pentBipyramid →
-      ∃ (g : R3 ≃ₗᵢ[ℝ] R3) (σ : Equiv.Perm (Fin 7)), ∀ i, x i = g (pentBipyramid (σ i))) :=
-  seven_of_AB hc hA (regimeB_of_cases hη hM hR hL)
 
 end TwoRegime
 
@@ -6067,138 +4935,12 @@ namespace TwoRegime
 open scoped InnerProductSpace
 open Base
 
-open scoped Classical in
-/-- Number of pairs `i < j` whose inner product `⟪y i, y j⟫` lies in the window `S`. -/
-noncomputable def cnt (S : Set ℝ) (y : Fin 7 → R3) : ℕ :=
-  ∑ i : Fin 7, ((Finset.Ioi i).filter fun j => ⟪y i, y j⟫_ℝ ∈ S).card
 
-open scoped Classical in
-/-- The count as a real indicator sum (the form in which the energy sums appear). -/
-theorem cnt_cast (S : Set ℝ) (y : Fin 7 → R3) :
-    (cnt S y : ℝ) = ∑ i, ∑ j ∈ Finset.Ioi i, (if ⟪y i, y j⟫_ℝ ∈ S then (1 : ℝ) else 0) := by
-  unfold cnt
-  push_cast
-  refine Finset.sum_congr rfl fun i _ => ?_
-  rw [Finset.sum_boole]
 
-/-- **Exact counts from lower bounds.** If the windows `S k` are pairwise disjoint, the prescribed
-counts `n k` add up to the number `21` of pairs, and every window contains at least `n k` of the
-pair inner products, then every pair lies in some window and the counts are exactly `n k`. -/
-theorem exact_counts {κ : Type*} [Fintype κ] {S : κ → Set ℝ} {n : κ → ℕ}
-    (hdisj : Pairwise fun a b => Disjoint (S a) (S b)) (hn : ∑ k, n k = 21)
-    {y : Fin 7 → R3} (hlow : ∀ k, n k ≤ cnt (S k) y) :
-    (∀ i j, i < j → ∃ k, ⟪y i, y j⟫_ℝ ∈ S k) ∧ ∀ k, cnt (S k) y = n k := by
-  classical
-  have hsum : ∑ k, cnt (S k) y = ∑ i : Fin 7, ∑ j ∈ Finset.Ioi i,
-      (Finset.univ.filter fun k => ⟪y i, y j⟫_ℝ ∈ S k).card := by
-    unfold cnt
-    rw [Finset.sum_comm]
-    refine Finset.sum_congr rfl fun i _ => ?_
-    simp only [Finset.card_filter]
-    rw [Finset.sum_comm]
-  have hle : ∀ i j, (Finset.univ.filter fun k => ⟪y i, y j⟫_ℝ ∈ S k).card ≤ 1 := by
-    intro i j
-    rw [Finset.card_le_one]
-    intro a ha b hb
-    by_contra hab
-    simp only [Finset.mem_filter, Finset.mem_univ, true_and] at ha hb
-    exact (Set.disjoint_left.1 (hdisj hab) ha) hb
-  have h21 : ∑ i : Fin 7, ∑ j ∈ Finset.Ioi i, (1 : ℕ) = 21 := by decide
-  have hge : 21 ≤ ∑ i : Fin 7, ∑ j ∈ Finset.Ioi i,
-      (Finset.univ.filter fun k => ⟪y i, y j⟫_ℝ ∈ S k).card := by
-    rw [← hsum, ← hn]
-    exact Finset.sum_le_sum fun k _ => hlow k
-  have hle2 : ∑ i : Fin 7, ∑ j ∈ Finset.Ioi i,
-      (Finset.univ.filter fun k => ⟪y i, y j⟫_ℝ ∈ S k).card
-      ≤ ∑ i : Fin 7, ∑ j ∈ Finset.Ioi i, (1 : ℕ) :=
-    Finset.sum_le_sum fun i _ => Finset.sum_le_sum fun j _ => hle i j
-  have hEq : ∑ i : Fin 7, ∑ j ∈ Finset.Ioi i,
-      (Finset.univ.filter fun k => ⟪y i, y j⟫_ℝ ∈ S k).card
-      = ∑ i : Fin 7, ∑ j ∈ Finset.Ioi i, (1 : ℕ) := le_antisymm hle2 (by omega)
-  have hout := (Finset.sum_eq_sum_iff_of_le
-    (fun i _ => Finset.sum_le_sum fun j _ => hle i j)).1 hEq
-  refine ⟨fun i j hij => ?_, fun k => ?_⟩
-  · have hin := (Finset.sum_eq_sum_iff_of_le (fun j _ => hle i j)).1
-      (hout i (Finset.mem_univ i)) j (Finset.mem_Ioi.2 hij)
-    have hpos : 0 < (Finset.univ.filter fun k => ⟪y i, y j⟫_ℝ ∈ S k).card := by omega
-    obtain ⟨k, hk⟩ := Finset.card_pos.1 hpos
-    exact ⟨k, by simpa using hk⟩
-  · have hall : ∑ k, n k = ∑ k, cnt (S k) y := by
-      rw [hsum, hEq, h21, hn]
-    exact ((Finset.sum_eq_sum_iff_of_le fun k _ => hlow k).1 hall k (Finset.mem_univ k)).symm
 
-/-- **Lower bound for a count from a functional inequality.** If
-`e ≤ E(y) + η · cnt S y` on all configurations and `E(P) + (m - 1) η < e`, then every
-configuration with `E(y) ≤ E(P)` has at least `m` pairs in the window `S`. -/
-theorem count_lower_of_slack {S : Set ℝ} {η e : ℝ} {m : ℕ} (hη : 0 < η)
-    (hslack : coulombEnergy pentBipyramid + ((m : ℝ) - 1) * η < e)
-    (hcert : ∀ y ∈ SphereConfig 7, e ≤ coulombEnergy y + η * (cnt S y : ℝ)) :
-    ∀ y ∈ SphereConfig 7, coulombEnergy y ≤ coulombEnergy pentBipyramid → m ≤ cnt S y := by
-  intro y hy hE
-  by_contra hlt
-  push Not at hlt
-  have h1 : (cnt S y : ℝ) + 1 ≤ m := by exact_mod_cast hlt
-  have h2 := hcert y hy
-  nlinarith
 
-/-- **Rigidity of exact counts (R').** A unit configuration in which every pair lies in one of the
-windows `S k`, with exactly `n k` pairs in the window `S k`, has, for some relabelling `σ`, Gram
-entries within `ω (⟪P σi, P σj⟫)` of those of `P ∘ σ`. -/
-def CountRigid {κ : Type*} [Fintype κ] (S : κ → Set ℝ) (n : κ → ℕ) (ω : ℝ → ℝ) : Prop :=
-  ∀ y ∈ SphereConfig 7,
-    (∀ i j, i < j → ∃ k, ⟪y i, y j⟫_ℝ ∈ S k) → (∀ k, cnt (S k) y = n k) →
-    ∃ σ : Equiv.Perm (Fin 7), ∀ i j, i ≠ j →
-      |⟪y i, y j⟫_ℝ - ⟪pentBipyramid (σ i), pentBipyramid (σ j)⟫_ℝ|
-        ≤ ω ⟪pentBipyramid (σ i), pentBipyramid (σ j)⟫_ℝ
 
-/-- **Regime B for configurations at most as energetic as `P`, from rigidity and the local
-statement.**  (The relabelling step of `regimeB_of_rigidW_localGram`, for one configuration.) -/
-theorem local_of_window {ω : ℝ → ℝ} (hL : LocalGram ω) {y : Fin 7 → R3} (hy : y ∈ SphereConfig 7)
-    (σ : Equiv.Perm (Fin 7))
-    (hσ : ∀ i j, i ≠ j → |⟪y i, y j⟫_ℝ - ⟪pentBipyramid (σ i), pentBipyramid (σ j)⟫_ℝ|
-      ≤ ω ⟪pentBipyramid (σ i), pentBipyramid (σ j)⟫_ℝ) :
-    coulombEnergy pentBipyramid ≤ coulombEnergy y ∧
-    (coulombEnergy y = coulombEnergy pentBipyramid →
-      ∃ (g : R3 ≃ₗᵢ[ℝ] R3) (σ : Equiv.Perm (Fin 7)), ∀ i, y i = g (pentBipyramid (σ i))) := by
-  have hz : (fun a => (LinearIsometryEquiv.refl ℝ R3) (y (σ.symm a))) ∈ SphereConfig 7 :=
-    sphereConfig_comp (LinearIsometryEquiv.refl ℝ R3) σ.symm hy
-  have hE : coulombEnergy (fun a => (LinearIsometryEquiv.refl ℝ R3) (y (σ.symm a)))
-      = coulombEnergy y := by
-    rw [coulombEnergy_comp_isometry (LinearIsometryEquiv.refl ℝ R3) (fun a => y (σ.symm a)),
-      coulombEnergy_comp_perm σ.symm y]
-  obtain ⟨h1, h2⟩ := hL _ hz (fun i j hij => by
-    have := hσ (σ.symm i) (σ.symm j) (fun h => hij (σ.symm.injective h))
-    simpa using this)
-  refine ⟨hE ▸ h1, fun hEq => ?_⟩
-  obtain ⟨g', hg'⟩ := h2 (hE.trans hEq)
-  refine ⟨g', σ, fun j => ?_⟩
-  have := hg' (σ j)
-  simpa using this
 
-/-- **Count-functional two-step theorem.** Windows `S k` (pairwise disjoint), prescribed counts
-`n k` (adding up to the `21` pairs), count certificates (C) saying that every configuration with
-`E(y) ≤ E(P)` has at least `n k` pairs in `S k`, rigidity of exact counts (R') and the Gram-window
-local statement (L) give `thomson_seven` and `thomson_seven_unique`. -/
-theorem seven_of_counts {κ : Type*} [Fintype κ] {S : κ → Set ℝ} {n : κ → ℕ} {ω : ℝ → ℝ}
-    (hdisj : Pairwise fun a b => Disjoint (S a) (S b)) (hn : ∑ k, n k = 21)
-    (hC : ∀ k, ∀ y ∈ SphereConfig 7, coulombEnergy y ≤ coulombEnergy pentBipyramid →
-      n k ≤ cnt (S k) y)
-    (hR : CountRigid S n ω) (hL : LocalGram ω) :
-    (∀ x ∈ SphereConfig 7, coulombEnergy pentBipyramid ≤ coulombEnergy x) ∧
-    (∀ x ∈ SphereConfig 7, coulombEnergy x = coulombEnergy pentBipyramid →
-      ∃ (g : R3 ≃ₗᵢ[ℝ] R3) (σ : Equiv.Perm (Fin 7)), ∀ i, x i = g (pentBipyramid (σ i))) := by
-  have key : ∀ y ∈ SphereConfig 7, coulombEnergy y ≤ coulombEnergy pentBipyramid →
-      coulombEnergy pentBipyramid ≤ coulombEnergy y ∧
-      (coulombEnergy y = coulombEnergy pentBipyramid →
-        ∃ (g : R3 ≃ₗᵢ[ℝ] R3) (σ : Equiv.Perm (Fin 7)), ∀ i, y i = g (pentBipyramid (σ i))) := by
-    intro y hy hE
-    obtain ⟨hcov, hcnt⟩ := exact_counts hdisj hn (fun k => hC k y hy hE)
-    obtain ⟨σ, hσ⟩ := hR y hy hcov hcnt
-    exact local_of_window hL hy σ hσ
-  refine ⟨fun x hx => ?_, fun x hx hEq => (key x hx hEq.le).2 hEq⟩
-  by_contra h
-  push Not at h
-  exact absurd (key x hx h.le).1 (not_le.2 h)
 
 end TwoRegime
 
@@ -6207,53 +4949,7 @@ namespace TwoRegime
 open scoped InnerProductSpace
 open Base
 
-/-- **Count functional from a three-point certificate.** A three-point certificate for `H`, a
-minorant `H ≤ φ` off the window `S` and `H ≤ φ + η` on `S` give
-`e ≤ E(y) + η · cnt S y` for every configuration. -/
-theorem count_ge_of_threePoint {H : ℝ → ℝ} {S : Set ℝ} {η e : ℝ} (K : ℕ) (m : ℕ → ℕ)
-    (F : (k : ℕ) → Matrix (Fin (m k)) (Fin (m k)) ℝ) (hF : ∀ k, k < K → (F k).PosSemidef)
-    (hpt : ∀ u v t : ℝ, ThreePoint.GramOK u v t →
-      ∑ k ∈ Finset.range K, ThreePoint.matDot (F k) (ThreePoint.Rk 7 (m k) k u v t)
-        ≤ (H u + H v + H t) / 3 - e / ((Nat.choose 7 2 : ℕ) : ℝ))
-    (hH0 : ∀ t : ℝ, -1 ≤ t → t < 1 → t ∉ S → H t ≤ phi t)
-    (hH1 : ∀ t : ℝ, -1 ≤ t → t < 1 → t ∈ S → H t ≤ phi t + η) :
-    ∀ y ∈ SphereConfig 7, e ≤ coulombEnergy y + η * (cnt S y : ℝ) := by
-  classical
-  intro y hy
-  have h1 : coulombEnergy y = ∑ i, ∑ j ∈ Finset.Ioi i, phi ⟪y i, y j⟫_ℝ :=
-    coulombEnergy_eq_sum_phi hy.1
-  have h2 : ∑ i, ∑ j ∈ Finset.Ioi i, H ⟪y i, y j⟫_ℝ
-      ≤ ∑ i, ∑ j ∈ Finset.Ioi i,
-        (phi ⟪y i, y j⟫_ℝ + η * (if ⟪y i, y j⟫_ℝ ∈ S then (1 : ℝ) else 0)) := by
-    refine Finset.sum_le_sum fun i _ => Finset.sum_le_sum fun j hj => ?_
-    have hij : i ≠ j := (Finset.mem_Ioi.1 hj).ne
-    have hl := neg_one_le_inner_of_unit (hy.1 i) (hy.1 j)
-    have hu := inner_lt_one_of_ne (hy.1 i) (hy.1 j) (fun h => hij (hy.2 h))
-    by_cases hS : ⟪y i, y j⟫_ℝ ∈ S
-    · simpa [hS] using hH1 _ hl hu hS
-    · simpa [hS] using hH0 _ hl hu hS
-  have h3 : ∑ i, ∑ j ∈ Finset.Ioi i,
-        (phi ⟪y i, y j⟫_ℝ + η * (if ⟪y i, y j⟫_ℝ ∈ S then (1 : ℝ) else 0))
-      = coulombEnergy y + η * (cnt S y : ℝ) := by
-    rw [h1, cnt_cast]
-    simp only [Finset.sum_add_distrib, Finset.mul_sum]
-  have h4 := ThreePoint.three_point_bound (by norm_num) K m F hF H e hpt y hy.1
-  linarith
 
-/-- **Count lower bound from a three-point certificate.** If moreover `η > 0` and
-`E(P) + (m - 1) η < e`, then every configuration with `E(y) ≤ E(P)` has at least `m` pairs with
-inner product in the window `S`. -/
-theorem count_lower_of_threePoint {H : ℝ → ℝ} {S : Set ℝ} {η e : ℝ} {mm : ℕ} (hη : 0 < η)
-    (hslack : coulombEnergy pentBipyramid + ((mm : ℝ) - 1) * η < e)
-    (K : ℕ) (m : ℕ → ℕ)
-    (F : (k : ℕ) → Matrix (Fin (m k)) (Fin (m k)) ℝ) (hF : ∀ k, k < K → (F k).PosSemidef)
-    (hpt : ∀ u v t : ℝ, ThreePoint.GramOK u v t →
-      ∑ k ∈ Finset.range K, ThreePoint.matDot (F k) (ThreePoint.Rk 7 (m k) k u v t)
-        ≤ (H u + H v + H t) / 3 - e / ((Nat.choose 7 2 : ℕ) : ℝ))
-    (hH0 : ∀ t : ℝ, -1 ≤ t → t < 1 → t ∉ S → H t ≤ phi t)
-    (hH1 : ∀ t : ℝ, -1 ≤ t → t < 1 → t ∈ S → H t ≤ phi t + η) :
-    ∀ y ∈ SphereConfig 7, coulombEnergy y ≤ coulombEnergy pentBipyramid → mm ≤ cnt S y :=
-  count_lower_of_slack hη hslack (count_ge_of_threePoint K m F hF hpt hH0 hH1)
 
 end TwoRegime
 
@@ -6283,12 +4979,6 @@ def LocalGramA (lo hi : ℝ → ℝ) : Prop :=
     (coulombEnergy y = coulombEnergy pentBipyramid →
       ∃ g : R3 ≃ₗᵢ[ℝ] R3, ∀ i, y i = g (pentBipyramid i))
 
-/-- **Rigidity of exact counts (R'), asymmetric windows.** A unit configuration all of whose pairs
-lie in the windows `S k`, with exactly `n k` pairs in `S k`, lies in the asymmetric Gram window of
-some relabelling of the pentagonal bipyramid. -/
-def CountRigidA {κ : Type*} [Fintype κ] (S : κ → Set ℝ) (n : κ → ℕ) (lo hi : ℝ → ℝ) : Prop :=
-  ∀ y ∈ SphereConfig 7, (∀ i j, i < j → ∃ k, ⟪y i, y j⟫_ℝ ∈ S k) → (∀ k, cnt (S k) y = n k) →
-    ∃ σ : Equiv.Perm (Fin 7), InWindow lo hi y σ
 
 /-- A symmetric local statement gives the asymmetric one on any smaller window. -/
 theorem localGramA_of_localGram {ω lo hi : ℝ → ℝ} (hL : LocalGram ω) (hlo : ∀ t, lo t ≤ ω t)
@@ -6302,17 +4992,6 @@ theorem localGramA_of_localGram {ω lo hi : ℝ → ℝ} (hL : LocalGram ω) (hl
   simp only [Equiv.refl_apply] at h1 h2
   constructor <;> linarith
 
-/-- Rigidity for a symmetric window gives rigidity for any larger asymmetric window. -/
-theorem countRigidA_of_countRigid {κ : Type*} [Fintype κ] {S : κ → Set ℝ} {n : κ → ℕ}
-    {ω lo hi : ℝ → ℝ} (hR : CountRigid S n ω) (hlo : ∀ t, ω t ≤ lo t) (hhi : ∀ t, ω t ≤ hi t) :
-    CountRigidA S n lo hi := by
-  intro y hy hcov hcnt
-  obtain ⟨σ, hσ⟩ := hR y hy hcov hcnt
-  refine ⟨σ, fun i j hij => ?_⟩
-  have h := abs_le.1 (hσ i j hij)
-  have := hlo ⟪pentBipyramid (σ i), pentBipyramid (σ j)⟫_ℝ
-  have := hhi ⟪pentBipyramid (σ i), pentBipyramid (σ j)⟫_ℝ
-  constructor <;> linarith [h.1, h.2]
 
 /-- The local statement transported along a relabelling of the points. -/
 theorem local_of_windowA {lo hi : ℝ → ℝ} (hL : LocalGramA lo hi) {y : Fin 7 → R3}
@@ -6335,28 +5014,6 @@ theorem local_of_windowA {lo hi : ℝ → ℝ} (hL : LocalGramA lo hi) {y : Fin 
   have := hg' (σ j)
   simpa using this
 
-/-- **Count-functional two-step theorem, asymmetric windows.** Same as `seven_of_counts` with the
-rigidity (R') and the local statement (L) for the asymmetric windows `[t - lo t, t + hi t]`. -/
-theorem seven_of_countsA {κ : Type*} [Fintype κ] {S : κ → Set ℝ} {n : κ → ℕ} {lo hi : ℝ → ℝ}
-    (hdisj : Pairwise fun a b => Disjoint (S a) (S b)) (hn : ∑ k, n k = 21)
-    (hC : ∀ k, ∀ y ∈ SphereConfig 7, coulombEnergy y ≤ coulombEnergy pentBipyramid →
-      n k ≤ cnt (S k) y)
-    (hR : CountRigidA S n lo hi) (hL : LocalGramA lo hi) :
-    (∀ x ∈ SphereConfig 7, coulombEnergy pentBipyramid ≤ coulombEnergy x) ∧
-    (∀ x ∈ SphereConfig 7, coulombEnergy x = coulombEnergy pentBipyramid →
-      ∃ (g : R3 ≃ₗᵢ[ℝ] R3) (σ : Equiv.Perm (Fin 7)), ∀ i, x i = g (pentBipyramid (σ i))) := by
-  have key : ∀ y ∈ SphereConfig 7, coulombEnergy y ≤ coulombEnergy pentBipyramid →
-      coulombEnergy pentBipyramid ≤ coulombEnergy y ∧
-      (coulombEnergy y = coulombEnergy pentBipyramid →
-        ∃ (g : R3 ≃ₗᵢ[ℝ] R3) (σ : Equiv.Perm (Fin 7)), ∀ i, y i = g (pentBipyramid (σ i))) := by
-    intro y hy hE
-    obtain ⟨hcov, hcnt⟩ := exact_counts hdisj hn (fun k => hC k y hy hE)
-    obtain ⟨σ, hσ⟩ := hR y hy hcov hcnt
-    exact local_of_windowA hL hy σ hσ
-  refine ⟨fun x hx => ?_, fun x hx hEq => (key x hx hEq.le).2 hEq⟩
-  by_contra h
-  push Not at h
-  exact absurd (key x hx h.le).1 (not_le.2 h)
 
 end TwoRegime
 /- END TR_G3 -/
@@ -6366,52 +5023,7 @@ namespace TwoRegime
 open scoped InnerProductSpace
 open Base
 
-/-- **Menu-form two-step theorem.** A finite or infinite menu of count certificates `(S k, n k)`
-(each saying that an energy `≤ E(P)` forces at least `n k` pairs with inner product in `S k`; the
-sets need not be disjoint and the `n k` need not add up to `21`), a rigidity statement (R') for
-configurations satisfying all the count lower bounds, and the local statement (L) on the same
-asymmetric Gram window give `thomson_seven` and the equality case. -/
-theorem seven_of_menu {κ : Type*} {S : κ → Set ℝ} {n : κ → ℕ} {lo hi : ℝ → ℝ}
-    (hC : ∀ k, ∀ y ∈ SphereConfig 7, coulombEnergy y ≤ coulombEnergy pentBipyramid →
-      n k ≤ cnt (S k) y)
-    (hR : ∀ y ∈ SphereConfig 7, (∀ k, n k ≤ cnt (S k) y) →
-      ∃ σ : Equiv.Perm (Fin 7), InWindow lo hi y σ)
-    (hL : LocalGramA lo hi) :
-    (∀ x ∈ SphereConfig 7, coulombEnergy pentBipyramid ≤ coulombEnergy x) ∧
-    (∀ x ∈ SphereConfig 7, coulombEnergy x = coulombEnergy pentBipyramid →
-      ∃ (g : R3 ≃ₗᵢ[ℝ] R3) (σ : Equiv.Perm (Fin 7)), ∀ i, x i = g (pentBipyramid (σ i))) := by
-  have key : ∀ y ∈ SphereConfig 7, coulombEnergy y ≤ coulombEnergy pentBipyramid →
-      coulombEnergy pentBipyramid ≤ coulombEnergy y ∧
-      (coulombEnergy y = coulombEnergy pentBipyramid →
-        ∃ (g : R3 ≃ₗᵢ[ℝ] R3) (σ : Equiv.Perm (Fin 7)), ∀ i, y i = g (pentBipyramid (σ i))) := by
-    intro y hy hE
-    obtain ⟨σ, hσ⟩ := hR y hy (fun k => hC k y hy hE)
-    exact local_of_windowA hL hy σ hσ
-  refine ⟨fun x hx => ?_, fun x hx hEq => (key x hx hEq.le).2 hEq⟩
-  by_contra h
-  push Not at h
-  exact absurd (key x hx h.le).1 (not_le.2 h)
 
-/-- The coverage certificate is a special case of the menu: a single window `U` with `n = 21`
-says that every one of the `21` pairs has inner product in `U`. -/
-theorem mem_of_cnt_ge_21 {U : Set ℝ} {y : Fin 7 → R3} (h : 21 ≤ cnt U y) :
-    ∀ i j, i < j → ⟪y i, y j⟫_ℝ ∈ U := by
-  classical
-  have hle : ∀ i : Fin 7, ((Finset.Ioi i).filter fun j => ⟪y i, y j⟫_ℝ ∈ U).card
-      ≤ (Finset.Ioi i).card := fun i => Finset.card_filter_le _ _
-  have h21 : ∑ i : Fin 7, (Finset.Ioi i).card = 21 := by decide
-  have hEq : ∑ i : Fin 7, ((Finset.Ioi i).filter fun j => ⟪y i, y j⟫_ℝ ∈ U).card
-      = ∑ i : Fin 7, (Finset.Ioi i).card := by
-    refine le_antisymm (Finset.sum_le_sum fun i _ => hle i) ?_
-    rw [h21]
-    exact h
-  have hall := (Finset.sum_eq_sum_iff_of_le (fun i _ => hle i)).1 hEq
-  intro i j hij
-  have hfull : (Finset.Ioi i).filter (fun j => ⟪y i, y j⟫_ℝ ∈ U) = Finset.Ioi i :=
-    Finset.eq_of_subset_of_card_le (Finset.filter_subset _ _) (hall i (Finset.mem_univ i)).ge
-  have hj : j ∈ Finset.Ioi i := Finset.mem_Ioi.2 hij
-  rw [← hfull] at hj
-  exact (Finset.mem_filter.1 hj).2
 
 end TwoRegime
 /- END TR_G4 -/
@@ -6427,10 +5039,7 @@ noncomputable def H : ℝ → ℝ := M2.H
 
 lemma H_le_phi {t : ℝ} (h1 : -1 ≤ t) (h2 : t < 1) : H t ≤ phi t := M2.H_le_phi h1 h2
 
-lemma H_eq_phi_of_isNode {t : ℝ} (h : IsNode t) : H t = phi t := M2.H_eq_phi_of_node h
 
-lemma isNode_of_H_eq_phi {t : ℝ} (h1 : -1 ≤ t) (h2 : t < 1) (h : H t = phi t) : IsNode t :=
-  M2.node_of_H_eq_phi h1 h2 h
 
 /-- (M1 + M4) the sharp three-point inequality: this is the only missing ingredient of the
 Hermite-minorant route. It is stated here as a `Prop` (not proved). -/
@@ -6438,13 +5047,6 @@ def SumHGe : Prop :=
   ∀ y : Fin 7 → R3, (∀ i, ‖y i‖ = 1) →
     coulombEnergy pentBipyramid ≤ ∑ i, ∑ j ∈ Finset.Ioi i, H (inner ℝ (y i) (y j))
 
-/-- (M3) contact rigidity. -/
-lemma congruent_of_nodes (x : Fin 7 → R3) (hx : x ∈ SphereConfig 7)
-    (h : ∀ i j, i ≠ j → IsNode (inner ℝ (x i) (x j))) :
-    ∃ (g : R3 ≃ₗᵢ[ℝ] R3) (σ : Equiv.Perm (Fin 7)), ∀ i, x i = g (pentBipyramid (σ i)) :=
-  M3.contact_rigidity x hx.1 (fun i j hij => by
-    rcases h i j hij with h | h | h | h
-    exacts [Or.inl h, Or.inr (Or.inr (Or.inl h)), Or.inr (Or.inr (Or.inr h)), Or.inr (Or.inl h)])
 
 end Interfaces
 /- END INTERFACES -/
@@ -6467,52 +5069,10 @@ theorem seven (hH : SumHGe) {x : Fin 7 → R3} (hx : x ∈ SphereConfig 7) :
   obtain ⟨h1, h2⟩ := pair_bounds hx (Finset.mem_Ioi.1 hj)
   exact H_le_phi h1 h2
 
-theorem seven_unique (hH : SumHGe) {x : Fin 7 → R3} (hx : x ∈ SphereConfig 7)
-    (heq : coulombEnergy x = coulombEnergy pentBipyramid) :
-    ∃ (g : R3 ≃ₗᵢ[ℝ] R3) (σ : Equiv.Perm (Fin 7)), ∀ i, x i = g (pentBipyramid (σ i)) := by
-  have hle := hH x hx.1
-  rw [← heq, coulombEnergy_eq_sum_phi hx.1] at hle
-  -- every summand `phi - H` is nonnegative and the total is `≤ 0`, so each vanishes
-  have hnn : ∀ i : Fin 7, ∀ j ∈ Finset.Ioi i,
-      0 ≤ phi (inner ℝ (x i) (x j)) - H (inner ℝ (x i) (x j)) := by
-    intro i j hj
-    obtain ⟨h1, h2⟩ := pair_bounds hx (Finset.mem_Ioi.1 hj)
-    linarith [H_le_phi h1 h2]
-  have hsum : ∑ i : Fin 7, ∑ j ∈ Finset.Ioi i,
-      (phi (inner ℝ (x i) (x j)) - H (inner ℝ (x i) (x j))) ≤ 0 := by
-    simp only [Finset.sum_sub_distrib]
-    linarith
-  have hz : ∀ i : Fin 7, ∀ j ∈ Finset.Ioi i,
-      phi (inner ℝ (x i) (x j)) - H (inner ℝ (x i) (x j)) = 0 := by
-    have h1 : ∀ i : Fin 7, ∑ j ∈ Finset.Ioi i,
-        (phi (inner ℝ (x i) (x j)) - H (inner ℝ (x i) (x j))) = 0 := by
-      intro i
-      have := (Finset.sum_eq_zero_iff_of_nonneg (fun i _ => Finset.sum_nonneg (hnn i))).1
-        (le_antisymm hsum (Finset.sum_nonneg fun i _ => Finset.sum_nonneg (hnn i))) i
-        (Finset.mem_univ i)
-      exact this
-    intro i j hj
-    exact (Finset.sum_eq_zero_iff_of_nonneg (hnn i)).1 (h1 i) j hj
-  apply congruent_of_nodes x hx
-  intro i j hij
-  have key : ∀ a b : Fin 7, a < b → IsNode (inner ℝ (x a) (x b)) := by
-    intro a b hab
-    obtain ⟨h1, h2⟩ := pair_bounds hx hab
-    exact isNode_of_H_eq_phi h1 h2 (by linarith [hz a b (Finset.mem_Ioi.2 hab)])
-  rcases lt_or_gt_of_ne hij with h | h
-  · exact key i j h
-  · rw [real_inner_comm]; exact key j i h
 
 end Glue
 /- END GLUE -/
 
-/-- **Conditional reduction (no unproved steps).** The sharp three-point inequality `SumHGe`
-implies both `thomson_seven` and `thomson_seven_unique`. -/
-theorem seven_of_SumHGe (hH : Interfaces.SumHGe) :
-    (∀ x ∈ SphereConfig 7, coulombEnergy pentBipyramid ≤ coulombEnergy x) ∧
-    (∀ x ∈ SphereConfig 7, coulombEnergy x = coulombEnergy pentBipyramid →
-      ∃ (g : R3 ≃ₗᵢ[ℝ] R3) (σ : Equiv.Perm (Fin 7)), ∀ i, x i = g (pentBipyramid (σ i))) :=
-  ⟨fun _ hx => Glue.seven hH hx, fun _ hx heq => Glue.seven_unique hH hx heq⟩
 
 /- BEGIN TR_F -/
 namespace EPBounds
@@ -8768,10 +7328,6 @@ lemma atoms_inBox : InBox c1 s1 (phi c1) (phi c2) (phi 0) :=
   ⟨c1_box.1, c1_box.2, s1_box.1, s1_box.2, phi_c1_box.1, phi_c1_box.2, phi_c2_box.1,
     phi_c2_box.2, phi_zero_box.1, phi_zero_box.2⟩
 
-lemma phi_mono {s t : ℝ} (ht : t < 1) (hst : s ≤ t) : phi s ≤ phi t := by
-  unfold phi
-  have h1 : 0 < √(2 - 2 * t) := Real.sqrt_pos.2 (by linarith)
-  exact inv_anti₀ h1 (Real.sqrt_le_sqrt (by linarith))
 
 lemma phi_c1_le : phi c1 ≤ 8507 / 10000 := by
   have := phi_c1_box.2
@@ -10517,29 +9073,6 @@ theorem case1_margin : ∀ y ∈ SphereConfig 7, (∀ i j, i ≠ j → (-9 / 10 
     rw [Hf_eq]
     exact CutOneD.cutH_le_phi h1 h2
 
-/-- **Wildcard pole.**  Every configuration with `E(y) ≤ E(P)` has at least one pair with inner
-product `< -9/10`. -/
-theorem pole_count : ∀ y ∈ SphereConfig 7, coulombEnergy y ≤ coulombEnergy pentBipyramid →
-    1 ≤ TwoRegime.cnt (Set.Iio (-9 / 10 : ℝ)) y := by
-  intro y hy hE
-  by_contra hcnt
-  have h0 : TwoRegime.cnt (Set.Iio (-9 / 10 : ℝ)) y = 0 := by omega
-  have key : ∀ i j : Fin 7, i < j → ⟪y i, y j⟫_ℝ < -9 / 10 →
-      0 < TwoRegime.cnt (Set.Iio (-9 / 10 : ℝ)) y := by
-    intro i j hij hlt
-    unfold TwoRegime.cnt
-    refine Finset.sum_pos' (fun _ _ => Nat.zero_le _)
-      ⟨i, Finset.mem_univ _, Finset.card_pos.2 ⟨j, ?_⟩⟩
-    simp [Finset.mem_filter, Finset.mem_Ioi, hij, hlt]
-  have hm := case1_margin y hy (fun i j hij => by
-    by_contra hlt
-    push Not at hlt
-    rcases lt_or_gt_of_ne hij with h | h
-    · have := key i j h hlt
-      omega
-    · have := key j i h (by rw [real_inner_comm]; exact hlt)
-      omega)
-  linarith
 
 end Case1
 end ThomsonN7
@@ -10645,114 +9178,11 @@ variable {n : ℕ}
 noncomputable def mrg (s : Fin n → ℝ → ℝ → ℝ → ℝ) (i : Fin n) (t : ℝ) : ℝ :=
   s i 1 t t + s i t 1 t + s i t t 1
 
-/-- The constant term of the typed reduction. -/
-noncomputable def kap (s : Fin n → ℝ → ℝ → ℝ → ℝ) : ℝ :=
-  (∑ i, s i 1 1 1) / ((n : ℝ) * ((n : ℝ) - 1))
 
-/-- The ordered slack of the typed three-point bound at the ordered triple `(i, j, l)`. -/
-noncomputable def os (s : Fin n → ℝ → ℝ → ℝ → ℝ) (H : Fin n → Fin n → ℝ → ℝ) (e : ℝ)
-    (τ : Fin n → Fin n → ℝ) (i j l : Fin n) : ℝ :=
-  (H i j (τ i j) + H i l (τ i l) + H j l (τ j l)) / 3 - e / (n.choose 2 : ℝ)
-    - (((n : ℝ) - 2) * s i (τ i j) (τ i l) (τ j l) + mrg s i (τ i j) + kap s)
 
-theorem dsum_G (hn : 3 ≤ n) (G : Fin n → Fin n → ℝ) (c : ℝ) (hsymm : ∀ i j, G i j = G j i) :
-    dsum (fun i j l => (G i j + G i l + G j l) / 3 - c)
-      = 2 * ((n : ℝ) - 2) * ∑ i, ∑ j ∈ Finset.Ioi i, G i j
-        - c * ((n : ℝ) * ((n : ℝ) - 1) * ((n : ℝ) - 2)) := by
-  have hn2 : 2 ≤ n := by omega
-  have hfun : (fun i j l => (G i j + G i l + G j l) / 3 - c)
-      = fun i j l => (1 / 3 : ℝ) * (G i j + G i l + G j l) - c := by
-    funext i j l; ring
-  rw [hfun, dsum_sub, dsum_mul_left, dsum_add, dsum_add,
-    dsum_pair12 hn2 G, dsum_pair13 hn2 G, dsum_pair23 hn2 G, dsum_const hn2,
-    sum_ne_eq_two_sum_Ioi G hsymm]
-  ring
 
-theorem dsum_os_R (hn : 3 ≤ n) (s : Fin n → ℝ → ℝ → ℝ → ℝ)
-    (τ : Fin n → Fin n → ℝ) (hsymm : ∀ i j, τ i j = τ j i) (hdiag : ∀ i, τ i i = 1) :
-    dsum (fun i j l => ((n : ℝ) - 2) * s i (τ i j) (τ i l) (τ j l) + mrg s i (τ i j) + kap s)
-      = ((n : ℝ) - 2) * ∑ i, ∑ j, ∑ l, s i (τ i j) (τ i l) (τ j l) := by
-  have hn2 : 2 ≤ n := by omega
-  have h3 : (3 : ℝ) ≤ n := by exact_mod_cast hn
-  have hn1 : ((n : ℝ) - 1) ≠ 0 := by intro h; linarith
-  have hn0 : (n : ℝ) ≠ 0 := by intro h; linarith
-  set f : Fin n → Fin n → Fin n → ℝ := fun i j l => s i (τ i j) (τ i l) (τ j l) with hf
-  set g : Fin n → Fin n → ℝ := fun i j => mrg s i (τ i j) with hg
-  have hgd : ∀ i, g i i = 3 * s i 1 1 1 := by
-    intro i
-    simp only [hg, mrg, hdiag]
-    ring
-  have hQ : ∑ i, ∑ j, (if i ≠ j then g i j else 0)
-      = ∑ i, ∑ j, g i j - 3 * ∑ i, s i 1 1 1 := by
-    simp only [sum_ne_eq_sub, hgd, Finset.sum_sub_distrib, ← Finset.mul_sum]
-  have hall := sum_all_eq (n := n) f
-  have e1 : ∑ i, ∑ l, f i i l = ∑ i, ∑ j, s i 1 (τ i j) (τ i j) := by
-    refine Finset.sum_congr rfl fun i _ => Finset.sum_congr rfl fun l _ => ?_
-    simp only [hf, hdiag]
-  have e2 : ∑ i, ∑ j, f i j i = ∑ i, ∑ j, s i (τ i j) 1 (τ i j) := by
-    refine Finset.sum_congr rfl fun i _ => Finset.sum_congr rfl fun j _ => ?_
-    simp only [hf, hdiag, ← hsymm i j]
-  have e3 : ∑ i, ∑ j, f i j j = ∑ i, ∑ j, s i (τ i j) (τ i j) 1 := by
-    refine Finset.sum_congr rfl fun i _ => Finset.sum_congr rfl fun j _ => ?_
-    simp only [hf, hdiag]
-  have e4 : ∑ i, f i i i = ∑ i, s i 1 1 1 := by
-    refine Finset.sum_congr rfl fun i _ => ?_
-    simp only [hf, hdiag]
-  have eg : ∑ i, ∑ j, g i j
-      = ∑ i, ∑ j, s i 1 (τ i j) (τ i j) + ∑ i, ∑ j, s i (τ i j) 1 (τ i j)
-        + ∑ i, ∑ j, s i (τ i j) (τ i j) 1 := by
-    simp only [hg, mrg, Finset.sum_add_distrib]
-  have hR : dsum (fun i j l => ((n : ℝ) - 2) * s i (τ i j) (τ i l) (τ j l) + mrg s i (τ i j) + kap s)
-      = ((n : ℝ) - 2) * dsum f + dsum (fun i j (_ : Fin n) => g i j)
-        + dsum (n := n) (fun _ _ _ => kap s) := by
-    have hfun : (fun i j l => ((n : ℝ) - 2) * s i (τ i j) (τ i l) (τ j l) + mrg s i (τ i j) + kap s)
-        = fun i j l => (((n : ℝ) - 2) * f i j l + g i j) + kap s := by
-      funext i j l
-      simp only [hf, hg]
-    rw [hfun, dsum_add, dsum_add, dsum_mul_left]
-  have hk : kap s * ((n : ℝ) * ((n : ℝ) - 1)) = ∑ i, s i 1 1 1 := by
-    simp only [kap]
-    field_simp
-  rw [hR, dsum_pair12 hn2 g, dsum_const hn2, hQ]
-  have hkk : kap s * ((n : ℝ) * ((n : ℝ) - 1) * ((n : ℝ) - 2))
-      = ((n : ℝ) - 2) * ∑ i, s i 1 1 1 := by
-    rw [← hk]; ring
-  rw [hkk]
-  have hall' : ∑ i, ∑ j, ∑ l, f i j l
-      = dsum f + ∑ i, ∑ j, g i j - 2 * ∑ i, s i 1 1 1 := by
-    rw [hall, e1, e2, e3, e4, eg]
-    ring
-  show _ = ((n : ℝ) - 2) * ∑ i, ∑ j, ∑ l, f i j l
-  rw [hall']
-  ring
 
-/-- The exact typed three-point identity. -/
-theorem typed_identity (hn : 3 ≤ n) (s : Fin n → ℝ → ℝ → ℝ → ℝ) (H : Fin n → Fin n → ℝ → ℝ)
-    (hH : ∀ i j t, H j i t = H i j t) (e : ℝ) (τ : Fin n → Fin n → ℝ)
-    (hsymm : ∀ i j, τ i j = τ j i) (hdiag : ∀ i, τ i i = 1) :
-    dsum (fun i j l => os s H e τ i j l)
-      + ((n : ℝ) - 2) * ∑ i, ∑ j, ∑ l, s i (τ i j) (τ i l) (τ j l)
-    = 2 * ((n : ℝ) - 2) * (∑ i, ∑ j ∈ Finset.Ioi i, H i j (τ i j) - e) := by
-  have hos : (fun i j l => os s H e τ i j l)
-      = fun i j l => ((H i j (τ i j) + H i l (τ i l) + H j l (τ j l)) / 3 - e / (n.choose 2 : ℝ))
-        - (((n : ℝ) - 2) * s i (τ i j) (τ i l) (τ j l) + mrg s i (τ i j) + kap s) := by
-    funext i j l; rfl
-  rw [hos, dsum_sub, dsum_G hn (fun i j => H i j (τ i j)) (e / (n.choose 2 : ℝ))
-      (fun i j => by simp only [hH, hsymm i j]),
-    dsum_os_R hn s τ hsymm hdiag]
-  have hc : (n.choose 2 : ℝ) = n * (n - 1) / 2 := Nat.cast_choose_two ℝ n
-  have h3 : (3 : ℝ) ≤ n := by exact_mod_cast hn
-  have hn1 : ((n : ℝ) - 1) ≠ 0 := by intro h; linarith
-  have hn0 : (n : ℝ) ≠ 0 := by intro h; linarith
-  rw [hc]
-  field_simp
-  ring
 
-/-- The six-fold (symmetrised) ordered slack. -/
-noncomputable def os6 (s : Fin n → ℝ → ℝ → ℝ → ℝ) (H : Fin n → Fin n → ℝ → ℝ) (e : ℝ)
-    (τ : Fin n → Fin n → ℝ) (i j l : Fin n) : ℝ :=
-  os s H e τ i j l + os s H e τ i l j + os s H e τ j i l + os s H e τ j l i + os s H e τ l i j
-    + os s H e τ l j i
 
 theorem dsum_os6 (f : Fin n → Fin n → Fin n → ℝ) :
     dsum (fun i j l => f i j l + f i l j + f j i l + f j l i + f l i j + f l j i) = 6 * dsum f := by
@@ -10767,58 +9197,7 @@ theorem dsum_os6 (f : Fin n → Fin n → Fin n → ℝ) :
   rw [e1, e2, e3, e4, e5]
   ring
 
-/-- **Typed three-point bound (combinatorial form).** -/
-theorem typed_bound_comb (hn : 3 ≤ n) (s : Fin n → ℝ → ℝ → ℝ → ℝ) (H : Fin n → Fin n → ℝ → ℝ)
-    (hH : ∀ i j t, H j i t = H i j t) (e : ℝ) (τ : Fin n → Fin n → ℝ)
-    (hsymm : ∀ i j, τ i j = τ j i) (hdiag : ∀ i, τ i i = 1)
-    (hroot : 0 ≤ ∑ i, ∑ j, ∑ l, s i (τ i j) (τ i l) (τ j l))
-    (hpt : ∀ i j l, i ≠ j → i ≠ l → j ≠ l → 0 ≤ os6 s H e τ i j l) :
-    e ≤ ∑ i, ∑ j ∈ Finset.Ioi i, H i j (τ i j) := by
-  have hid := typed_identity hn s H hH e τ hsymm hdiag
-  have h6 : 0 ≤ dsum (fun i j l => os s H e τ i j l) := by
-    have h0 : 0 ≤ dsum (fun i j l => os6 s H e τ i j l) := dsum_nonneg hpt
-    have := dsum_os6 (fun i j l => os s H e τ i j l)
-    have h1 : (fun i j l => os6 s H e τ i j l)
-        = (fun i j l => os s H e τ i j l + os s H e τ i l j + os s H e τ j i l
-            + os s H e τ j l i + os s H e τ l i j + os s H e τ l j i) := by
-      funext i j l; rfl
-    rw [h1, this] at h0
-    linarith
-  have h3 : (3 : ℝ) ≤ n := by exact_mod_cast hn
-  have hprod : 0 ≤ 2 * ((n : ℝ) - 2) * (∑ i, ∑ j ∈ Finset.Ioi i, H i j (τ i j) - e) := by
-    rw [← hid]
-    have : 0 ≤ ((n : ℝ) - 2) * ∑ i, ∑ j, ∑ l, s i (τ i j) (τ i l) (τ j l) :=
-      mul_nonneg (by linarith) hroot
-    linarith
-  have hpos : (0 : ℝ) < 2 * ((n : ℝ) - 2) := by linarith
-  have := nonneg_of_mul_nonneg_right hprod hpos
-  linarith
 
-/-- **Typed three-point bound (geometric form).**  Every root `i` has its own family of PSD
-blocks `F i k`; every pair its own minorant `H i j`. -/
-theorem typed_bound (hn : 3 ≤ n) (K : ℕ) (m : ℕ → ℕ)
-    (F : Fin n → (k : ℕ) → Matrix (Fin (m k)) (Fin (m k)) ℝ)
-    (hF : ∀ i k, k < K → (F i k).PosSemidef)
-    (H : Fin n → Fin n → ℝ → ℝ) (hH : ∀ i j t, H j i t = H i j t) (e : ℝ)
-    (x : Fin n → R3) (hx : ∀ i, ‖x i‖ = 1)
-    (hpt : ∀ i j l, i ≠ j → i ≠ l → j ≠ l →
-      0 ≤ os6 (fun i u v t => ∑ k ∈ Finset.range K, matDot (F i k) (Y3 (m k) k u v t)) H e
-        (fun i j => ⟪x i, x j⟫) i j l) :
-    e ≤ ∑ i, ∑ j ∈ Finset.Ioi i, H i j ⟪x i, x j⟫ := by
-  refine typed_bound_comb hn (fun i u v t => ∑ k ∈ Finset.range K, matDot (F i k) (Y3 (m k) k u v t))
-    H hH e (fun i j => ⟪x i, x j⟫) (fun i j => real_inner_comm _ _)
-    (fun i => by rw [real_inner_self_eq_norm_sq, hx i]; norm_num) ?_ hpt
-  refine Finset.sum_nonneg fun i _ => ?_
-  have hswap : ∀ (g : Fin n → Fin n → ℕ → ℝ),
-      ∑ j, ∑ l, ∑ k ∈ Finset.range K, g j l k = ∑ k ∈ Finset.range K, ∑ j, ∑ l, g j l k := by
-    intro g
-    calc ∑ j, ∑ l, ∑ k ∈ Finset.range K, g j l k
-        = ∑ j, ∑ k ∈ Finset.range K, ∑ l, g j l k :=
-          Finset.sum_congr rfl fun j _ => Finset.sum_comm
-      _ = ∑ k ∈ Finset.range K, ∑ j, ∑ l, g j l k := Finset.sum_comm
-  rw [hswap]
-  exact Finset.sum_nonneg fun k hk =>
-    matDot_root_nonneg (m k) k x hx i (F i k) (hF i k (Finset.mem_range.mp hk))
 
 end TypedComb
 
@@ -11270,25 +9649,6 @@ theorem typed7_bound (K : ℕ) (m : ℕ → ℕ)
     hcut (fun u v t hG h1 h2 _ _ => hα u v t hG h1 h2) (fun u v t hG _ _ _ => hβ u v t hG)
     (fun u v t hG _ _ _ => hγ u v t hG)
 
-/-- The class selector `H7` written with explicit index tests (`i.val ≤ 1`, as in a pair
-classification `A / B / C`). -/
-theorem H7_eq (HA HB HC : ℝ → ℝ) (i j : Fin 7) (t : ℝ) :
-    H7 HA HB HC i j t
-      = if i.val ≤ 1 ∧ j.val ≤ 1 then HA t else if i.val ≤ 1 ∨ j.val ≤ 1 then HB t else HC t := by
-  unfold H7 isP
-  by_cases hi : i.val < 2 <;> by_cases hj : j.val < 2
-  · have hi' : i.val ≤ 1 := by omega
-    have hj' : j.val ≤ 1 := by omega
-    simp [hi, hj, hi', hj']
-  · have hi' : i.val ≤ 1 := by omega
-    have hj' : ¬ j.val ≤ 1 := by omega
-    simp [hi, hj, hi', hj']
-  · have hi' : ¬ i.val ≤ 1 := by omega
-    have hj' : j.val ≤ 1 := by omega
-    simp [hi, hj, hi', hj']
-  · have hi' : ¬ i.val ≤ 1 := by omega
-    have hj' : ¬ j.val ≤ 1 := by omega
-    simp [hi, hj, hi', hj']
 
 end Typed7
 
@@ -11595,30 +9955,7 @@ theorem chk4_sound (δ : ℤ) : ∀ (n : ℕ) (b : Box6) (a₁ a₂ a₃ a₄ a�
       · exact ih _ _ _ _ _ _ _ h1 hs
       · exact ih _ _ _ _ _ _ _ h2 hs
 
-/-- refutation checker for a triple: `det3h < 0` on the whole box. -/
-def chk3 (δ : ℤ) : ℕ → Box6 → Bool
-  | 0, _ => false
-  | n + 1, b =>
-    decide ((idet3 δ b.A b.B b.C).2 < 0) ||
-    (chk3 δ n (b.split (widest b)).1 && chk3 δ n (b.split (widest b)).2)
 
-theorem chk3_sound (δ : ℤ) : ∀ (n : ℕ) (b : Box6) (a₁ a₂ a₃ a₄ a₅ a₆ : ℝ),
-    chk3 δ n b = true → b.Mem a₁ a₂ a₃ a₄ a₅ a₆ → det3h (δ : ℝ) a₁ a₂ a₃ < 0 := by
-  intro n
-  induction n with
-  | zero => intro b a₁ a₂ a₃ a₄ a₅ a₆ h; simp [chk3] at h
-  | succ n ih =>
-    intro b a₁ a₂ a₃ a₄ a₅ a₆ h hm
-    obtain ⟨hA, hB, hC, hD, hE, hF⟩ := hm
-    have t1 := idet3_mem δ hA hB hC
-    simp only [chk3, Bool.or_eq_true, Bool.and_eq_true, decide_eq_true_eq] at h
-    rcases h with (h | h)
-    · have h' : ((idet3 δ b.A b.B b.C).2 : ℝ) < 0 := by exact_mod_cast h
-      exact lt_of_le_of_lt t1.2 h'
-    · obtain ⟨h1, h2⟩ := h
-      rcases Box6.mem_split (widest b) ⟨hA, hB, hC, hD, hE, hF⟩ with hs | hs
-      · exact ih _ _ _ _ _ _ _ h1 hs
-      · exact ih _ _ _ _ _ _ _ h2 hs
 
 end M6
 end ThomsonN7
@@ -11764,9 +10101,6 @@ theorem comb5_dec : ∀ b01 b02 b03 b04 b12 b13 b14 b23 b24 b34 : Bool,
 noncomputable def col (τ : ℝ) (y : Fin 7 → R3) (a b : Fin 5) : Bool :=
   decide (|⟪y a.succ.succ, y b.succ.succ⟫_ℝ - M3.cosB| ≤ τ)
 
-lemma col_comm (τ : ℝ) (y : Fin 7 → R3) (a b : Fin 5) : col τ y a b = col τ y b a := by
-  unfold col
-  rw [real_inner_comm]
 
 lemma mk10_col (τ : ℝ) (y : Fin 7 → R3) (a b : Fin 5) (hab : a < b) :
     mk10 [col τ y 0 1, col τ y 0 2, col τ y 0 3, col τ y 0 4, col τ y 1 2, col τ y 1 3,
@@ -12135,9 +10469,6 @@ and `C` for ring--ring pairs. -/
 def cls3 {α : Sort*} (A B C : α) (i j : Fin 7) : α :=
   if i.val ≤ 1 ∧ j.val ≤ 1 then A else if i.val ≤ 1 ∨ j.val ≤ 1 then B else C
 
-lemma cls3_symm {α : Sort*} (A B C : α) (i j : Fin 7) : cls3 A B C i j = cls3 A B C j i := by
-  unfold cls3
-  simp only [and_comm, or_comm]
 
 /-- Termwise facts for the pairs of a minimal-pair configuration: the class minorant lies below
 `phi` and its contact set is contained in the class zero predicate. -/
@@ -12166,24 +10497,6 @@ lemma pair_facts {y : Fin 7 → R3} (hy : y ∈ SphereConfig 7) {lo hi : ℝ}
     · simpa only [h1, h2, ite_false, ite_true] using hB _ hge hlt
     · simpa only [h1, h2, ite_false] using hC _ hge hlt
 
-/-- Explicit expansion of the typed double sum over the `21` pairs of `Fin 7`: the pole pair
-`(0,1)`, the ten pole--ring pairs and the ten ring--ring pairs. -/
-lemma sum_cls3_seven (HA HB HC : ℝ → ℝ) (g : Fin 7 → Fin 7 → ℝ) :
-    ∑ i : Fin 7, ∑ j ∈ Finset.Ioi i, cls3 HA HB HC i j (g i j) =
-      HA (g 0 1)
-      + (HB (g 0 2) + HB (g 0 3) + HB (g 0 4) + HB (g 0 5) + HB (g 0 6))
-      + (HB (g 1 2) + HB (g 1 3) + HB (g 1 4) + HB (g 1 5) + HB (g 1 6))
-      + (HC (g 2 3) + HC (g 2 4) + HC (g 2 5) + HC (g 2 6) + HC (g 3 4) + HC (g 3 5)
-        + HC (g 3 6) + HC (g 4 5) + HC (g 4 6) + HC (g 5 6)) := by
-  have hI : ∀ i : Fin 7, ∑ j ∈ Finset.Ioi i, cls3 HA HB HC i j (g i j) =
-      ∑ j, if i < j then cls3 HA HB HC i j (g i j) else 0 := by
-    intro i
-    rw [← Finset.sum_filter]
-    congr 1
-    ext j; simp
-  simp only [hI, Fin.sum_univ_seven]
-  simp [cls3]
-  ring
 
 /-- The energy of a unit configuration as a double sum of `phi`. -/
 lemma energy_eq_sum {y : Fin 7 → R3} (hy : y ∈ SphereConfig 7) :
@@ -12544,28 +10857,6 @@ theorem typed7_cls3 (K : ℕ) (m : ℕ → ℕ)
   exact ThreePoint.typed7_bound K m FP FR hFP hFR HA HB HC ψBa ψCb e cal cbe alo ahi y hy.1
     ⟨hlo, hhi⟩ hα hβ hγ
 
-/-- **Typed bound with the lower cut, in the shape of the slab glue.** As `typed7_cls3`, but
-all pair inner products are assumed to be `≥ amin`, and the positivity conditions only have to
-hold for Gram triples with entries `≥ amin`. -/
-theorem typed7_cls3_lo (K : ℕ) (m : ℕ → ℕ)
-    (FP FR : (k : ℕ) → Matrix (Fin (m k)) (Fin (m k)) ℝ)
-    (hFP : ∀ k, k < K → (FP k).PosSemidef) (hFR : ∀ k, k < K → (FR k).PosSemidef)
-    (HA HB HC ψBa ψCb : ℝ → ℝ) (e cal cbe alo ahi amin : ℝ)
-    (hα : ∀ u v t, ThreePoint.GramOK u v t → alo ≤ u → u ≤ ahi → amin ≤ v → amin ≤ t →
-      0 ≤ ThreePoint.lamA (ThreePoint.Sk K m FP) (ThreePoint.Sk K m FR) HA ψBa cal u v t)
-    (hβ : ∀ u v t, ThreePoint.GramOK u v t → amin ≤ u → amin ≤ v → amin ≤ t →
-      0 ≤ ThreePoint.lamB (ThreePoint.Sk K m FP) (ThreePoint.Sk K m FR) HB ψBa ψCb cbe u v t)
-    (hγ : ∀ u v t, ThreePoint.GramOK u v t → amin ≤ u → amin ≤ v → amin ≤ t →
-      0 ≤ ThreePoint.lamG (ThreePoint.Sk K m FR) HC ψCb
-        ((e + 2 * ThreePoint.Sk K m FP 1 1 1 + 5 * ThreePoint.Sk K m FR 1 1 1
-          - 5 * cal - 20 * cbe) / 10) u v t) :
-    ∀ y ∈ SphereConfig 7, alo ≤ ⟪y 0, y 1⟫_ℝ → ⟪y 0, y 1⟫_ℝ ≤ ahi →
-      (∀ i j, i ≠ j → amin ≤ ⟪y i, y j⟫_ℝ) →
-      e ≤ ∑ i : Fin 7, ∑ j ∈ Finset.Ioi i, cls3 HA HB HC i j ⟪y i, y j⟫_ℝ := by
-  intro y hy hlo hhi hmin
-  rw [← sum_H7_eq_sum_cls3 HA HB HC (fun i j => ⟪y i, y j⟫_ℝ)]
-  exact ThreePoint.typed7_bound_lo K m FP FR hFP hFR HA HB HC ψBa ψCb e cal cbe alo ahi amin y
-    hy.1 hmin ⟨hlo, hhi⟩ hα hβ hγ
 
 end Bridge
 
@@ -12628,31 +10919,6 @@ theorem cap_of_typed_tube7 {a0 e δ τ : ℝ} (K : ℕ) (m : ℕ → ℕ)
   exact typed7_cls3 K m FP FR hFP hFR HA HB HC ψBa ψCb e cal cbe (-1) a0 hα hβ hγ y hy
     (neg_one_le_inner_of_unit (hy.1 0) (hy.1 1)) hle
 
-/-- **Slab from the typed bound with the lower cut.** For minimal-pair configurations with
-`lo ≤ ⟪y 0, y 1⟫ ≤ hi`, all pair inner products are `≥ lo`; the typed positivity conditions
-(for Gram triples with entries `≥ lo`) with a bound `e > E(P)` and class minorants below `phi`
-give `E(y) > E(P)`. -/
-theorem slab_of_typed7 {lo hi e : ℝ} (K : ℕ) (m : ℕ → ℕ)
-    (FP FR : (k : ℕ) → Matrix (Fin (m k)) (Fin (m k)) ℝ)
-    (hFP : ∀ k, k < K → (FP k).PosSemidef) (hFR : ∀ k, k < K → (FR k).PosSemidef)
-    (HA HB HC ψBa ψCb : ℝ → ℝ) (cal cbe : ℝ) (he : coulombEnergy pentBipyramid < e)
-    (hα : ∀ u v t, ThreePoint.GramOK u v t → lo ≤ u → u ≤ hi → lo ≤ v → lo ≤ t →
-      0 ≤ ThreePoint.lamA (ThreePoint.Sk K m FP) (ThreePoint.Sk K m FR) HA ψBa cal u v t)
-    (hβ : ∀ u v t, ThreePoint.GramOK u v t → lo ≤ u → lo ≤ v → lo ≤ t →
-      0 ≤ ThreePoint.lamB (ThreePoint.Sk K m FP) (ThreePoint.Sk K m FR) HB ψBa ψCb cbe u v t)
-    (hγ : ∀ u v t, ThreePoint.GramOK u v t → lo ≤ u → lo ≤ v → lo ≤ t →
-      0 ≤ ThreePoint.lamG (ThreePoint.Sk K m FR) HC ψCb
-        ((e + 2 * ThreePoint.Sk K m FP 1 1 1 + 5 * ThreePoint.Sk K m FR 1 1 1
-          - 5 * cal - 20 * cbe) / 10) u v t)
-    (hA : ∀ t, lo ≤ t → t ≤ hi → HA t ≤ phi t)
-    (hB : ∀ t, lo ≤ t → t < 1 → HB t ≤ phi t)
-    (hC : ∀ t, lo ≤ t → t < 1 → HC t ≤ phi t) :
-    ∀ y ∈ SphereConfig 7, lo ≤ ⟪y 0, y 1⟫_ℝ → ⟪y 0, y 1⟫_ℝ ≤ hi →
-      (∀ i j, i ≠ j → ⟪y 0, y 1⟫_ℝ ≤ ⟪y i, y j⟫_ℝ) →
-      coulombEnergy pentBipyramid < coulombEnergy y := by
-  refine slab_of_typed HA HB HC he (fun y hy hlo hhi hmin => ?_) hA hB hC
-  exact typed7_cls3_lo K m FP FR hFP hFR HA HB HC ψBa ψCb e cal cbe lo hi lo hα hβ hγ y hy hlo hhi
-    (fun i j hij => hlo.trans (hmin i j hij))
 
 end Assembly
 
@@ -12685,29 +10951,6 @@ section Final
 open scoped InnerProductSpace
 open Base
 
-/-- **Near-sharp cap, final form.**  As `cap_of_typed_tube7`, with the tube rigidity and the local
-Regime-B statement discharged: only `τ ≤ 1/165000` is required. -/
-theorem cap_of_typed_tube7_final {a0 e δ τ : ℝ} (hτ : τ ≤ 1 / 165000) (K : ℕ) (m : ℕ → ℕ)
-    (FP FR : (k : ℕ) → Matrix (Fin (m k)) (Fin (m k)) ℝ)
-    (hFP : ∀ k, k < K → (FP k).PosSemidef) (hFR : ∀ k, k < K → (FR k).PosSemidef)
-    (HA HB HC ψBa ψCb : ℝ → ℝ) (cal cbe : ℝ)
-    (hα : ∀ u v t, ThreePoint.GramOK u v t → -1 ≤ u → u ≤ a0 →
-      0 ≤ ThreePoint.lamA (ThreePoint.Sk K m FP) (ThreePoint.Sk K m FR) HA ψBa cal u v t)
-    (hβ : ∀ u v t, ThreePoint.GramOK u v t →
-      0 ≤ ThreePoint.lamB (ThreePoint.Sk K m FP) (ThreePoint.Sk K m FR) HB ψBa ψCb cbe u v t)
-    (hγ : ∀ u v t, ThreePoint.GramOK u v t →
-      0 ≤ ThreePoint.lamG (ThreePoint.Sk K m FR) HC ψCb
-        ((e + 2 * ThreePoint.Sk K m FP 1 1 1 + 5 * ThreePoint.Sk K m FR 1 1 1
-          - 5 * cal - 20 * cbe) / 10) u v t)
-    (hEδ : coulombEnergy pentBipyramid ≤ e + δ)
-    (hA : ∀ t, -1 ≤ t → t ≤ a0 → HA t ≤ phi t ∧ (phi t - HA t ≤ δ → |t + 1| ≤ τ))
-    (hB : ∀ t, -1 ≤ t → t < 1 → HB t ≤ phi t ∧ (phi t - HB t ≤ δ → |t| ≤ τ))
-    (hC : ∀ t, -1 ≤ t → t < 1 →
-      HC t ≤ phi t ∧ (phi t - HC t ≤ δ → |t - c1| ≤ τ ∨ |t - c2| ≤ τ)) :
-    ∀ y ∈ SphereConfig 7, ⟪y 0, y 1⟫_ℝ ≤ a0 →
-      (∀ i j, i ≠ j → ⟪y 0, y 1⟫_ℝ ≤ ⟪y i, y j⟫_ℝ) → Concl y :=
-  cap_of_typed_tube7 K m FP FR hFP hFR HA HB HC ψBa ψCb cal cbe (localGramA_of_le hτ)
-    (tubeRigid_of_le (hτ.trans (by norm_num))) hα hβ hγ hEδ hA hB hC
 
 /-- **Cap specification.**  A near-sharp cap certificate on the cap `⟪y 0, y 1⟫ ≤ a0`: class
 minorants `HA HB HC` whose typed sum is bounded below by `e` on minimal-pair configurations of the
@@ -12754,50 +10997,7 @@ theorem slabSpec_sound {lo hi : ℝ} (h : SlabSpec lo hi) :
   obtain ⟨e, HA, HB, HC, he, hTB, hA, hB, hC⟩ := h
   exact slab_of_typed HA HB HC he (fun y hy hlo hhi hmin => hTB y hy hlo hhi hmin) hA hB hC
 
-/-- **Cap specification from the typed three-point data.**  The `Typed7` positivity conditions
-(PSD blocks `FP FR`, multipliers, constants) with class minorants give a cap specification. -/
-theorem capSpec_of_typed7 {a0 e δ τ : ℝ} (hτ : τ ≤ 1 / 165000) (K : ℕ) (m : ℕ → ℕ)
-    (FP FR : (k : ℕ) → Matrix (Fin (m k)) (Fin (m k)) ℝ)
-    (hFP : ∀ k, k < K → (FP k).PosSemidef) (hFR : ∀ k, k < K → (FR k).PosSemidef)
-    (HA HB HC ψBa ψCb : ℝ → ℝ) (cal cbe : ℝ)
-    (hα : ∀ u v t, ThreePoint.GramOK u v t → -1 ≤ u → u ≤ a0 →
-      0 ≤ ThreePoint.lamA (ThreePoint.Sk K m FP) (ThreePoint.Sk K m FR) HA ψBa cal u v t)
-    (hβ : ∀ u v t, ThreePoint.GramOK u v t →
-      0 ≤ ThreePoint.lamB (ThreePoint.Sk K m FP) (ThreePoint.Sk K m FR) HB ψBa ψCb cbe u v t)
-    (hγ : ∀ u v t, ThreePoint.GramOK u v t →
-      0 ≤ ThreePoint.lamG (ThreePoint.Sk K m FR) HC ψCb
-        ((e + 2 * ThreePoint.Sk K m FP 1 1 1 + 5 * ThreePoint.Sk K m FR 1 1 1
-          - 5 * cal - 20 * cbe) / 10) u v t)
-    (hEδ : coulombEnergy pentBipyramid ≤ e + δ)
-    (hA : ∀ t, -1 ≤ t → t ≤ a0 → HA t ≤ phi t ∧ (phi t - HA t ≤ δ → |t + 1| ≤ τ))
-    (hB : ∀ t, -1 ≤ t → t < 1 → HB t ≤ phi t ∧ (phi t - HB t ≤ δ → |t| ≤ τ))
-    (hC : ∀ t, -1 ≤ t → t < 1 →
-      HC t ≤ phi t ∧ (phi t - HC t ≤ δ → |t - c1| ≤ τ ∨ |t - c2| ≤ τ)) :
-    CapSpec a0 :=
-  ⟨e, δ, τ, HA, HB, HC, hτ, hEδ, fun y hy hle _ =>
-    typed7_cls3 K m FP FR hFP hFR HA HB HC ψBa ψCb e cal cbe (-1) a0 hα hβ hγ y hy
-      (neg_one_le_inner_of_unit (hy.1 0) (hy.1 1)) hle, hA, hB, hC⟩
 
-/-- **Slab specification from the typed three-point data.** -/
-theorem slabSpec_of_typed7 {lo hi e : ℝ} (K : ℕ) (m : ℕ → ℕ)
-    (FP FR : (k : ℕ) → Matrix (Fin (m k)) (Fin (m k)) ℝ)
-    (hFP : ∀ k, k < K → (FP k).PosSemidef) (hFR : ∀ k, k < K → (FR k).PosSemidef)
-    (HA HB HC ψBa ψCb : ℝ → ℝ) (cal cbe : ℝ) (he : coulombEnergy pentBipyramid < e)
-    (hα : ∀ u v t, ThreePoint.GramOK u v t → lo ≤ u → u ≤ hi → lo ≤ v → lo ≤ t →
-      0 ≤ ThreePoint.lamA (ThreePoint.Sk K m FP) (ThreePoint.Sk K m FR) HA ψBa cal u v t)
-    (hβ : ∀ u v t, ThreePoint.GramOK u v t → lo ≤ u → lo ≤ v → lo ≤ t →
-      0 ≤ ThreePoint.lamB (ThreePoint.Sk K m FP) (ThreePoint.Sk K m FR) HB ψBa ψCb cbe u v t)
-    (hγ : ∀ u v t, ThreePoint.GramOK u v t → lo ≤ u → lo ≤ v → lo ≤ t →
-      0 ≤ ThreePoint.lamG (ThreePoint.Sk K m FR) HC ψCb
-        ((e + 2 * ThreePoint.Sk K m FP 1 1 1 + 5 * ThreePoint.Sk K m FR 1 1 1
-          - 5 * cal - 20 * cbe) / 10) u v t)
-    (hA : ∀ t, lo ≤ t → t ≤ hi → HA t ≤ phi t)
-    (hB : ∀ t, lo ≤ t → t < 1 → HB t ≤ phi t)
-    (hC : ∀ t, lo ≤ t → t < 1 → HC t ≤ phi t) :
-    SlabSpec lo hi :=
-  ⟨e, HA, HB, HC, he, fun y hy hlo hhi hmin =>
-    typed7_cls3_lo K m FP FR hFP hFR HA HB HC ψBa ψCb e cal cbe lo hi lo hα hβ hγ y hy hlo hhi
-      (fun i j hij => hlo.trans (hmin i j hij)), hA, hB, hC⟩
 
 /-- **Assembly.**  A cap specification at `a 0` and slab specifications on `[a k, a (k+1)]`
 for `k < K`, with `-9/10 ≤ a K`, prove both open Challenge statements for `N = 7`. -/
@@ -12890,11 +11090,6 @@ lemma coulombEnergy_pent_le_of {e δ : ℝ} (h : (144529774142213429350444915306
     coulombEnergy pentBipyramid ≤ e + δ :=
   le_trans coulombEnergy_pent_enc40.2 h
 
-/-- Lower enclosure (for `e` a certificate value: `e ≤ E(P) + δ`). -/
-lemma le_coulombEnergy_pent_of {e δ : ℝ} (h : e ≤ (144529774142213429350444915306029287904778:ℝ) / 10^40 + δ) :
-    e ≤ coulombEnergy pentBipyramid + δ := by
-  have := coulombEnergy_pent_enc40.1
-  linarith
 
 end EPEnc
 end Glue
@@ -13056,12 +11251,6 @@ theorem yOf_le_one {t : ℝ} (h1 : -1 ≤ t) (h2 : t < 1) : yOf t ≤ 1 := by
   have := yOf_sq h2.le
   nlinarith
 
-/-- `y ≤ yl` as soon as `t ≥ 1 - 2 yl²`. -/
-theorem yOf_le_of_lo {t yl : ℝ} (h2 : t < 1) (hyl : 0 ≤ yl) (h : 1 - 2 * yl ^ 2 ≤ t) :
-    yOf t ≤ yl := by
-  have hy := yOf_pos h2
-  have := yOf_sq h2.le
-  nlinarith
 
 /-- `y ≥ yh` as soon as `t ≤ 1 - 2 yh²`. -/
 theorem le_yOf_of_hi {t yh : ℝ} (h2 : t < 1) (hyh : 0 ≤ yh) (h : t ≤ 1 - 2 * yh ^ 2) :
@@ -13128,23 +11317,6 @@ structure PlainCert where
 def PlainCert.check (c : PlainCert) (a1 : ℤ) (a2 : ℕ) (b1 : ℤ) (b2 : ℕ) : Bool :=
   0 < c.Dq && 0 < a2 && 0 < b2 && chainOK (Fpoly c.Q c.Dq) c.pieces a1 a2 b1 b2
 
-/-- **Plain minorant**: a passing certificate on `[a, b]` gives `H ≤ phi` for all `t < 1` with
-`1 - 2 b² ≤ t ≤ 1 - 2 a²` (`0 ≤ a`, `0 ≤ b`). -/
-theorem PlainCert.le_phi (c : PlainCert) {a1 : ℤ} {a2 : ℕ} {b1 : ℤ} {b2 : ℕ}
-    (hc : c.check a1 a2 b1 b2 = true) {t : ℝ} (h : t < 1)
-    (ha : 0 ≤ (a1 : ℝ) / a2) (hb : 0 ≤ (b1 : ℝ) / b2)
-    (hlo : 1 - 2 * ((b1 : ℝ) / b2) ^ 2 ≤ t) (hhi : t ≤ 1 - 2 * ((a1 : ℝ) / a2) ^ 2) :
-    peval c.Q t / c.Dq ≤ phi t := by
-  simp only [PlainCert.check, Bool.and_eq_true, decide_eq_true_eq] at hc
-  obtain ⟨⟨⟨hD, ha2⟩, hb2⟩, hch⟩ := hc
-  have ha2R : (0 : ℝ) < a2 := by exact_mod_cast ha2
-  have hb2R : (0 : ℝ) < b2 := by exact_mod_cast hb2
-  have hy1 := yOf_le_of_lo h hb hlo
-  have hy0 := le_yOf_of_hi h ha hhi
-  refine H_le_phi_of_F hD h ?_
-  refine chainOK_nonneg _ c.pieces a1 a2 b1 b2 ha2 hb2 hch (yOf t) ?_ ?_
-  · rw [div_le_iff₀ ha2R] at hy0; linarith
-  · rw [le_div_iff₀ hb2R] at hy1; linarith
 
 /-! ## D. Contact certificates with coercivity -/
 
@@ -13474,23 +11646,7 @@ theorem abs_node_sub_c2_le {tn ε lo hi : ℝ} (hlo : lo ≤ √5) (hhi : √5 �
   rw [abs_le]
   constructor <;> linarith
 
-/-- **Slab facts** for `hB`/`hC` (`H ≤ phi` on `[lo, 1)`) and `hA` (`H ≤ phi` on `[lo, hi]`)
-from plain certificates; `lo = 1 - 2 yl²`, `hi = 1 - 2 yh²` are given by rational `y`-ends. -/
-theorem PlainCert.slab_lo (c : PlainCert) {b1 : ℤ} {b2 : ℕ}
-    (hc : c.check 0 1 b1 b2 = true) {lo : ℝ} (hb : 0 ≤ (b1 : ℝ) / b2)
-    (hlo : 1 - 2 * ((b1 : ℝ) / b2) ^ 2 ≤ lo) :
-    ∀ t, lo ≤ t → t < 1 → peval c.Q t / c.Dq ≤ phi t := by
-  intro t h1 h2
-  exact c.le_phi hc h2 (by simp) hb (by linarith) (by simp; linarith)
 
-/-- Slab fact for `hA`: `H ≤ phi` for `lo ≤ t ≤ hi`. -/
-theorem PlainCert.slab_two (c : PlainCert) {a1 : ℤ} {a2 : ℕ} {b1 : ℤ} {b2 : ℕ}
-    (hc : c.check a1 a2 b1 b2 = true) {lo hi : ℝ} (ha : 0 ≤ (a1 : ℝ) / a2)
-    (hb : 0 ≤ (b1 : ℝ) / b2) (hlo : 1 - 2 * ((b1 : ℝ) / b2) ^ 2 ≤ lo)
-    (hhi : hi ≤ 1 - 2 * ((a1 : ℝ) / a2) ^ 2) (hlt : hi < 1) :
-    ∀ t, lo ≤ t → t ≤ hi → peval c.Q t / c.Dq ≤ phi t := by
-  intro t h1 h2
-  exact c.le_phi hc (lt_of_le_of_lt h2 hlt) ha hb (by linarith) (by linarith)
 
 end Coerce
 end Glue
@@ -14689,9 +12845,6 @@ lemma fqFlat_spec (w D : ℕ) (s : TBlk) (h : s.wf = true) :
     refine Finset.sum_congr rfl fun c _ => ?_
     ring
 
-/-- Reference evaluator of the Kronecker value of the quadratic form of a packed block: the
-expression tree (slow). -/
-def fqTree (w D : ℕ) (s : TBlk) : ℤ := (sqfF s.B s.z).kev w D
 
 /-- The evaluator used by the certificates: the flat `Nat`-only version. -/
 def fqCur (w D : ℕ) (s : TBlk) : ℤ := fqFlat w D s
