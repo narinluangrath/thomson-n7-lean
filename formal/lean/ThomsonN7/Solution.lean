@@ -557,30 +557,13 @@ theorem exists_tangent_frame (x : R3) (hx : ‖x‖ = 1) :
     ∃ e₁ e₂ : R3, ∀ y z : R3, ‖y‖ = 1 → ‖z‖ = 1 →
       (1 - ⟪x, y⟫ ^ 2 = ⟪e₁, y⟫ ^ 2 + ⟪e₂, y⟫ ^ 2) ∧
       (⟪y, z⟫ - ⟪x, y⟫ * ⟪x, z⟫ = ⟪e₁, y⟫ * ⟪e₁, z⟫ + ⟪e₂, y⟫ * ⟪e₂, z⟫) := by
-  have hcard : Module.finrank ℝ R3 = Fintype.card (Fin 3) := by simp
-  let v : Fin 3 → R3 := fun _ => x
-  have hv : Orthonormal ℝ (({0} : Set (Fin 3)).domRestrict v) := by
-    rw [orthonormal_iff_ite]
-    intro i j
-    have hij : i = j := Subtype.ext (by
-      have hi := i.2; have hj := j.2
-      rw [hi, hj])
-    subst hij
-    simp [Set.domRestrict, v, real_inner_self_eq_norm_sq, hx]
-  obtain ⟨b, hb⟩ := Orthonormal.exists_orthonormalBasis_extension_of_card_eq hcard hv
-  have hb0 : b 0 = x := hb 0 (Set.mem_singleton 0)
+  obtain ⟨b, hb⟩ := Orthonormal.exists_orthonormalBasis_extension_of_card_eq (𝕜 := ℝ) (v := fun _ : Fin 3 => x)
+    (s := {0}) (by simp) (by simp [orthonormal_iff_ite, real_inner_self_eq_norm_sq, hx])
   refine ⟨b 1, b 2, fun y z hy hz => ?_⟩
-  have P := b.sum_inner_mul_inner y z
-  have Py := b.sum_inner_mul_inner y y
-  rw [Fin.sum_univ_three, hb0] at P Py
-  rw [real_inner_self_eq_norm_sq, hy] at Py
-  have c1 : ⟪y, x⟫ = ⟪x, y⟫ := real_inner_comm _ _
-  have c2 : ⟪y, b 1⟫ = ⟪b 1, y⟫ := real_inner_comm _ _
-  have c3 : ⟪y, b 2⟫ = ⟪b 2, y⟫ := real_inner_comm _ _
-  rw [c1, c2, c3] at P Py
-  constructor
-  · linear_combination -Py
-  · linear_combination -P
+  have := b.sum_inner_mul_inner y z
+  have := b.sum_inner_mul_inner y y
+  simp only [Fin.sum_univ_three, hb 0 rfl, real_inner_self_eq_norm_sq, hy, real_inner_comm y] at *
+  constructor <;> linarith
 
 /-- **Bachoc–Vallentin positivity for `S²`.** For unit vectors `x i`, the moment matrix
 `Σ_{i,j,l} S_k(⟨xᵢ,xⱼ⟩, ⟨xᵢ,x_l⟩, ⟨xⱼ,x_l⟩)` is positive semidefinite (as a quadratic form). -/
@@ -907,16 +890,9 @@ theorem three_point_identity (hn : 3 ≤ n) (s : ℝ → ℝ → ℝ → ℝ)
         - e / (n.choose 2 : ℝ)) - Rs s n ⟪x i, x j⟫ ⟪x i, x l⟫ ⟪x j, x l⟫)
       + ((n : ℝ) - 2) * ∑ i, ∑ j, ∑ l, s ⟪x i, x j⟫ ⟪x i, x l⟫ ⟪x j, x l⟫
     = 2 * ((n : ℝ) - 2) * (∑ i, ∑ j ∈ Finset.Ioi i, H ⟪x i, x j⟫ - e) := by
-  have hsymm : ∀ i j, ⟪x i, x j⟫ = ⟪x j, x i⟫ := fun i j => (real_inner_comm _ _).symm
-  have hdiag : ∀ i, ⟪x i, x i⟫ = 1 := fun i => by
-    rw [real_inner_self_eq_norm_sq, hx i]; norm_num
-  rw [dsum_sub, dsum_Rs hn s hs12 hs23 (fun i j => ⟪x i, x j⟫) hsymm hdiag,
-    dsum_H hn H (e / (n.choose 2 : ℝ)) (fun i j => ⟪x i, x j⟫) hsymm]
-  have hc : (n.choose 2 : ℝ) = n * (n - 1) / 2 := Nat.cast_choose_two ℝ n
-  have h3 : (3 : ℝ) ≤ n := by exact_mod_cast hn
-  have hn1 : ((n : ℝ) - 1) ≠ 0 := by intro h; linarith
-  rw [hc]
-  field_simp
+  rw [dsum_sub, dsum_Rs hn s hs12 hs23 _ (fun i j => real_inner_comm _ _) fun i => by simp [hx],
+    dsum_H hn H _ _ fun i j => real_inner_comm _ _, Nat.cast_choose_two]
+  field_simp [sub_ne_zero.2 (by norm_cast; omega : (n : ℝ) ≠ 1)]
   ring
 
 end Final
@@ -1245,53 +1221,22 @@ lemma digit_unique (B : ℕ) (a : ℕ → ℤ) : ∀ N : ℕ, (∀ k < N, |a k| 
     ∑ k ∈ Finset.range N, a k * (B : ℤ) ^ k = 0 → ∀ k < N, a k = 0 := by
   intro N
   induction N generalizing a with
-  | zero => intro _ _ k hk; omega
+  | zero => simp
   | succ N ih =>
     intro hb hs
-    rw [Finset.sum_range_succ'] at hs
-    have hB : (0 : ℤ) < B := lt_of_le_of_lt (abs_nonneg _) (hb 0 (Nat.succ_pos N))
-    have hs' : ∑ k ∈ Finset.range N, a (k + 1) * (B : ℤ) ^ (k + 1) + a 0 * (B : ℤ) ^ 0 = 0 := hs
-    have hfac : ∑ k ∈ Finset.range N, a (k + 1) * (B : ℤ) ^ (k + 1)
-        = (B : ℤ) * ∑ k ∈ Finset.range N, a (k + 1) * (B : ℤ) ^ k := by
-      rw [Finset.mul_sum]
-      refine Finset.sum_congr rfl fun k _ => ?_
-      ring
-    rw [hfac] at hs'
-    have hdvd : (B : ℤ) ∣ a 0 := by
-      refine ⟨-∑ k ∈ Finset.range N, a (k + 1) * (B : ℤ) ^ k, ?_⟩
-      linarith
-    have ha0 : a 0 = 0 := Int.eq_zero_of_abs_lt_dvd hdvd (hb 0 (Nat.succ_pos N))
-    have hsum : ∑ k ∈ Finset.range N, a (k + 1) * (B : ℤ) ^ k = 0 := by
-      rw [ha0] at hs'
-      simp only [pow_zero, mul_one, add_zero] at hs'
-      rcases mul_eq_zero.1 hs' with h | h
-      · exact absurd h hB.ne'
-      · exact h
-    have := ih (fun k => a (k + 1)) (fun k hk => hb (k + 1) (by omega)) hsum
-    intro k hk
-    rcases Nat.eq_zero_or_pos k with h0 | hpos
-    · rw [h0]; exact ha0
-    · obtain ⟨j, rfl⟩ : ∃ j, k = j + 1 := ⟨k - 1, by omega⟩
-      exact this j (by omega)
+    simp only [Finset.sum_range_succ', pow_succ, ← mul_assoc, ← Finset.sum_mul, pow_zero, mul_one] at hs
+    have hB := hb 0 (by omega)
+    have h0 := Int.eq_zero_of_abs_lt_dvd ⟨-∑ k ∈ Finset.range N, a (k + 1) * (B : ℤ) ^ k, by linarith⟩ hB
+    have := ih (fun k => a (k + 1)) (fun k hk => hb _ (by omega))
+      (by simpa [h0, show B ≠ 0 by exact_mod_cast ((abs_nonneg _).trans_lt hB).ne'] using hs)
+    rintro (_ | k) hk
+    exacts [h0, this k (by omega)]
 
 lemma decode_code {D a b d : ℕ} (ha : a < D) (hb : b < D) (hd : d < D) :
     (a + D * b + D * D * d) % D = a ∧ (a + D * b + D * D * d) / D % D = b ∧
       (a + D * b + D * D * d) / D / D = d ∧ a + D * b + D * D * d < D * D * D := by
-  have hD : 0 < D := by omega
-  have e1 : a + D * b + D * D * d = a + D * (b + D * d) := by ring
-  have h1 : (a + D * b + D * D * d) / D = b + D * d := by
-    rw [e1, Nat.add_mul_div_left _ _ hD, Nat.div_eq_of_lt ha, zero_add]
-  refine ⟨?_, ?_, ?_, ?_⟩
-  · rw [e1, Nat.add_mul_mod_self_left, Nat.mod_eq_of_lt ha]
-  · rw [h1, Nat.add_mul_mod_self_left, Nat.mod_eq_of_lt hb]
-  · rw [h1, Nat.add_mul_div_left _ _ hD, Nat.div_eq_of_lt hb, zero_add]
-  · calc a + D * b + D * D * d < D + D * b + D * D * d := by omega
-      _ = D * (b + 1) + D * D * d := by ring
-      _ ≤ D * D + D * D * d := by
-          have : D * (b + 1) ≤ D * D := Nat.mul_le_mul_left D hb
-          omega
-      _ = D * D * (d + 1) := by ring
-      _ ≤ D * D * D := Nat.mul_le_mul_left _ hd
+  simp [add_assoc, mul_assoc, ← mul_add, Nat.add_mul_div_left, Nat.zero_lt_of_lt ha, Nat.div_eq_of_lt, Nat.mod_eq_of_lt, *]
+  nlinarith
 
 /-- **Soundness of the Kronecker check.** -/
 theorem Ex.ev_eq_zero_of_kev (e : Ex) (w D : ℕ) (hx : e.dx < D) (hy : e.dy < D)
@@ -1590,27 +1535,10 @@ lemma cast_ent (r : ℕ) (b : Blk) (a c : ℕ) :
 lemma ev_fpE (r : ℕ) (b : Blk) (u v t : ℝ) :
     (fpE r b).ev u v t
       = ∑ a ∈ Finset.range r, ∑ c ∈ Finset.range r, (b.ent r a c : ℝ) * u ^ a * v ^ c := by
-  simp only [fpE, ev_add, ev_sumRange, ev_smulNZ, ev_mul, ev_mon, pow_zero, mul_one, one_mul]
-  have h1 : ∀ q ∈ Finset.range r, (b.dq q : ℝ) * ((∑ a ∈ Finset.range r, (b.lq q a : ℝ) * u ^ a)
-      * (∑ c ∈ Finset.range r, (b.lq q c : ℝ) * v ^ c))
-      = ∑ a ∈ Finset.range r, ∑ c ∈ Finset.range r,
-        (b.dq q : ℝ) * b.lq q a * b.lq q c * u ^ a * v ^ c := by
-    intro q _
-    rw [Finset.sum_mul_sum, Finset.mul_sum]
-    refine Finset.sum_congr rfl fun a _ => ?_
-    rw [Finset.mul_sum]
-    refine Finset.sum_congr rfl fun c _ => ?_
-    ring
-  rw [Finset.sum_congr rfl h1]
-  have h2 : ∀ a ∈ Finset.range r, ∀ c ∈ Finset.range r, (b.ent r a c : ℝ) * u ^ a * v ^ c
-      = (∑ q ∈ Finset.range r, (b.dq q : ℝ) * b.lq q a * b.lq q c * u ^ a * v ^ c)
-        + (b.del a c : ℝ) * (u ^ a * v ^ c) := by
-    intro a _ c _
-    rw [cast_ent, add_mul, add_mul, Finset.sum_mul, Finset.sum_mul]
-    ring
-  rw [Finset.sum_congr rfl fun a ha => Finset.sum_congr rfl fun c hc => h2 a ha c hc]
-  simp only [Finset.sum_add_distrib]
-  rw [← sum3_comm r (fun a c q => (b.dq q : ℝ) * b.lq q a * b.lq q c * u ^ a * v ^ c)]
+  simp only [fpE, ev_add, ev_sumRange, ev_smulNZ, ev_mul, ev_mon, pow_zero, mul_one, one_mul,
+    cast_ent, add_mul, Finset.sum_add_distrib, Finset.sum_mul, Finset.mul_sum]
+  rw [← sum3_comm, Finset.sum_comm]
+  simp only [mul_comm, mul_assoc, mul_left_comm]
 
 /-! ## Block matrices and their quadratic forms -/
 
@@ -2025,26 +1953,12 @@ lemma Hf_sum (cf : Cert3) (u v t : ℝ) :
 lemma hpt_gramCut (cf : Cert3) (hc : cf.check = true) {u v t : ℝ} (hg : GramCut cf.an cf.ad u v t) :
     ∑ k ∈ Finset.range cf.K, matDot (cf.Fm k) (Rk cf.n (cf.m k) k u v t)
       ≤ (cf.Hf u + cf.Hf v + cf.Hf t) / 3 - ((cf.eps : ℝ) / cf.Lam) / (cf.n.choose 2 : ℕ) := by
-  obtain ⟨hn, hL, hA, hF, hS, hz⟩ := check_parts hc
+  obtain ⟨hn, hL, -, -, hS, hz⟩ := check_parts hc
   have hev := chk_sound hz u v t
-  simp only [idE, ev_sub, ev_smul, ev_c, ev_hE, ev_ftotE, ev_sumE] at hev
-  have hnr : (3 : ℝ) ≤ cf.n := by exact_mod_cast hn
-  have hn1 : (cf.n : ℝ) - 1 ≠ 0 := by
-    have : (0 : ℝ) < (cf.n : ℝ) - 1 := by linarith
-    exact this.ne'
-  have hLpos : (0 : ℝ) < cf.Lam := by exact_mod_cast hL
-  have hC : (0 : ℝ) < (cf.n.choose 2 : ℕ) := by
-    exact_mod_cast Nat.choose_pos (by omega)
-  have hFp : ∑ k ∈ Finset.range cf.K,
-        ftotTerm cf.n (fun a b c => (fkE (cf.m k) (cf.blk k) k).ev a b c) u v t
-      = 6 * ((cf.n : ℝ) - 1) * cf.Lam
-        * ∑ k ∈ Finset.range cf.K, matDot (cf.Fm k) (Rk cf.n (cf.m k) k u v t) := by
-    rw [Finset.mul_sum]
-    exact Finset.sum_congr rfl fun k _ => (key_F (cf.blk k) k cf.n hLpos.ne' hn1 u v t).symm
-  rw [hFp] at hev
-  push_cast at hev
+  rify at hL
+  push_cast [idE, ev_sub, ev_smul, ev_c, ev_hE, ev_ftotE, ev_sumE, ← key_F _ _ cf.n hL.ne' (sub_ne_zero.2 (by norm_cast; omega)), ← Finset.mul_sum] at hev
   rw [Hf_sum]
-  exact final_ineq hnr hC hLpos (sos_sum_nonneg cf.an cf.ad cf.S hS hg) hev
+  exact final_ineq (by exact_mod_cast hn) (by exact_mod_cast Nat.choose_pos (by omega)) hL (sos_sum_nonneg cf.an cf.ad cf.S hS hg) hev
 
 lemma gramCut_of_le {cf : Cert3} (hA : 0 < cf.ad) {u v t : ℝ} (hg : GramOK u v t)
     (hu : (cf.an : ℝ) / cf.ad ≤ u) (hv : (cf.an : ℝ) / cf.ad ≤ v)
@@ -2196,29 +2110,8 @@ lemma cos_eight_pi_div_five : cos (8 * π / 5) = cosB := by
 lemma cos_pent_diff (d : ℤ) (h1 : -4 ≤ d) (h2 : d ≤ 4) :
     cos (d * (2 * π / 5)) =
       if d = 0 then 1 else if d % 5 = 1 ∨ d % 5 = 4 then cosB else cosA := by
-  have : d = -4 ∨ d = -3 ∨ d = -2 ∨ d = -1 ∨ d = 0 ∨ d = 1 ∨ d = 2 ∨ d = 3 ∨ d = 4 := by omega
-  rcases this with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
-  · rw [show ((-4 : ℤ) : ℝ) * (2 * π / 5) = -(8 * π / 5) by push_cast; ring, cos_neg,
-      cos_eight_pi_div_five]
-    norm_num
-  · rw [show ((-3 : ℤ) : ℝ) * (2 * π / 5) = -(6 * π / 5) by push_cast; ring, cos_neg,
-      cos_six_pi_div_five]
-    norm_num
-  · rw [show ((-2 : ℤ) : ℝ) * (2 * π / 5) = -(4 * π / 5) by push_cast; ring, cos_neg,
-      cos_four_pi_div_five]
-    norm_num
-  · rw [show ((-1 : ℤ) : ℝ) * (2 * π / 5) = -(2 * π / 5) by push_cast; ring, cos_neg,
-      cos_two_pi_div_five]
-    norm_num
-  · simp
-  · rw [show ((1 : ℤ) : ℝ) * (2 * π / 5) = 2 * π / 5 by push_cast; ring, cos_two_pi_div_five]
-    norm_num
-  · rw [show ((2 : ℤ) : ℝ) * (2 * π / 5) = 4 * π / 5 by push_cast; ring, cos_four_pi_div_five]
-    norm_num
-  · rw [show ((3 : ℤ) : ℝ) * (2 * π / 5) = 6 * π / 5 by push_cast; ring, cos_six_pi_div_five]
-    norm_num
-  · rw [show ((4 : ℤ) : ℝ) * (2 * π / 5) = 8 * π / 5 by push_cast; ring, cos_eight_pi_div_five]
-    norm_num
+  interval_cases d <;> norm_num [mul_div_assoc', ← mul_assoc, neg_div, cos_two_pi_div_five,
+    cos_four_pi_div_five, cos_six_pi_div_five, cos_eight_pi_div_five]
 
 lemma cos_pent (k l : ℕ) (hk : k < 5) (hl : l < 5) :
     cos (2 * π * k / 5 - 2 * π * l / 5) =
@@ -2313,21 +2206,13 @@ The gap is `(a-b)^4 (5a^3 + 20a^2 b + 29 a b^2 + 16 b^3) / (16 b^6)`, `a = phi t
 lemma phi_bregman_cubic {t0 t : ℝ} (h0 : t0 < 1) (h : t < 1) :
     phi t0 + phi t0 ^ 3 * (t - t0) + 3 / 2 * phi t0 ^ 5 * (t - t0) ^ 2
       + 5 / 2 * phi t0 ^ 7 * (t - t0) ^ 3 ≤ phi t := by
-  have ha := phi_pos h0
-  have hb := phi_pos h
-  have hτ := phi_tau_eq h0 h
-  generalize phi t0 = a at *
-  generalize phi t = b at *
-  have key : b - (a + a ^ 3 * (t - t0) + 3 / 2 * a ^ 5 * (t - t0) ^ 2
-      + 5 / 2 * a ^ 7 * (t - t0) ^ 3)
-      = (a - b) ^ 4 * (5 * a ^ 3 + 20 * a ^ 2 * b + 29 * a * b ^ 2 + 16 * b ^ 3) / (16 * b ^ 6) := by
-    rw [hτ]
-    field_simp
-    ring
-  have : 0 ≤ (a - b) ^ 4 * (5 * a ^ 3 + 20 * a ^ 2 * b + 29 * a * b ^ 2 + 16 * b ^ 3)
-      / (16 * b ^ 6) := by
-    positivity
-  linarith
+  have := phi_pos h0
+  have := phi_pos h
+  rw [phi_tau_eq h0 h, ← sub_nonneg]
+  convert (by positivity : 0 ≤ (phi t0 - phi t) ^ 4 * (5 * phi t0 ^ 3 + 20 * phi t0 ^ 2 * phi t
+    + 29 * phi t0 * phi t ^ 2 + 16 * phi t ^ 3) / (16 * phi t ^ 6)) using 1
+  field_simp
+  ring
 
 end Base
 
@@ -2664,27 +2549,18 @@ lemma max_score_stationary {n : ℕ} (P y : Fin n → R3) {A : R3 →L[ℝ] R3} 
     (hmax : ∀ B ∈ IsoSet, procScore P y B ≤ procScore P y A) (u v : R3) (hu : ‖u‖ = 1)
     (hv : ‖v‖ = 1) (huv : ⟪u, v⟫ = 0) :
     ∑ i, (⟪u, A (y i)⟫ * ⟪P i, v⟫ - ⟪v, A (y i)⟫ * ⟪P i, u⟫) = 0 := by
-  set α := ∑ i, (⟪u, A (y i)⟫ * ⟪P i, u⟫ + ⟪v, A (y i)⟫ * ⟪P i, v⟫) with hα
-  set β := ∑ i, (⟪u, A (y i)⟫ * ⟪P i, v⟫ - ⟪v, A (y i)⟫ * ⟪P i, u⟫) with hβ
-  refine eq_zero_of_mul_le_sq_mul (α := α) fun t => ?_
-  set c := (1 - t ^ 2) / (1 + t ^ 2) with hc
-  set s := 2 * t / (1 + t ^ 2) with hs
-  have hcs : c ^ 2 + s ^ 2 = 1 := by
-    rw [hc, hs]; field_simp; ring
-  have h1 := hmax _ (comp_planeRot_mem hA u v hu hv huv c s hcs)
-  have h2 : procScore P y ((planeRot u v c s).comp A) = procScore P y A + (c - 1) * α + s * β := by
-    unfold procScore
-    simp only [ContinuousLinearMap.comp_apply, planeRot_apply, inner_add_right, real_inner_smul_right,
-      hα, hβ, Finset.mul_sum, ← Finset.sum_add_distrib]
-    refine Finset.sum_congr rfl fun i _ => ?_
-    ring
-  have h3 : (c - 1) * α + s * β ≤ 0 := by linarith
-  have h4 : c - 1 = -(2 * t ^ 2) / (1 + t ^ 2) := by rw [hc]; field_simp; ring
-  rw [h4, hs] at h3
-  have h5 : (-(2 * t ^ 2) / (1 + t ^ 2)) * α + (2 * t / (1 + t ^ 2)) * β
-      = 2 / (1 + t ^ 2) * (t * β - t ^ 2 * α) := by ring
-  have h6 : 0 < 2 / (1 + t ^ 2) := by positivity
-  nlinarith
+  refine eq_zero_of_mul_le_sq_mul (α := ∑ i, (⟪u, A (y i)⟫ * ⟪P i, u⟫ + ⟪v, A (y i)⟫ * ⟪P i, v⟫))
+    fun t => ?_
+  have h1 := hmax _ (comp_planeRot_mem hA u v hu hv huv ((1 - t ^ 2) / (1 + t ^ 2))
+    (2 * t / (1 + t ^ 2)) (by field_simp; ring))
+  rw [← sub_nonpos, procScore, procScore, ← Finset.sum_sub_distrib] at h1
+  rw [← sub_nonpos, Finset.mul_sum, Finset.mul_sum, ← Finset.sum_sub_distrib]
+  convert mul_nonpos_of_nonneg_of_nonpos (a := (1 + t ^ 2) / 2) (by positivity) h1 using 1
+  rw [Finset.mul_sum]
+  refine Finset.sum_congr rfl fun i _ => ?_
+  simp [planeRot_apply, inner_add_right, real_inner_smul_right]
+  field_simp
+  ring
 
 /-- A linear isometry (as a continuous linear map) upgraded to an isometry equivalence. -/
 noncomputable def isoOfMem (A : R3 →L[ℝ] R3) (hA : A ∈ IsoSet) : R3 ≃ₗᵢ[ℝ] R3 :=
@@ -2703,34 +2579,18 @@ theorem exists_gauge {n : ℕ} (P y : Fin n → R3) :
   refine ⟨isoOfMem A hA, fun a b => ?_, ?_⟩
   · by_cases hab : a = b
     · rw [hab]
-    · have h := max_score_stationary P y hA hmax (EuclideanSpace.single a 1)
-        (EuclideanSpace.single b 1) (by simp) (by simp) (by simp [EuclideanSpace.inner_single_left, hab])
-      simp only [EuclideanSpace.inner_single_left, EuclideanSpace.inner_single_right,
-        RCLike.conj_to_real, one_mul] at h
-      simp only [isoOfMem_apply]
-      rw [Finset.sum_sub_distrib] at h
-      have e1 : ∑ i, P i a * A (y i) b = ∑ i, A (y i) b * P i a :=
-        Finset.sum_congr rfl fun i _ => mul_comm _ _
-      have e2 : ∑ i, P i b * A (y i) a = ∑ i, A (y i) a * P i b :=
-        Finset.sum_congr rfl fun i _ => mul_comm _ _
-      linarith [h]
-  · have hid := hmax (ContinuousLinearMap.id ℝ R3) id_mem_isoSet
-    unfold procScore at hid
-    simp only [ContinuousLinearMap.id_apply] at hid
-    have key : ∀ (B : R3 →L[ℝ] R3), B ∈ IsoSet →
-        ∑ i, ‖B (y i) - P i‖ ^ 2 = ∑ i, (‖y i‖ ^ 2 + ‖P i‖ ^ 2) - 2 * procScore P y B := by
-      intro B hB
-      unfold procScore
-      rw [Finset.mul_sum, ← Finset.sum_sub_distrib]
-      refine Finset.sum_congr rfl fun i _ => ?_
-      rw [norm_sub_sq_real, hB (y i), real_inner_comm]
-      ring
-    have k1 := key A hA
-    have k2 := key (ContinuousLinearMap.id ℝ R3) id_mem_isoSet
-    simp only [isoOfMem_apply]
-    unfold procScore at k1 k2
-    simp only [ContinuousLinearMap.id_apply] at k2
+    have h := max_score_stationary P y hA hmax (EuclideanSpace.single a 1)
+      (EuclideanSpace.single b 1) (by simp) (by simp) (by simp [EuclideanSpace.inner_single_left, hab])
+    simp [EuclideanSpace.inner_single_left, EuclideanSpace.inner_single_right,
+      Finset.sum_sub_distrib, isoOfMem_apply, mul_comm] at h ⊢
     linarith
+  · have := hmax _ id_mem_isoSet
+    simp [procScore, isoOfMem_apply] at this ⊢
+    rw [← sub_nonneg, ← Finset.sum_sub_distrib]
+    convert mul_nonneg zero_le_two (sub_nonneg.2 this) using 1
+    rw [← Finset.sum_sub_distrib, Finset.mul_sum]
+    exact Finset.sum_congr rfl fun i _ => by
+      simp only [norm_sub_sq_real, hA (y i), real_inner_comm (P i)]; ring
 
 end Reg
 
@@ -2841,41 +2701,15 @@ lemma db_bound {c1 s1 g01 L22 a b a0 b0 w : ℝ} (hw0 : 0 ≤ w)
     (hL22a : 9 / 10 ≤ L22) (hLs : |L22 - s1| ≤ 4 / 10 * w)
     (ha0 : |a0| ≤ 1) (hb0 : |b0| ≤ 1) (e0 : |a - a0| ≤ w)
     (e1 : |(g01 * a + L22 * b) - (c1 * a0 + s1 * b0)| ≤ w) : |b - b0| ≤ 32 / 10 * w := by
-  have key : L22 * (b - b0) = ((g01 * a + L22 * b) - (c1 * a0 + s1 * b0))
-      - g01 * (a - a0) - (g01 - c1) * a0 + (s1 - L22) * b0 := by ring
-  have hg : |g01| ≤ 41 / 100 := abs_le.2 ⟨by linarith, hg01u⟩
-  have t2 : |g01 * (a - a0)| ≤ 41 / 100 * w := abs_mul_le' hg e0
-  have t3 : |(g01 - c1) * a0| ≤ w * 1 := abs_mul_le' hg01 ha0
-  have hLs' : |s1 - L22| ≤ 4 / 10 * w := by rw [abs_sub_comm]; exact hLs
-  have t4 : |(s1 - L22) * b0| ≤ 4 / 10 * w * 1 := abs_mul_le' hLs' hb0
-  obtain ⟨t1l, t1u⟩ := abs_le.1 e1
-  obtain ⟨t2l, t2u⟩ := abs_le.1 t2
-  obtain ⟨t3l, t3u⟩ := abs_le.1 t3
-  obtain ⟨t4l, t4u⟩ := abs_le.1 t4
-  have h1 : |L22 * (b - b0)| ≤ 281 / 100 * w := by
-    rw [abs_le]; constructor <;> nlinarith
-  rw [abs_mul, abs_of_pos (by linarith : 0 < L22)] at h1
-  nlinarith [abs_nonneg (b - b0)]
+  rw [abs_le] at *
+  constructor <;> nlinarith
 
 lemma dc_bound {g05 L32 L33 a b c c0 w : ℝ} (hw0 : 0 ≤ w)
     (hg05 : |g05| ≤ w) (hL32 : |L32| ≤ 157 / 100 * w)
     (hL33a : 98 / 100 ≤ L33) (hL33b : L33 ≤ 1) (hL33c : 1 - L33 ≤ 175 / 1000 * w)
     (ha : |a| ≤ 1) (hb : |b| ≤ 1) (hc0 : |c0| ≤ 1)
     (e5 : |(g05 * a + L32 * b + L33 * c) - c0| ≤ w) : |c - c0| ≤ 39 / 10 * w := by
-  have key : L33 * (c - c0) = ((g05 * a + L32 * b + L33 * c) - c0)
-      + (1 - L33) * c0 - g05 * a - L32 * b := by ring
-  have h1L : |1 - L33| ≤ 175 / 1000 * w := abs_le.2 ⟨by linarith, hL33c⟩
-  have t2 : |(1 - L33) * c0| ≤ 175 / 1000 * w * 1 := abs_mul_le' h1L hc0
-  have t3 : |g05 * a| ≤ w * 1 := abs_mul_le' hg05 ha
-  have t4 : |L32 * b| ≤ 157 / 100 * w * 1 := abs_mul_le' hL32 hb
-  obtain ⟨t1l, t1u⟩ := abs_le.1 e5
-  obtain ⟨t2l, t2u⟩ := abs_le.1 t2
-  obtain ⟨t3l, t3u⟩ := abs_le.1 t3
-  obtain ⟨t4l, t4u⟩ := abs_le.1 t4
-  have h1 : |L33 * (c - c0)| ≤ 375 / 100 * w := by
-    rw [abs_le]; constructor <;> nlinarith
-  rw [abs_mul, abs_of_pos (by linarith : 0 < L33)] at h1
-  nlinarith [abs_nonneg (c - c0)]
+  rw [abs_le]; constructor <;> nlinarith [abs_le.1 e5, abs_le.1 (abs_mul_le' (abs_le.2 ⟨by linarith, hL33c⟩) hc0), abs_le.1 (abs_mul_le' hg05 ha), abs_le.1 (abs_mul_le' hL32 hb)]
 
 lemma core_bound {c1 s1 g01 g05 g15 L22 L32 L33 a b c a0 b0 c0 w : ℝ}
     (hw0 : 0 ≤ w) (hw : w ≤ 1 / 10)
@@ -2959,35 +2793,11 @@ lemma frame_gram {g01 g05 g15 : ℝ} (h22 : 0 < L22 g01)
     (h33 : 0 ≤ 1 - g05 ^ 2 - L32 g01 g05 g15 ^ 2) (i j : Fin 3) :
     ⟪frame g01 g05 g15 i, frame g01 g05 g15 j⟫_ℝ =
       ![![1, g01, g05], ![g01, 1, g15], ![g05, g15, 1]] i j := by
-  have hd : 0 < 1 - g01 ^ 2 := Real.sqrt_pos.1 h22
-  have s22 : L22 g01 ^ 2 = 1 - g01 ^ 2 := Real.sq_sqrt hd.le
-  have s33 : L33 g01 g05 g15 ^ 2 = 1 - g05 ^ 2 - L32 g01 g05 g15 ^ 2 := Real.sq_sqrt h33
-  have m32 : L32 g01 g05 g15 * L22 g01 = g15 - g01 * g05 := div_mul_cancel₀ _ h22.ne'
-  have f0 : frame g01 g05 g15 0 = !₂[1, 0, 0] := rfl
-  have f1 : frame g01 g05 g15 1 = !₂[g01, L22 g01, 0] := rfl
-  have f2 : frame g01 g05 g15 2 = !₂[g05, L32 g01 g05 g15, L33 g01 g05 g15] := rfl
-  have e00 : ⟪frame g01 g05 g15 0, frame g01 g05 g15 0⟫_ℝ = 1 := by
-    rw [f0, inner_cols]; ring
-  have e01 : ⟪frame g01 g05 g15 0, frame g01 g05 g15 1⟫_ℝ = g01 := by
-    rw [f0, f1, inner_cols]; ring
-  have e02 : ⟪frame g01 g05 g15 0, frame g01 g05 g15 2⟫_ℝ = g05 := by
-    rw [f0, f2, inner_cols]; ring
-  have e11 : ⟪frame g01 g05 g15 1, frame g01 g05 g15 1⟫_ℝ = 1 := by
-    rw [f1, inner_cols]; linear_combination s22
-  have e12 : ⟪frame g01 g05 g15 1, frame g01 g05 g15 2⟫_ℝ = g15 := by
-    rw [f1, f2, inner_cols]; linear_combination m32
-  have e22 : ⟪frame g01 g05 g15 2, frame g01 g05 g15 2⟫_ℝ = 1 := by
-    rw [f2, inner_cols]; linear_combination s33
-  fin_cases i <;> fin_cases j
-  · exact e00
-  · exact e01
-  · exact e02
-  · exact (real_inner_comm _ _).trans e01
-  · exact e11
-  · exact e12
-  · exact (real_inner_comm _ _).trans e02
-  · exact (real_inner_comm _ _).trans e12
-  · exact e22
+  have s22 : L22 g01 ^ 2 = _ := Real.sq_sqrt (Real.sqrt_pos.1 h22).le
+  have s33 : L33 g01 g05 g15 ^ 2 = _ := Real.sq_sqrt h33
+  have m32 : L32 g01 g05 g15 * L22 g01 = _ := div_mul_cancel₀ _ h22.ne'
+  fin_cases i <;> fin_cases j <;> simp [frame, inner_cols, -inner_self_eq_norm_sq_to_K] <;>
+    linarith
 
 lemma c1_bounds : 309 / 1000 ≤ c1 ∧ c1 ≤ 31 / 100 := by
   have h5 : (5 : ℝ) = √5 ^ 2 := (Real.sq_sqrt (by norm_num)).symm
@@ -3212,15 +3022,11 @@ theorem margin_of_threePoint_cut {H : ℝ → ℝ} {a η : ℝ} (K : ℕ) (m : �
     ∀ y ∈ SphereConfig 7, (∀ i j, i ≠ j → a ≤ ⟪y i, y j⟫_ℝ) →
       coulombEnergy pentBipyramid + η ≤ coulombEnergy y := by
   intro y hy hya
-  have h1 : coulombEnergy y = ∑ i, ∑ j ∈ Finset.Ioi i, phi ⟪y i, y j⟫_ℝ :=
-    coulombEnergy_eq_sum_phi hy.1
-  have h2 : ∑ i, ∑ j ∈ Finset.Ioi i, H ⟪y i, y j⟫_ℝ ≤ ∑ i, ∑ j ∈ Finset.Ioi i, phi ⟪y i, y j⟫_ℝ := by
-    refine Finset.sum_le_sum fun i _ => Finset.sum_le_sum fun j hj => ?_
-    have hij : i ≠ j := (Finset.mem_Ioi.1 hj).ne
-    exact hH _ (hya i j hij) (inner_lt_one_of_ne (hy.1 i) (hy.1 j) (fun h => hij (hy.2 h)))
-  have h4 := ThreePoint.three_point_bound_cut (by norm_num) a K m F hF H
-    (coulombEnergy pentBipyramid + η) hpt y hy.1 hya
-  linarith
+  rw [coulombEnergy_eq_sum_phi hy.1]
+  refine (ThreePoint.three_point_bound_cut (by norm_num) a K m F hF H _ hpt y hy.1 hya).trans ?_
+  gcongr with i _ j hj
+  exact hH _ (hya i j (Finset.mem_Ioi.1 hj).ne)
+    (inner_lt_one_of_ne (hy.1 i) (hy.1 j) (hy.2.ne (Finset.mem_Ioi.1 hj).ne))
 
 end TwoRegime
 
@@ -3372,27 +3178,9 @@ lemma pent_formula_bounds :
   obtain ⟨h5l, h5u⟩ := sqrt5_bounds
   obtain ⟨hal, hau⟩ := sin_pi_div_five_bounds
   rw [sin_two_pi_div_five]
-  have h1 : 5 / (2 * sin (π / 5)) ≤ 5 / (2 * (587785252 / 1000000000)) :=
-    div_le_div_of_nonneg_left (by norm_num) (by norm_num) (by linarith)
-  have h1' : 5 / (2 * (587785253 / 1000000000)) ≤ 5 / (2 * sin (π / 5)) :=
-    div_le_div_of_nonneg_left (by norm_num) (by linarith) (by linarith)
-  have hb : 0 < sin (π / 5) * ((1 + √5) / 2) := by
-    positivity
-  have hbl : (587785252 / 1000000000) * ((1 + 2236067977 / 1000000000) / 2)
-      ≤ sin (π / 5) * ((1 + √5) / 2) := by
-    apply mul_le_mul hal (by linarith) (by norm_num) (by linarith)
-  have hbu : sin (π / 5) * ((1 + √5) / 2)
-      ≤ (587785253 / 1000000000) * ((1 + 2236067978 / 1000000000) / 2) := by
-    apply mul_le_mul hau (by linarith) (by linarith) (by norm_num)
-  have h2 : 5 / (2 * (sin (π / 5) * ((1 + √5) / 2))) ≤
-      5 / (2 * ((587785252 / 1000000000) * ((1 + 2236067977 / 1000000000) / 2))) :=
-    div_le_div_of_nonneg_left (by norm_num) (by positivity) (by linarith)
-  have h2' : 5 / (2 * ((587785253 / 1000000000) * ((1 + 2236067978 / 1000000000) / 2))) ≤
-      5 / (2 * (sin (π / 5) * ((1 + √5) / 2))) :=
-    div_le_div_of_nonneg_left (by norm_num) (by positivity) (by linarith)
-  constructor
-  · norm_num at h1' h2' ⊢; linarith
-  · norm_num at h1 h2 ⊢; linarith
+  have : 0 < sin (π / 5) := by linarith
+  constructor <;> field_simp <;> nlinarith [mul_le_mul hau h5u (sqrt_nonneg 5) (by norm_num),
+    mul_le_mul hal h5l (by norm_num) this.le]
 
 /-- **Rational enclosure of the minimum energy**: `14.452977 ≤ E(P) ≤ 14.452978`. -/
 lemma coulombEnergy_pent_bounds :
@@ -3489,21 +3277,12 @@ theorem energy_ge_cubic {y : Fin 7 → R3} (hy : ∀ i, ‖y i‖ = 1) (hinj : F
       + ∑ i, ∑ j ∈ Finset.Ioi i, (3 / 2 * phi (gP i j) ^ 5 * tau y i j ^ 2
           + 5 / 2 * phi (gP i j) ^ 7 * tau y i j ^ 3)
       ≤ coulombEnergy y - coulombEnergy pentBipyramid := by
-  rw [coulombEnergy_eq_sum_phi hy, coulombEnergy_eq_sum_phi pent_norm, ← sum_W_tau hy,
+  simp only [coulombEnergy_eq_sum_phi hy, coulombEnergy_eq_sum_phi pent_norm, ← sum_W_tau hy,
     ← Finset.sum_add_distrib, ← Finset.sum_sub_distrib]
-  refine Finset.sum_le_sum fun i _ => ?_
-  rw [← Finset.sum_add_distrib, ← Finset.sum_sub_distrib]
-  refine Finset.sum_le_sum fun j hj => ?_
-  have hij : i ≠ j := (Finset.mem_Ioi.1 hj).ne
-  have h0 : gP i j < 1 := gP_lt_one hij
-  have h1 : inner ℝ (y i) (y j) < 1 := inner_lt_one_of_ne (hy i) (hy j) (hinj.ne hij)
-  have hb := phi_bregman_cubic h0 h1
-  have hW : W i j = phi (gP i j) ^ 3 := W_ne hij
-  have hτ : inner ℝ (y i) (y j) - gP i j = tau y i j := rfl
-  rw [hτ] at hb
-  rw [hW]
-  have hg : gP i j = inner ℝ (pentBipyramid i) (pentBipyramid j) := rfl
-  rw [hg] at hb ⊢
+  gcongr with i _ j hj
+  have hij := (Finset.mem_Ioi.1 hj).ne
+  have := phi_bregman_cubic (gP_lt_one hij) (inner_lt_one_of_ne (hy i) (hy j) (hinj.ne hij))
+  simp only [tau, gP, W_ne hij] at *
   linarith
 
 end Reg
@@ -3948,34 +3727,14 @@ lemma Dpair_lower {y : Fin 7 → R3} {r : ℝ} (hr : r ≤ 1 / 1000)
     -(23 / 5 * r * (‖y i - pentBipyramid i‖ ^ 2 + ‖y j - pentBipyramid j‖ ^ 2))
       ≤ Dpair y i j := by
   have hA0 : 0 ≤ phi (gP i j) := (phi_pos (gP_lt_one hij)).le
-  have hA : phi (gP i j) ^ 5 ≤ 4456 / 10000 := by
-    have := pow_le_pow_left₀ hA0 hφ 5
-    refine this.trans ?_
-    norm_num
-  have hB : phi (gP i j) ^ 7 ≤ 3225 / 10000 := by
-    have := pow_le_pow_left₀ hA0 hφ 7
-    refine this.trans ?_
-    norm_num
-  have ht1 : |inner ℝ (pentBipyramid i) (y j - pentBipyramid j)
-        + inner ℝ (y i - pentBipyramid i) (pentBipyramid j)|
-      ≤ ‖y i - pentBipyramid i‖ + ‖y j - pentBipyramid j‖ := by
-    calc _ ≤ |inner ℝ (pentBipyramid i) (y j - pentBipyramid j)|
-          + |inner ℝ (y i - pentBipyramid i) (pentBipyramid j)| := abs_add_le _ _
-      _ ≤ ‖pentBipyramid i‖ * ‖y j - pentBipyramid j‖
-          + ‖y i - pentBipyramid i‖ * ‖pentBipyramid j‖ :=
-        add_le_add (abs_real_inner_le_norm _ _) (abs_real_inner_le_norm _ _)
-      _ = _ := by rw [pent_norm i, pent_norm j]; ring
-  have hq : |inner ℝ (y i - pentBipyramid i) (y j - pentBipyramid j)|
-      ≤ ‖y i - pentBipyramid i‖ * ‖y j - pentBipyramid j‖ := abs_real_inner_le_norm _ _
-  have h := pair_rem (A := phi (gP i j) ^ 5) (B := phi (gP i j) ^ 7) (r := r)
-    (pow_nonneg hA0 5) (pow_nonneg hA0 7) (norm_nonneg _) (norm_nonneg _) (hρ i) (hρ j) hr ht1 hq
-  have hw : 3 * phi (gP i j) ^ 5 + 101 / 10 * phi (gP i j) ^ 7 ≤ 23 / 5 := by linarith
-  have hr0 : 0 ≤ r := (norm_nonneg _).trans (hρ i)
-  have hnn : 0 ≤ r * (‖y i - pentBipyramid i‖ ^ 2 + ‖y j - pentBipyramid j‖ ^ 2) := by positivity
-  have h2 := mul_le_mul_of_nonneg_right hw hnn
-  unfold Dpair
-  rw [tau_expand y i j]
-  linarith [h, h2]
+  rw [Dpair, tau_expand]
+  nlinarith [pair_rem (A := phi (gP i j) ^ 5) (B := phi (gP i j) ^ 7) (pow_nonneg hA0 5)
+    (pow_nonneg hA0 7) (norm_nonneg _) (norm_nonneg _) (hρ i) (hρ j) hr
+    ((abs_add_le _ _).trans ((add_le_add (abs_real_inner_le_norm (pentBipyramid i) (y j - pentBipyramid j))
+      (abs_real_inner_le_norm (y i - pentBipyramid i) (pentBipyramid j))).trans_eq (by simp [pent_norm, add_comm])))
+    (abs_real_inner_le_norm _ _), pow_le_pow_left₀ hA0 hφ 5, pow_le_pow_left₀ hA0 hφ 7,
+    mul_nonneg ((norm_nonneg _).trans (hρ i)) (add_nonneg (sq_nonneg ‖y i - pentBipyramid i‖)
+      (sq_nonneg ‖y j - pentBipyramid j‖))]
 
 lemma sum_Dpair_lower {y : Fin 7 → R3} {r : ℝ} (hr : r ≤ 1 / 1000)
     (hρ : ∀ i, ‖y i - pentBipyramid i‖ ≤ r) :
@@ -4060,25 +3819,14 @@ theorem pent_local_min {z : Fin 7 → R3} (hz : z ∈ SphereConfig 7)
       (coulombEnergy z = coulombEnergy pentBipyramid →
         ∃ g : R3 ≃ₗᵢ[ℝ] R3, ∀ i, z i = g (pentBipyramid i)) := by
   obtain ⟨g, hg1, hg2⟩ := exists_gauge pentBipyramid z
-  have hy1 : ∀ i, ‖g (z i)‖ = 1 := fun i => by rw [LinearIsometryEquiv.norm_map]; exact hz.1 i
-  have hyinj : Function.Injective (fun i => g (z i)) := g.injective.comp hz.2
-  have hE : coulombEnergy (fun i => g (z i)) = coulombEnergy z := coulombEnergy_comp_isometry g z
-  have hρ : ∀ i, ‖g (z i) - pentBipyramid i‖ ≤ 1 / 10000 := by
-    intro i
-    have h1 : ‖g (z i) - pentBipyramid i‖ ^ 2 ≤ ∑ j, ‖g (z j) - pentBipyramid j‖ ^ 2 :=
-      Finset.single_le_sum (f := fun j => ‖g (z j) - pentBipyramid j‖ ^ 2)
-        (fun j _ => sq_nonneg _) (Finset.mem_univ i)
-    have h2 : ‖g (z i) - pentBipyramid i‖ ^ 2 ≤ (1 / 10000) ^ 2 := h1.trans (hg2.trans hclose)
-    exact le_of_sq_le_sq h2 (by norm_num)
-  have key := local_ineq (y := fun i => g (z i)) hy1 hyinj hg1 hρ
-  have hS : 0 ≤ ∑ i, ‖g (z i) - pentBipyramid i‖ ^ 2 := Finset.sum_nonneg fun i _ => sq_nonneg _
-  refine ⟨by linarith, fun heq => ⟨g.symm, fun i => ?_⟩⟩
-  have hS0 : ∑ i, ‖g (z i) - pentBipyramid i‖ ^ 2 = 0 := by linarith
-  have hi : ‖g (z i) - pentBipyramid i‖ ^ 2 = 0 :=
-    (Finset.sum_eq_zero_iff_of_nonneg (fun j _ => sq_nonneg _)).1 hS0 i (Finset.mem_univ i)
-  have hi' : g (z i) = pentBipyramid i := sub_eq_zero.1 (norm_eq_zero.1 (pow_eq_zero_iff (two_ne_zero) |>.1 hi))
-  rw [← hi']
-  simp
+  have hS := Finset.sum_nonneg fun i (_ : i ∈ Finset.univ) => sq_nonneg ‖g (z i) - pentBipyramid i‖
+  have key := local_ineq (y := fun i => g (z i)) (fun i => by simpa using hz.1 i) (g.injective.comp hz.2) hg1 fun i =>
+    le_of_sq_le_sq ((Finset.single_le_sum (fun j _ => sq_nonneg ‖g (z j) - pentBipyramid j‖)
+      (Finset.mem_univ i)).trans (hg2.trans hclose)) (by norm_num)
+  rw [coulombEnergy_comp_isometry g z] at key
+  exact ⟨by linarith, fun heq => ⟨g.symm, fun i => g.eq_symm_apply.2 (by
+    simpa [sub_eq_zero] using (Finset.sum_eq_zero_iff_of_nonneg fun j _ =>
+      sq_nonneg ‖g (z j) - pentBipyramid j‖).1 (by linarith) i (Finset.mem_univ i))⟩⟩
 
 end Reg
 end ThomsonN7
@@ -6066,31 +5814,20 @@ def idet4 (δ : ℤ) (A B C D E F : ℤ × ℤ) : ℤ × ℤ :=
 lemma idet4_mem (δ : ℤ) {A B C D E F : ℤ × ℤ} {a b c d e f : ℝ} (ha : Imem A a)
     (hb : Imem B b) (hc : Imem C c) (hd : Imem D d) (he : Imem E e) (hf : Imem F f) :
     Imem (idet4 δ A B C D E F) (det4h (δ : ℝ) a b c d e f) := by
-  have h0 : Imem ((δ ^ 4 : ℤ), (δ ^ 4 : ℤ)) ((δ : ℝ) ^ 4) := by
-    unfold Imem; push_cast; constructor <;> exact le_refl _
-  have sa := isq_mem ha
-  have sb := isq_mem hb
-  have sc := isq_mem hc
-  have sd := isq_mem hd
-  have se := isq_mem he
-  have sf := isq_mem hf
-  have hs := iadd_mem (iadd_mem (iadd_mem sa sb) sc) (iadd_mem (iadd_mem sd se) sf)
-  have hq := iadd_mem (iadd_mem (imul_mem sa sf) (imul_mem sb se)) (imul_mem sc sd)
-  have ht := iadd_mem (iadd_mem (imul_mem (imul_mem ha hd) hb) (imul_mem (imul_mem ha he) hc))
-    (iadd_mem (imul_mem (imul_mem hb hf) hc) (imul_mem (imul_mem hd hf) he))
-  have hu := iadd_mem (iadd_mem (imul_mem (imul_mem ha hb) (imul_mem he hf))
-    (imul_mem (imul_mem ha hc) (imul_mem hd hf))) (imul_mem (imul_mem hb hc) (imul_mem hd he))
-  have h1 := iadd_mem (iadd_mem h0 (iscale_mem (-(δ ^ 2)) hs))
-    (iadd_mem hq (iscale_mem (2 * δ) ht))
-  have h2 := iadd_mem h1 (iscale_mem (-2) hu)
-  have e : (δ : ℝ) ^ 4 + (((-(δ ^ 2) : ℤ) : ℝ) * (a ^ 2 + b ^ 2 + c ^ 2 + (d ^ 2 + e ^ 2 + f ^ 2))) +
-      ((a ^ 2 * f ^ 2 + b ^ 2 * e ^ 2 + c ^ 2 * d ^ 2) +
-        ((2 * δ : ℤ) : ℝ) * (a * d * b + a * e * c + (b * f * c + d * f * e))) +
-      (((-2 : ℤ) : ℝ) * (a * b * (e * f) + a * c * (d * f) + b * c * (d * e))) =
-      det4h (δ : ℝ) a b c d e f := by
-    unfold det4h; push_cast; ring
-  rw [e] at h2
-  exact h2
+  convert iadd_mem (iadd_mem (iadd_mem (⟨le_rfl, le_rfl⟩ : Imem (δ ^ 4, δ ^ 4) _)
+    (iscale_mem (-(δ ^ 2)) (iadd_mem (iadd_mem (iadd_mem (isq_mem ha) (isq_mem hb)) (isq_mem hc))
+      (iadd_mem (iadd_mem (isq_mem hd) (isq_mem he)) (isq_mem hf)))))
+    (iadd_mem (iadd_mem (iadd_mem (imul_mem (isq_mem ha) (isq_mem hf))
+      (imul_mem (isq_mem hb) (isq_mem he))) (imul_mem (isq_mem hc) (isq_mem hd)))
+      (iscale_mem (2 * δ) (iadd_mem (iadd_mem (imul_mem (imul_mem ha hd) hb)
+        (imul_mem (imul_mem ha he) hc))
+        (iadd_mem (imul_mem (imul_mem hb hf) hc) (imul_mem (imul_mem hd hf) he))))))
+    (iscale_mem (-2) (iadd_mem (iadd_mem (imul_mem (imul_mem ha hb) (imul_mem he hf))
+      (imul_mem (imul_mem ha hc) (imul_mem hd hf))) (imul_mem (imul_mem hb hc) (imul_mem hd he))))
+    using 1
+  · rfl
+  push_cast [det4h]
+  ring
 
 /-! ### Boxes, bisection and the two refutation checkers -/
 
@@ -6221,32 +5958,13 @@ lemma box_exclude (n : ℕ) (bx : Box6) (hbx : chk4 1000 n bx = true) (e a b c :
     (he : ‖e‖ = 1) (ha : ‖a‖ = 1) (hb : ‖b‖ = 1) (hc : ‖c‖ = 1)
     (hm : bx.Mem (1000 * ⟪e, a⟫_ℝ) (1000 * ⟪e, b⟫_ℝ) (1000 * ⟪e, c⟫_ℝ)
       (1000 * ⟪a, b⟫_ℝ) (1000 * ⟪a, c⟫_ℝ) (1000 * ⟪b, c⟫_ℝ)) : False := by
-  have hz := M3.det4h_inner_eq_zero ![e, a, b, c]
-    (by intro i; fin_cases i <;> simp [he, ha, hb, hc])
-  simp only [Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val] at hz
-  have hs := chk4_sound 1000 n bx _ _ _ _ _ _ hbx hm
-  have h4 : det4h ((1000 : ℤ) : ℝ) (1000 * ⟪e, a⟫_ℝ) (1000 * ⟪e, b⟫_ℝ) (1000 * ⟪e, c⟫_ℝ)
-      (1000 * ⟪a, b⟫_ℝ) (1000 * ⟪a, c⟫_ℝ) (1000 * ⟪b, c⟫_ℝ) = 0 := by
-    have := M3.det4h_scale (1000 : ℝ) 1 ⟪e, a⟫_ℝ ⟪e, b⟫_ℝ ⟪e, c⟫_ℝ ⟪a, b⟫_ℝ ⟪a, c⟫_ℝ ⟪b, c⟫_ℝ
-    rw [hz, mul_zero, mul_one] at this
-    unfold det4h
-    unfold M3.det4h at this
-    push_cast
-    linarith
-  have s3 : ∀ x y z : ℝ, det3h ((1000 : ℤ) : ℝ) (1000 * x) (1000 * y) (1000 * z) =
-      1000 ^ 3 * det3h 1 x y z := by
-    intro x y z; unfold det3h; push_cast; ring
-  rw [s3, s3, s3, s3] at hs
-  have n1 := det3h_nonneg e a b he ha hb
-  have n2 := det3h_nonneg e a c he ha hc
-  have n3 := det3h_nonneg e b c he hb hc
-  have n4 := det3h_nonneg a b c ha hb hc
-  rcases hs with h | h | h | h | h
-  · exact h h4
-  · nlinarith
-  · nlinarith
-  · nlinarith
-  · nlinarith
+  have := det3h_nonneg e a b he ha hb
+  have := det3h_nonneg e a c he ha hc
+  have := det3h_nonneg e b c he hb hc
+  have := det3h_nonneg a b c ha hb hc
+  have hz := M3.det4h_inner_eq_zero ![e, a, b, c] (by simp [Fin.forall_fin_succ, he, ha, hb, hc])
+  rcases chk4_sound 1000 n bx _ _ _ _ _ _ hbx hm with h | h | h | h | h <;>
+    simp [det4h, M3.det4h, det3h] at * <;> first | exact h (by linear_combination 1000 ^ 4 * hz) | linarith
 
 lemma imem_of {lo hi : ℤ} {x : ℝ} (h1 : (lo : ℝ) ≤ x) (h2 : x ≤ hi) : Imem (lo, hi) x :=
   ⟨h1, h2⟩
@@ -6647,18 +6365,13 @@ lemma pair_facts {y : Fin 7 → R3} (hy : y ∈ SphereConfig 7) {lo hi : ℝ}
     (i j : Fin 7) (hij : i < j) :
     cls3 HA HB HC i j ⟪y i, y j⟫_ℝ ≤ phi ⟪y i, y j⟫_ℝ ∧
     (cls3 HA HB HC i j ⟪y i, y j⟫_ℝ = phi ⟪y i, y j⟫_ℝ → cls3 ZA ZB ZC i j ⟪y i, y j⟫_ℝ) := by
-  have hne : i ≠ j := hij.ne
-  have hlt : ⟪y i, y j⟫_ℝ < 1 := inner_lt_one_of_ne (hy.1 i) (hy.1 j) (fun h => hne (hy.2 h))
-  have hge : lo ≤ ⟪y i, y j⟫_ℝ := hlo.trans (hmin i j hne)
+  have := hlo.trans (hmin i j hij.ne)
+  have := inner_lt_one_of_ne (hy.1 i) (hy.1 j) (hy.2.ne hij.ne)
   unfold cls3
-  by_cases h1 : i.val ≤ 1 ∧ j.val ≤ 1
-  · have hi5 : i = 0 := Fin.ext (by simp; omega)
-    have hj6 : j = 1 := Fin.ext (by simp; omega)
-    subst hi5 hj6
-    simpa only [h1, ite_true, and_self] using hA _ hlo hhi
-  · by_cases h2 : i.val ≤ 1 ∨ j.val ≤ 1
-    · simpa only [h1, h2, ite_false, ite_true] using hB _ hge hlt
-    · simpa only [h1, h2, ite_false] using hC _ hge hlt
+  split_ifs
+  · obtain ⟨rfl, rfl⟩ : i = 0 ∧ j = 1 := by omega
+    exact hA _ hlo hhi
+  exacts [hB _ ‹_› ‹_›, hC _ ‹_› ‹_›]
 
 /-- The energy of a unit configuration as a double sum of `phi`. -/
 lemma energy_eq_sum {y : Fin 7 → R3} (hy : y ∈ SphereConfig 7) :
@@ -6679,16 +6392,11 @@ theorem slab_of_typed {lo hi e : ℝ} (HA HB HC : ℝ → ℝ) (he : coulombEner
       (∀ i j, i ≠ j → ⟪y 0, y 1⟫_ℝ ≤ ⟪y i, y j⟫_ℝ) →
       coulombEnergy pentBipyramid < coulombEnergy y := by
   intro y hy hlo hhi hmin
-  have h1 := hTB y hy hlo hhi hmin
-  have h2 : ∑ i : Fin 7, ∑ j ∈ Finset.Ioi i, cls3 HA HB HC i j ⟪y i, y j⟫_ℝ
-      ≤ coulombEnergy y := by
-    rw [energy_eq_sum hy]
-    refine Finset.sum_le_sum fun i _ => Finset.sum_le_sum fun j hj => ?_
-    exact (pair_facts hy HA HB HC (fun _ => True) (fun _ => True) (fun _ => True) hmin hlo hhi
-      (fun t h1 h2 => ⟨hA t h1 h2, fun _ => trivial⟩)
-      (fun t h1 h2 => ⟨hB t h1 h2, fun _ => trivial⟩)
-      (fun t h1 h2 => ⟨hC t h1 h2, fun _ => trivial⟩) i j (Finset.mem_Ioi.1 hj)).1
-  linarith
+  refine he.trans_le ((hTB y hy hlo hhi hmin).trans ?_)
+  rw [energy_eq_sum hy]
+  gcongr with i _ j hj
+  exact (pair_facts hy HA HB HC _ _ _ hmin hlo hhi (⟨hA · · ·, id⟩) (⟨hB · · ·, id⟩)
+    (⟨hC · · ·, id⟩) i j (Finset.mem_Ioi.1 hj)).1
 
 /-- **Top-level assembly from a cap certificate and slab certificates**, both stated in the
 minimal-pair normal form. -/
@@ -6783,18 +6491,13 @@ lemma pair_facts_tube {y : Fin 7 → R3} (hy : y ∈ SphereConfig 7) {lo hi δ :
     cls3 HA HB HC i j ⟪y i, y j⟫_ℝ ≤ phi ⟪y i, y j⟫_ℝ ∧
     (phi ⟪y i, y j⟫_ℝ - cls3 HA HB HC i j ⟪y i, y j⟫_ℝ ≤ δ →
       cls3 ZA ZB ZC i j ⟪y i, y j⟫_ℝ) := by
-  have hne : i ≠ j := hij.ne
-  have hlt : ⟪y i, y j⟫_ℝ < 1 := inner_lt_one_of_ne (hy.1 i) (hy.1 j) (fun h => hne (hy.2 h))
-  have hge : lo ≤ ⟪y i, y j⟫_ℝ := hlo.trans (hmin i j hne)
+  have h := hlo.trans (hmin i j hij.ne)
+  have h' := inner_lt_one_of_ne (hy.1 i) (hy.1 j) (hy.2.ne hij.ne)
   unfold cls3
-  by_cases h1 : i.val ≤ 1 ∧ j.val ≤ 1
-  · have hi5 : i = 0 := Fin.ext (by simp; omega)
-    have hj6 : j = 1 := Fin.ext (by simp; omega)
-    subst hi5 hj6
-    simpa only [h1, ite_true, and_self] using hA _ hlo hhi
-  · by_cases h2 : i.val ≤ 1 ∨ j.val ≤ 1
-    · simpa only [h1, h2, ite_false, ite_true] using hB _ hge hlt
-    · simpa only [h1, h2, ite_false] using hC _ hge hlt
+  split_ifs
+  · obtain ⟨rfl, rfl⟩ : i = 0 ∧ j = 1 := by omega
+    exact hA _ hlo hhi
+  exacts [hB _ h h', hC _ h h']
 
 /-- **Cap claim from a near-sharp typed minorant bound (tube route).**  The typed sum is bounded
 below by `e` on the cap `⟪y 0, y 1⟫ ≤ a0` (minimal-pair configurations), with `E(P) ≤ e + δ`.  The
@@ -7014,27 +6717,18 @@ lemma sin_pi_div_five_enc60 : (3673657826827957057304412216494204803735327735269
 lemma pent_formula_enc60 :
     (2749119669932377435234055288292254784954290675400566755703294260891298019502848863829080584715823163195763171851924111216693219925026887457700757192016552400988256247789361356038783/190211303259030714423287866675876428681139726825150044489461341270161735474419585794589163301350513554082924534014861115400000000000000000000000000000000000000000000000000000000000:ℝ) ≤ 1 / 2 + 5 * √2 + 5 / (2 * sin (π / 5)) + 5 / (2 * sin (2 * π / 5)) ∧
     1 / 2 + 5 * √2 + 5 / (2 * sin (π / 5)) + 5 / (2 * sin (2 * π / 5)) ≤ (8590998968538679485106422775913296202982158360626771111572787709008136802664564722236982378865706250355829161488401108250568180672808974029458937792907486302049850635875288467833/594410322684470982572774583362113839628561646328593889029565496515121113275428212520708832082656592896884997083885396245000000000000000000000000000000000000000000000000000000000:ℝ) := by
-  obtain ⟨h2l, h2u⟩ := sqrt2_enc60
   obtain ⟨h5l, h5u⟩ := sqrt5_enc60
   obtain ⟨hal, hau⟩ := sin_pi_div_five_enc60
   rw [EPBounds.sin_two_pi_div_five]
-  have h1 : 5 / (2 * sin (π / 5)) ≤ 5 / (2 * (36736578268279570573044122164942048037353277352696624442017/62500000000000000000000000000000000000000000000000000000000:ℝ)) :=
-    div_le_div_of_nonneg_left (by norm_num) (by norm_num) (by linarith)
-  have h1' : 5 / (2 * (587785252292473129168705954639072768597652437643145991072273/1000000000000000000000000000000000000000000000000000000000000:ℝ)) ≤ 5 / (2 * sin (π / 5)) :=
-    div_le_div_of_nonneg_left (by norm_num) (by linarith) (by linarith)
-  have hbl : (36736578268279570573044122164942048037353277352696624442017/62500000000000000000000000000000000000000000000000000000000:ℝ) * ((1 + (2236067977499789696409173668731276235440618359611525724270897/1000000000000000000000000000000000000000000000000000000000000:ℝ)) / 2) ≤ sin (π / 5) * ((1 + √5) / 2) :=
-    mul_le_mul hal (by linarith) (by norm_num) (by linarith)
-  have hbu : sin (π / 5) * ((1 + √5) / 2) ≤ (587785252292473129168705954639072768597652437643145991072273/1000000000000000000000000000000000000000000000000000000000000:ℝ) * ((1 + (1118033988749894848204586834365638117720309179805762862135449/500000000000000000000000000000000000000000000000000000000000:ℝ)) / 2) :=
-    mul_le_mul hau (by linarith) (by linarith) (by norm_num)
-  have h2 : 5 / (2 * (sin (π / 5) * ((1 + √5) / 2))) ≤
-      5 / (2 * ((36736578268279570573044122164942048037353277352696624442017/62500000000000000000000000000000000000000000000000000000000:ℝ) * ((1 + (2236067977499789696409173668731276235440618359611525724270897/1000000000000000000000000000000000000000000000000000000000000:ℝ)) / 2))) :=
-    div_le_div_of_nonneg_left (by norm_num) (by positivity) (by linarith)
-  have h2' : 5 / (2 * ((587785252292473129168705954639072768597652437643145991072273/1000000000000000000000000000000000000000000000000000000000000:ℝ) * ((1 + (1118033988749894848204586834365638117720309179805762862135449/500000000000000000000000000000000000000000000000000000000000:ℝ)) / 2))) ≤
-      5 / (2 * (sin (π / 5) * ((1 + √5) / 2))) :=
-    div_le_div_of_nonneg_left (by norm_num) (by positivity) (by linarith)
-  constructor
-  · norm_num at h1' h2' ⊢; linarith
-  · norm_num at h1 h2 ⊢; linarith
+  generalize sin (π / 5) = s at *
+  have hx := div_mul_cancel₀ (5 : ℝ) (by linarith : 0 < 2 * s).ne'
+  have hy := div_mul_cancel₀ (5 : ℝ) (by nlinarith : 0 < 2 * (s * ((1 + √5) / 2))).ne'
+  generalize 5 / (2 * s) = x at *
+  generalize 5 / (2 * (s * ((1 + √5) / 2))) = y at *
+  have hr : 0 < 1 + √5 := by linarith
+  have hx0 : 0 < x := by nlinarith
+  have hy0 : 0 < y := by nlinarith [mul_pos (by linarith : 0 < s) hr]
+  constructor <;> nlinarith [mul_pos hy0 hr, sqrt2_enc60.1, sqrt2_enc60.2]
 
 /-- **40-digit enclosure of the minimum energy**:
 `144529774142213429350444915306029287904778/10^40 ≤ E(P) ≤ 144529774142213429350444915306029287904779/10^40`. -/
@@ -7160,28 +6854,17 @@ theorem chainOK_nonneg (P : List ℤ) (cs : List BPiece) :
     ∀ (l1 : ℤ) (l2 : ℕ) (r1 : ℤ) (r2 : ℕ), 0 < l2 → 0 < r2 → chainOK P cs l1 l2 r1 r2 = true →
       ∀ y : ℝ, (l1 : ℝ) ≤ l2 * y → (r2 : ℝ) * y ≤ r1 → 0 ≤ peval P y := by
   induction cs with
-  | nil => intro l1 l2 r1 r2 _ _ h; simp [chainOK] at h
+  | nil => simp [chainOK]
   | cons c cs ih =>
     intro l1 l2 r1 r2 hl hr h y hy0 hy1
-    simp only [chainOK, Bool.and_eq_true, decide_eq_true_eq, Bool.or_eq_true] at h
+    simp [chainOK] at h
     obtain ⟨⟨hc, hleft⟩, hright⟩ := h
-    have hu2 : 0 < c.u2 := by
-      simp only [BPiece.check, Bool.and_eq_true, decide_eq_true_eq] at hc; exact hc.1.1.2
-    have hw2 : 0 < c.w2 := by
-      simp only [BPiece.check, Bool.and_eq_true, decide_eq_true_eq] at hc; exact hc.1.2
-    have hlR : (0 : ℝ) < l2 := by exact_mod_cast hl
-    have hrR : (0 : ℝ) < r2 := by exact_mod_cast hr
-    have hleftR : (c.u1 : ℝ) * l2 ≤ l1 * c.u2 := by exact_mod_cast hleft
-    have hpl : (c.u1 : ℝ) ≤ c.u2 * y := by
-      nlinarith
     by_cases hyc : (c.w2 : ℝ) * y ≤ c.w1
-    · exact c.nonneg P hc hpl hyc
-    · rcases hright with hr1 | hr2
-      · exfalso
-        have hr1R : (r1 : ℝ) * c.w2 ≤ c.w1 * r2 := by exact_mod_cast hr1
-        nlinarith
-      · refine ih c.w1 c.w2 r1 r2 hw2 hr hr2 y ?_ hy1
-        exact le_of_lt (not_le.1 hyc)
+    · rify at hl hleft
+      exact c.nonneg P hc (by nlinarith) hyc
+    obtain hr1 | hr2 := hright
+    · rify at hr hr1; nlinarith
+    · exact ih _ _ _ _ (by simp_all [BPiece.check]) hr hr2 y (by linarith) hy1
 
 /-! ## B. The substitution `y = √(2 - 2t) / 2` -/
 
@@ -7341,30 +7024,18 @@ theorem ContactA.tube (c : ContactA) (hc : c.check = true) {δ τ a0 : ℝ}
     (ha1 : a0 < 1) (hδ : 8 * c.Dq * δ ≤ ((c.g0n : ℝ) / c.g0d) * τ)
     {t : ℝ} (h1 : -1 ≤ t) (h2 : t ≤ a0) :
     peval c.Q t / c.Dq ≤ phi t ∧ (phi t - peval c.Q t / c.Dq ≤ δ → |t + 1| ≤ τ) := by
-  have hc' := hc
-  simp only [ContactA.check, Bool.and_eq_true, decide_eq_true_eq] at hc'
-  obtain ⟨⟨⟨⟨⟨hD, hg0n⟩, hg0d⟩, hya2⟩, -⟩, -⟩ := hc'
-  have h2' : t < 1 := lt_of_le_of_lt h2 ha1
+  obtain ⟨⟨⟨⟨⟨hD, hg0n⟩, hg0d⟩, hya2⟩, -⟩, -⟩ := by
+    simpa only [ContactA.check, Bool.and_eq_true, decide_eq_true_eq] using hc
+  have h2' := h2.trans_lt ha1
   have hy1 := yOf_le_one h1 h2'
-  have hya2R : (0 : ℝ) < c.ya2 := by exact_mod_cast hya2
-  have hyl : (c.ya1 : ℝ) / c.ya2 ≤ yOf t :=
-    le_yOf_of_hi h2' hya (by linarith)
-  have hyl' : (c.ya1 : ℝ) ≤ c.ya2 * yOf t := by
-    rw [div_le_iff₀ hya2R] at hyl; linarith
-  have hG := c.G_ge hc hyl' hy1
+  have hG := c.G_ge hc ((div_le_iff₀' (by exact_mod_cast hya2)).1 (le_yOf_of_hi h2' hya (by linarith))) hy1
   have hg0 : (0 : ℝ) < (c.g0n : ℝ) / c.g0d := by positivity
-  have hF : 0 ≤ peval (Fpoly c.Q c.Dq) (yOf t) := by
-    rw [c.factor hc]; exact mul_nonneg (by linarith) (hg0.le.trans hG)
+  have hF : 0 ≤ peval (Fpoly c.Q c.Dq) (yOf t) := by nlinarith [c.factor hc (yOf t)]
   refine ⟨H_le_phi_of_F hD h2' hF, fun hs => ?_⟩
-  have hFle := F_le_of_slack hD h2' hy1 hF hs
-  rw [c.factor hc] at hFle
-  have h3 : ((c.g0n : ℝ) / c.g0d) * (1 - yOf t) ≤ 2 * c.Dq * δ :=
-    le_trans (by nlinarith [sub_nonneg.2 hy1]) hFle
-  have hsq := yOf_sq h2'.le
-  have h4 : 4 * (1 - yOf t) ≤ τ := by
-    nlinarith [h3, hδ]
+  have h4 : 4 * (1 - yOf t) ≤ τ := le_of_mul_le_mul_left (by
+    linarith [mul_nonneg (sub_nonneg.2 hy1) (sub_nonneg.2 hG), c.factor hc (yOf t), F_le_of_slack hD h2' hy1 hF hs]) hg0
   rw [abs_of_nonneg (by linarith)]
-  nlinarith [sq_nonneg (yOf t - 1)]
+  nlinarith [yOf_sq h2'.le, sq_nonneg (yOf t - 1)]
 
 /-! ## E. Shapes of the hypotheses `hA hB hC` of `cap_of_typed_tube7` and closeness of the nodes -/
 
@@ -8452,41 +8123,13 @@ lemma getD_weights (w D : ℕ) (zs : List (ℕ × ℕ × ℕ)) (a : ℕ) (ha : a
 /-- The flat evaluator computes the Kronecker value of the quadratic form of a packed block. -/
 lemma fqFlat_spec (w D : ℕ) (s : TBlk) (h : s.wf = true) :
     fqFlat w D s = (sqfF s.B s.z).kev w D := by
-  simp only [TBlk.wf, Bool.and_eq_true, decide_eq_true_eq] at h
-  have hz : s.z.length = s.r := h.2
-  rw [kev_sqfF, sqfVal]
-  have hpl : (weights w D s.z).length = s.r := by rw [weights_length, hz]
-  have hLl := rowsN_length s.Bl s.r (weights w D s.z) s.r s.xl
-  have hDl := rowsN_length s.BD s.r (weights w D s.z) s.r s.xD
-  have hP : ∀ a < s.r, (((weights w D s.z).getD a 0 : ℕ) : ℤ) = kw w D s.z a :=
-    fun a ha => getD_weights w D s.z a (by omega)
-  unfold fqFlat
-  rw [comb1_spec, comb2_spec _ _ _ _ (by rw [hpl, hDl]), hLl, hpl, hz]
-  congr 1
-  · refine Finset.sum_congr rfl fun q hq => ?_
-    have hrow := rowsN_spec s.Bl s.r (weights w D s.z) hpl s.r s.xl q (Finset.mem_range.mp hq)
-    have hsum : (∑ a ∈ Finset.range s.r, s.B.lq q a * kw w D s.z a)
-        = (((rowsN s.Bl s.r (weights w D s.z) s.r s.xl).getD q 0 : ℕ) : ℤ)
-          - offB s.Bl * (((weights w D s.z).sum : ℕ) : ℤ) := by
-      rw [hrow]
-      refine Finset.sum_congr rfl fun a ha => ?_
-      rw [hP a (Finset.mem_range.mp ha)]
-      rfl
-    rw [hsum]
-    simp only [TBlk.B, mkBlk, Blk.dq]
-    ring
-  · refine Finset.sum_congr rfl fun a ha => ?_
-    have ha' := Finset.mem_range.mp ha
-    have hrow := rowsN_spec s.BD s.r (weights w D s.z) hpl s.r s.xD a ha'
-    have hsum : (∑ c ∈ Finset.range s.r, s.B.del a c * kw w D s.z c)
-        = (((rowsN s.BD s.r (weights w D s.z) s.r s.xD).getD a 0 : ℕ) : ℤ)
-          - offB s.BD * (((weights w D s.z).sum : ℕ) : ℤ) := by
-      rw [hrow]
-      refine Finset.sum_congr rfl fun c hc => ?_
-      rw [hP c (Finset.mem_range.mp hc)]
-      rfl
-    rw [hP a ha', ← hsum, Finset.mul_sum]
-    ring
+  simp [TBlk.wf] at h
+  have hpl : (weights w D s.z).length = s.r := by rw [weights_length, h.2]
+  rw [kev_sqfF, sqfVal, fqFlat, comb1_spec, comb2_spec _ _ _ _ (by rw [hpl, rowsN_length]),
+    rowsN_length, hpl, h.2]
+  simp only [Finset.sum_range, rowsN_spec _ _ _ hpl, Fin.is_lt,
+    fun a : Fin s.r => getD_weights w D s.z a (by omega), pow_two, Finset.mul_sum, mul_assoc]
+  rfl
 
 /-- The evaluator used by the certificates: the flat `Nat`-only version. -/
 def fqCur (w D : ℕ) (s : TBlk) : ℤ := fqFlat w D s
@@ -8844,24 +8487,13 @@ lemma gamma_nonneg (hm : cf.checkMeta = true) (hG : cf.chkG = true) {u v t : ℝ
       ((cf.ef + 2 * Sk cf.K cf.m cf.FPm 1 1 1 + 5 * Sk cf.K cf.m cf.FRm 1 1 1 - 5 * cf.calf
         - 20 * cf.cbef) / 10) u v t := by
   obtain ⟨hL, hAd, -, -, -, hmG, -, -, -, -, hSG⟩ := cf.checkMeta_parts hm
-  have hgc := gramCut_of_le' cf.an cf.ad hAd hg hu hv ht
-  have hb : ((1 : ℕ) : ℝ) * u ≤ ((1 : ℤ) : ℝ) := by
-    have := le_one_of_gramOK hg
-    simpa using this
   have h0 := cf.idG_ev hG u v t
   simp only [idG, idT, FG, ev_sub, ev_smul, ev_sumE, SPE, SRE,
     ev_lamGE cf.K cf.m cf.Lam cf.blkP cf.blkR hL] at h0
-  have hS := tsum_nonneg cf.an cf.ad 1 1 cf.SG hSG hgc hb
-  have hLr : (0 : ℝ) < cf.Lam := by exact_mod_cast hL
-  have hmr : (0 : ℝ) < cf.mG := by exact_mod_cast hmG
-  change 0 ≤ lamG (Sk cf.K cf.m (fun k => fmat (cf.m k) cf.Lam (cf.blkR k)))
-    (polyR cf.Lam cf.HC) (polyR cf.Lam cf.ψCb)
-    (((cf.e : ℝ) / cf.Lam + 2 * Sk cf.K cf.m (fun k => fmat (cf.m k) cf.Lam (cf.blkP k)) 1 1 1
-      + 5 * Sk cf.K cf.m (fun k => fmat (cf.m k) cf.Lam (cf.blkR k)) 1 1 1
-      - 5 * ((cf.cal : ℝ) / cf.Lam) - 20 * ((cf.cbe : ℝ) / cf.Lam)) / 10) u v t
-  refine nonneg_of_scaled (L := cf.mG * 30 * cf.Lam) (mul_pos (mul_pos hmr (by norm_num)) hLr)
-    hS ?_
-  linear_combination h0
+  unfold FRm FPm HCf ψCbf ef calf cbef
+  exact nonneg_of_scaled (L := cf.mG * 30 * cf.Lam) (by simp [hmG, hL])
+    (tsum_nonneg cf.an cf.ad 1 1 cf.SG hSG (gramCut_of_le' cf.an cf.ad hAd hg hu hv ht)
+      (by simpa using le_one_of_gramOK hg)) (by linear_combination h0)
 
 /-- **Soundness of a typed certificate with lower cut.** -/
 theorem sound_lo (hm : cf.checkMeta = true) (hA : cf.chkA = true) (hB : cf.chkB = true)
