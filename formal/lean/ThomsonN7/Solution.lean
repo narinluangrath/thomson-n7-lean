@@ -611,15 +611,8 @@ theorem dsum_mul_left (c : ℝ) (f : Fin n → Fin n → Fin n → ℝ) :
   split_ifs <;> simp
 
 theorem dsum_swap23 (f : Fin n → Fin n → Fin n → ℝ) :
-    dsum (fun i j l => f i l j) = dsum f := by
-  refine Finset.sum_congr rfl fun i _ => ?_
-  rw [Finset.sum_comm]
-  refine Finset.sum_congr rfl fun a _ => Finset.sum_congr rfl fun b _ => ?_
-  by_cases h : i ≠ a ∧ i ≠ b ∧ a ≠ b
-  · rw [ite_eq_left h, ite_eq_left ⟨h.2.1, h.1, h.2.2.symm⟩]
-  · rw [ite_eq_right h, ite_eq_right]
-    rintro ⟨h1, h2, h3⟩
-    exact h ⟨h2, h1, h3.symm⟩
+    dsum (fun i j l => f i l j) = dsum f :=
+  Finset.sum_congr rfl fun i _ => Finset.sum_comm.trans (by simp only [ne_comm, and_left_comm])
 
 theorem dsum_cyc (f : Fin n → Fin n → Fin n → ℝ) :
     dsum (fun i j l => f j l i) = dsum f := by
@@ -635,15 +628,9 @@ theorem card_third (hn : 2 ≤ n) (i j : Fin n) (hij : i ≠ j) :
 theorem dsum_pair12 (hn : 2 ≤ n) (g : Fin n → Fin n → ℝ) :
     dsum (fun i j _ => g i j)
       = ((n : ℝ) - 2) * ∑ i, ∑ j, (if i ≠ j then g i j else 0) := by
-  rw [Finset.mul_sum]
-  refine Finset.sum_congr rfl fun i _ => ?_
-  rw [Finset.mul_sum]
-  refine Finset.sum_congr rfl fun j _ => ?_
-  by_cases hij : i = j
-  · simp [hij]
-  · rw [ite_eq_left hij, ← Finset.sum_filter, Finset.sum_const, card_third hn i j hij, nsmul_eq_mul]
-    push_cast [Nat.cast_sub hn]
-    ring
+  simp [dsum, Finset.mul_sum]
+  congr!
+  split_ifs <;> simp_all [← Finset.sum_filter, Finset.filter_and, Finset.filter_ne, Nat.sub_sub]
 
 theorem dsum_pair13 (hn : 2 ≤ n) (g : Fin n → Fin n → ℝ) :
     dsum (fun i _ l => g i l)
@@ -683,12 +670,7 @@ noncomputable def Rs (s : ℝ → ℝ → ℝ → ℝ) (n : ℕ) (u v t : ℝ) :
 
 theorem sum_ne_eq_sub (a : Fin n → ℝ) (i : Fin n) :
     ∑ j, (if i ≠ j then a j else 0) = ∑ j, a j - a i := by
-  have h1 : ∑ j, a j = ∑ j, (if i ≠ j then a j else 0) + ∑ j, (if i = j then a j else 0) := by
-    rw [← Finset.sum_add_distrib]
-    refine Finset.sum_congr rfl fun j _ => ?_
-    by_cases h : i = j <;> simp [h]
-  rw [h1, Finset.sum_ite_eq]
-  simp
+  simp [Finset.sum_ite, Finset.filter_ne]
 
 theorem dsum_Rs (hn : 3 ≤ n) (s : ℝ → ℝ → ℝ → ℝ)
     (hs12 : ∀ u v t, s u v t = s v u t) (hs23 : ∀ u v t, s u v t = s u t v)
@@ -830,16 +812,8 @@ section CriticalZsym
 variable {n : ℕ}
 
 theorem dsum_swap12 (f : Fin n → Fin n → Fin n → ℝ) :
-    dsum (fun i j l => f j i l) = dsum f := by
-  unfold dsum
-  rw [Finset.sum_comm]
-  refine Finset.sum_congr rfl fun a _ => Finset.sum_congr rfl fun b _ =>
-    Finset.sum_congr rfl fun c _ => ?_
-  by_cases h : a ≠ b ∧ a ≠ c ∧ b ≠ c
-  · rw [ite_eq_left ⟨h.1.symm, h.2.2, h.2.1⟩, ite_eq_left h]
-  · rw [ite_eq_right, ite_eq_right h]
-    rintro ⟨h1, h2, h3⟩
-    exact h ⟨h1.symm, h3, h2⟩
+    dsum (fun i j l => f j i l) = dsum f :=
+  (dsum_swap23 _).trans (dsum_cyc _).symm
 
 section Perm
 
@@ -1350,13 +1324,7 @@ lemma varVal_pow (u v t : ℝ) (i a : ℕ) :
 
 lemma ev_sbst (i j k : ℕ) (e : Ex) (u v t : ℝ) :
     (sbst i j k e).ev u v t = e.ev (varVal u v t i) (varVal u v t j) (varVal u v t k) := by
-  induction e with
-  | c n => simp [sbst]
-  | mon a b d =>
-    simp only [sbst, ev_mon, pow_add, varVal_pow]
-    ring
-  | add p q ihp ihq => simp [sbst, ihp, ihq]
-  | mul p q ihp ihq => simp [sbst, ihp, ihq]
+  induction e <;> simp only [sbst, ev, pow_add, varVal_pow, *] <;> ring
 
 /-! ## The `F`-blocks: `Λ · Fp(u,v)` -/
 
@@ -1401,11 +1369,7 @@ def fkE (r : ℕ) (b : Blk) (k : ℕ) : Ex := mul (fpE r b) (q3E k)
 lemma ev_fkE (r : ℕ) (b : Blk) (k : ℕ) (u v t : ℝ) :
     (fkE r b k).ev u v t = ∑ a ∈ Finset.range r, ∑ c ∈ Finset.range r,
       (b.ent r a c : ℝ) * (u ^ a * v ^ c * Q3 k u v t) := by
-  rw [fkE, ev_mul, ev_fpE, ev_q3E, Finset.sum_mul]
-  refine Finset.sum_congr rfl fun a _ => ?_
-  rw [Finset.sum_mul]
-  refine Finset.sum_congr rfl fun c _ => ?_
-  ring
+  simp [fkE, ev_fpE, ev_q3E, Finset.sum_mul, mul_assoc]
 
 /-- The real matrix of an `F`-block: `(∑_q d_q l_q l_qᵀ + Δ) / Λ`. -/
 noncomputable def fmat (r Lam : ℕ) (b : Blk) : Matrix (Fin r) (Fin r) ℝ :=
@@ -1486,8 +1450,7 @@ lemma key_F {r Lam : ℕ} (b : Blk) (k n : ℕ) (hL : (Lam : ℝ) ≠ 0) (hn : (
     (u v t : ℝ) :
     6 * ((n : ℝ) - 1) * Lam * matDot (fmat r Lam b) (Rk n r k u v t)
       = ftotTerm n (fun a b' c => (fkE r b k).ev a b' c) u v t := by
-  rw [matDot_Rk]
-  simp only [Rs, matDot_S3, matDot_fmat_Y3, six, ftotTerm]
+  simp [matDot_Rk, Rs, matDot_S3, matDot_fmat_Y3, six, ftotTerm]
   field_simp
 
 /-! ## SOS blocks with multipliers -/
@@ -1702,11 +1665,8 @@ end Cert3
 
 lemma sos_sum_nonneg (an : ℤ) (ad : ℕ) (S : List SBlk)
     (hS : S.all (fun s => s.B.ok s.z.length) = true) {u v t : ℝ} (hg : GramCut an ad u v t) :
-    0 ≤ ((S.map (sblkE an ad)).map fun e => e.ev u v t).sum := by
-  refine List.sum_nonneg fun x hx => ?_
-  simp only [List.mem_map] at hx
-  obtain ⟨e, ⟨s, hs, rfl⟩, rfl⟩ := hx
-  exact sblkE_nonneg an ad (List.all_eq_true.mp hS s hs) hg
+    0 ≤ ((S.map (sblkE an ad)).map fun e => e.ev u v t).sum :=
+  List.sum_nonneg (by simp_all [sblkE_nonneg])
 
 /-- The real-number algebra at the end of the soundness proof. -/
 lemma final_ineq {n' C Λ Hs eps A Ssum : ℝ} (hn : 3 ≤ n') (hC : 0 < C) (hΛ : 0 < Λ)
@@ -1743,11 +1703,7 @@ lemma hpt_gramCut (cf : Cert3) (hc : cf.check = true) {u v t : ℝ} (hg : GramCu
 lemma gramCut_of_le {cf : Cert3} (hA : 0 < cf.ad) {u v t : ℝ} (hg : GramOK u v t)
     (hu : (cf.an : ℝ) / cf.ad ≤ u) (hv : (cf.an : ℝ) / cf.ad ≤ v)
     (ht : (cf.an : ℝ) / cf.ad ≤ t) : GramCut cf.an cf.ad u v t := by
-  have hp : (0 : ℝ) < cf.ad := by exact_mod_cast hA
-  refine ⟨hg, ?_, ?_, ?_⟩
-  · rw [div_le_iff₀ hp] at hu; linarith
-  · rw [div_le_iff₀ hp] at hv; linarith
-  · rw [div_le_iff₀ hp] at ht; linarith
+  simp_all [GramCut, div_le_iff₀']
 
 /-- The pointwise inequality required by `three_point_bound_cut` (cut `a = an / ad`). -/
 lemma hpt_cut (cf : Cert3) (hc : cf.check = true) {u v t : ℝ} (hg : GramOK u v t)
@@ -2120,8 +2076,8 @@ noncomputable def gt : Fin 7 → Fin 7 → ℝ :=
     ![c1, c2, c2, c1, 1, 0, 0], ![0, 0, 0, 0, 0, 1, -1], ![0, 0, 0, 0, 0, -1, 1]]
 
 lemma gram (i j : Fin 7) : inner ℝ (pentBipyramid i) (pentBipyramid j) = gt i j := by
-  fin_cases i <;> fin_cases j <;> simp [gt, pent_norm] <;>
-    (first | simp only [g_0_1, g_0_2, g_0_3, g_0_4, g_0_5, g_0_6, g_1_2, g_1_3, g_1_4, g_1_5, g_1_6, g_2_3, g_2_4, g_2_5, g_2_6, g_3_4, g_3_5, g_3_6, g_4_5, g_4_6, g_5_6] | (rw [real_inner_comm]; simp only [g_0_1, g_0_2, g_0_3, g_0_4, g_0_5, g_0_6, g_1_2, g_1_3, g_1_4, g_1_5, g_1_6, g_2_3, g_2_4, g_2_5, g_2_6, g_3_4, g_3_5, g_3_6, g_4_5, g_4_6, g_5_6]))
+  have := real_inner_comm (pentBipyramid i) (pentBipyramid j)
+  fin_cases i <;> fin_cases j <;> simp_all [gt, pent_norm, g_0_1, g_0_2, g_0_3, g_0_4, g_0_5, g_0_6, g_1_2, g_1_3, g_1_4, g_1_5, g_1_6, g_2_3, g_2_4, g_2_5, g_2_6, g_3_4, g_3_5, g_3_6, g_4_5, g_4_6, g_5_6]
 
 lemma Wt (i j : Fin 7) : W i j = if i = j then 0 else phi (gt i j) ^ 3 := by unfold W; rw [gram]
 lemma crit_1_x (w1 w2 : ℝ) :
@@ -2868,21 +2824,12 @@ lemma sum_W_inner_left (v : Fin 7 → R3) :
     ∑ i, ∑ j, W i j * inner ℝ (pentBipyramid i) (v j)
       = ∑ j, muP j * inner ℝ (pentBipyramid j) (v j) := by
   rw [Finset.sum_comm]
-  refine Finset.sum_congr rfl fun j _ => ?_
-  have h := pent_critical j
-  have h2 : inner ℝ (∑ i, W j i • pentBipyramid i) (v j)
-      = inner ℝ (muP j • pentBipyramid j) (v j) := by rw [h]
-  simp only [sum_inner, real_inner_smul_left] at h2
-  simp only [W_symm j] at h2
-  exact h2
+  simp [W_symm, ← real_inner_smul_left, ← sum_inner, pent_critical]
 
 lemma sum_W_inner_right (v : Fin 7 → R3) :
     ∑ i, ∑ j, W i j * inner ℝ (v i) (pentBipyramid j)
       = ∑ i, muP i * inner ℝ (v i) (pentBipyramid i) := by
-  refine Finset.sum_congr rfl fun i _ => ?_
-  have h2 : inner ℝ (v i) (∑ j, W i j • pentBipyramid j)
-      = inner ℝ (v i) (muP i • pentBipyramid i) := by rw [pent_critical i]
-  simpa only [inner_sum, real_inner_smul_right] using h2
+  simp [← real_inner_smul_right, ← inner_sum, pent_critical]
 
 /-- The Gram increment `⟪y_i, y_j⟫ - ⟪P_i, P_j⟫`. -/
 noncomputable def tau (y : Fin 7 → R3) (i j : Fin 7) : ℝ := inner ℝ (y i) (y j) - gP i j
@@ -3034,9 +2981,8 @@ def hi (P : Poly) : ℚ := (P.map fun t => if 0 ≤ t.1 then t.1 * monQ boxHi t.
 
 lemma mono_mem {c s p q r : ℝ} (hb : InBox c s p q r) (e : ℕ × ℕ × ℕ × ℕ × ℕ) :
     (monQ boxLo e : ℝ) ≤ mono e c s p q r ∧ mono e c s p q r ≤ monQ boxHi e := by
-  obtain ⟨h1, h2, h3, h4, h5, h6, h7, h8, h9, h10⟩ := hb
-  simp only [monQ, mono, boxLo, boxHi, List.getD_cons_succ, List.getD_cons_zero]; push_cast
-  constructor <;> gcongr
+  simp_all [InBox, monQ, mono, boxLo, boxHi]
+  bound
 
 lemma ev_mem {c s p q r : ℝ} (hb : InBox c s p q r) (P : Poly) :
     (P.lo : ℝ) ≤ P.ev c s p q r ∧ P.ev c s p q r ≤ P.hi := by
@@ -3160,11 +3106,8 @@ lemma cp_mem {c s p q r : ℝ} (hb : InBox c s p q r) (k : ℕ) :
 
 lemma Hm_err {c s p q r : ℝ} (hb : InBox c s p q r) (i j : ℕ) :
     |Hm c s p q r i j - M0 i j| ≤ dl i j := by
-  obtain ⟨h1, h2⟩ := cp_mem hb (ix i j)
-  have hw : (0 : ℝ) ≤ wt i j := by unfold wt; split_ifs <;> norm_num
-  simp only [Hm, M0, dl, mid, rad]; push_cast
-  rw [← mul_sub, abs_mul, abs_of_nonneg hw]
-  exact mul_le_mul_of_nonneg_left (abs_le.2 ⟨by linarith, by linarith⟩) hw
+  unfold Hm M0 dl mid rad wt
+  split_ifs <;> push_cast <;> grind [cp_mem]
 
 lemma check_parts : ∀ i ∈ range 21, 0 ≤ Dq i ∧ (∀ j ∈ range 21, ix i j = ix j i ∧ res i j = res j i) ∧
     ∑ j ∈ range 21, (if i = j then dl i i else |res i j| + dl i j) ≤ res i i := by
@@ -4425,13 +4368,7 @@ def c1Stat (w D : ℕ) : Kron.Ex → C1Stat
 /-- `c1Stat` computes the four statistics `l1`, `dx`, `dy`, `dz` and the Kronecker value `kev`. -/
 lemma c1Stat_eq (w D : ℕ) (e : Kron.Ex) :
     c1Stat w D e = (e.l1, e.dx, e.dy, e.dz, e.kev w D) := by
-  induction e with
-  | c n => rfl
-  | mon a b d => rfl
-  | add p q ihp ihq => simp only [c1Stat, ihp, ihq, c1Add, Kron.Ex.l1, Kron.Ex.dx, Kron.Ex.dy,
-      Kron.Ex.dz, Kron.Ex.kev]
-  | mul p q ihp ihq => simp only [c1Stat, ihp, ihq, c1Mul, Kron.Ex.l1, Kron.Ex.dx, Kron.Ex.dy,
-      Kron.Ex.dz, Kron.Ex.kev]
+  induction e <;> simp only [c1Stat, *] <;> rfl
 
 /-- Statistics of a difference. -/
 def c1Sub (s t : C1Stat) : C1Stat := c1Add s (c1Mul (c1C (-1)) t)
@@ -4548,15 +4485,9 @@ theorem c1_idE_stat : c1Stat 179 11 Case1Data.cf.idE = (436332295499381438821328
 
 /-- The Kronecker check of the identity expression. -/
 theorem cf_chk : chk Case1Data.cf.idE = true := by
-  have h := c1Stat_eq 179 11 Case1Data.cf.idE
-  rw [c1_idE_stat] at h
-  simp only [Prod.mk.injEq] at h
-  obtain ⟨hl, hx, hy, hz, hk⟩ := h
-  unfold chk
-  rw [← hl, ← hx, ← hy, ← hz]
-  have hW : Nat.log2 436332295499381438821328134325189273208925017963848688 + 1 = 179 := by decide +kernel
-  have hD : max 10 (max 10 10) + 1 = 11 := by decide +kernel
-  exact decide_eq_true hk.symm
+  have h := c1_idE_stat
+  simp_all [c1Stat_eq, chk]
+  exact h.2.2.2.2
 
 /-- The positive-semidefiniteness certificates of the `F`-blocks. -/
 theorem cf_blocks :
@@ -4588,15 +4519,7 @@ theorem Hf_eq (t : ℝ) :
 
 /-- The certified bound `eps / Lam ≥ 14.453278`. -/
 theorem eps_ge : (14453278 : ℝ) / 1000000 ≤ (Case1Data.cf.eps : ℝ) / (Case1Data.cf.Lam : ℝ) := by
-  have hL : (0 : ℝ) < (Case1Data.cf.Lam : ℝ) := by
-    have : 0 < Case1Data.cf.Lam := by decide +kernel
-    exact_mod_cast this
-  have hI : (14453278 : ℤ) * (Case1Data.cf.Lam : ℤ) ≤ 1000000 * Case1Data.cf.eps := by
-    decide +kernel
-  have hR : (14453278 : ℝ) * (Case1Data.cf.Lam : ℝ) ≤ 1000000 * (Case1Data.cf.eps : ℝ) := by
-    exact_mod_cast hI
-  rw [div_le_div_iff₀ (by norm_num) hL]
-  linarith
+  norm_num [Case1Data.cf]
 
 /-- **Case 1 margin (exact certificate).**  Every configuration on the unit sphere all of whose
 pairwise inner products are `≥ -9/10` has energy at least `E(P) + 3/10000`. -/
@@ -4783,16 +4706,7 @@ namespace ThreePoint
 section Sym
 
 theorem Q3_swap (k : ℕ) (u v t : ℝ) : Q3 k u v t = Q3 k v u t := by
-  have key : ∀ k, Q3 k u v t = Q3 k v u t ∧ Q3 (k + 1) u v t = Q3 (k + 1) v u t := by
-    intro k
-    induction k with
-    | zero => exact ⟨by simp only [Q3], by simp only [Q3]; ring⟩
-    | succ k ih =>
-      refine ⟨ih.2, ?_⟩
-      simp only [Q3]
-      rw [ih.1, ih.2]
-      ring
-  exact (key k).1
+  induction k using Nat.twoStepInduction <;> simp_all [Q3] <;> ring
 
 theorem matDot_Y3_swap {m : ℕ} (F : Matrix (Fin m) (Fin m) ℝ) (hF : F.IsSymm) (k : ℕ)
     (u v t : ℝ) : matDot F (Y3 m k u v t) = matDot F (Y3 m k v u t) := by
@@ -5007,15 +4921,7 @@ lemma iadd_mem {a b : ℤ × ℤ} {x y : ℝ} (hx : Imem a x) (hy : Imem b y) :
 lemma iscale_mem {a : ℤ × ℤ} {x : ℝ} (c : ℤ) (hx : Imem a x) :
     Imem (iscale c a) (c * x) := by
   unfold Imem iscale at *
-  by_cases hc : 0 ≤ c
-  · have hc' : (0 : ℝ) ≤ c := by exact_mod_cast hc
-    simp only [hc, ite_true]
-    push_cast
-    constructor <;> nlinarith [hx.1, hx.2]
-  · have hc' : (c : ℝ) ≤ 0 := by exact_mod_cast (not_le.mp hc).le
-    simp only [hc, ite_false]
-    push_cast
-    constructor <;> nlinarith [hx.1, hx.2]
+  split_ifs with hc <;> rify at hc <;> constructor <;> push_cast <;> nlinarith
 
 lemma mul_ge_min4 {x y a1 a2 b1 b2 : ℝ} (hx1 : a1 ≤ x) (hx2 : x ≤ a2) (hy1 : b1 ≤ y)
     (hy2 : y ≤ b2) : min (min (a1 * b1) (a1 * b2)) (min (a2 * b1) (a2 * b2)) ≤ x * y := by
@@ -5193,12 +5099,9 @@ open M6
 /-- The Gram determinant of three unit vectors is non-negative. -/
 lemma det3h_nonneg (u v w : R3) (hu : ‖u‖ = 1) (hv : ‖v‖ = 1) (hw : ‖w‖ = 1) :
     0 ≤ det3h (1 : ℝ) ⟪u, v⟫_ℝ ⟪u, w⟫_ℝ ⟪v, w⟫_ℝ := by
-  have h := (Matrix.posSemidef_gram ℝ ![u, v, w]).det_nonneg
-  rw [Matrix.det_fin_three] at h
-  simp [Matrix.gram_apply, hu, hv, hw, real_inner_comm u v, real_inner_comm u w,
-    real_inner_comm v w] at h
-  unfold det3h
-  nlinarith [h]
+  have := (Matrix.posSemidef_gram ℝ ![u, v, w]).det_nonneg
+  simp_all [Matrix.det_fin_three, real_inner_comm, det3h]
+  linarith
 
 /-- Four unit vectors of `ℝ³` whose six pairwise inner products (times `1000`) lie in a box
 certified by `chk4` cannot exist. -/
@@ -5461,13 +5364,8 @@ def Concl (y : Fin 7 → R3) : Prop :=
 /-- The conclusion is invariant under relabelling. -/
 lemma concl_of_comp_perm (σ : Equiv.Perm (Fin 7)) {y : Fin 7 → R3}
     (h : Concl (fun i => y (σ i))) : Concl y := by
-  obtain ⟨h1, h2⟩ := h
-  rw [coulombEnergy_comp_perm σ y] at h1
-  refine ⟨h1, fun hE => ?_⟩
-  obtain ⟨g, τ, hg⟩ := h2 (by rw [coulombEnergy_comp_perm σ y]; exact hE)
-  refine ⟨g, σ.symm.trans τ, fun j => ?_⟩
-  have := hg (σ.symm j)
-  simpa using this
+  rw [Concl, coulombEnergy_comp_perm] at h
+  exact ⟨h.1, (h.2 · |>.imp fun g ⟨τ, hg⟩ => ⟨σ.symm.trans τ, by simpa using (hg <| σ.symm ·)⟩)⟩
 
 /-- Two distinct indices can be moved to `0` and `1` by a permutation. -/
 lemma exists_perm_of_ne {a b : Fin 7} (hab : a ≠ b) :
@@ -5640,24 +5538,16 @@ def TubeRigid (τ : ℝ) : Prop :=
 
 /-- The certified local window: Regime B holds for uniform Gram windows `tau <= 1/165000`. -/
 theorem localGramA_of_le {τ : ℝ} (hτ : τ ≤ 1 / 165000) :
-    TwoRegime.LocalGramA (fun _ => τ) (fun _ => τ) := by
-  have hL : TwoRegime.LocalGram (fun _ => (1 / 165000 : ℝ)) :=
-    TwoRegime.localGram_of_localMinAt (w := 1 / 165000) (by norm_num)
-      (by
-        have : (11 / 2 * (1 / 165000 : ℝ)) = 1 / 30000 := by norm_num
-        rw [this]
-        exact TwoRegime.localMinAt_tiny)
-  exact TwoRegime.localGramA_of_localGram hL (fun _ => hτ) (fun _ => hτ)
+    TwoRegime.LocalGramA (fun _ => τ) (fun _ => τ) :=
+  TwoRegime.localGramA_of_localGram (TwoRegime.localGram_of_localMinAt (by norm_num)
+    (by norm_num [TwoRegime.localMinAt_tiny])) (Function.const _ hτ) (Function.const _ hτ)
 
 /-- A relabelling with all Gram entries within `tau` of those of `P ∘ σ` puts `y` in the
 symmetric window. -/
 lemma inWindow_of_close {τ : ℝ} {y : Fin 7 → R3} {σ : Equiv.Perm (Fin 7)}
     (h : ∀ i j, i ≠ j →
       |⟪y i, y j⟫_ℝ - ⟪pentBipyramid (σ i), pentBipyramid (σ j)⟫_ℝ| ≤ τ) :
-    TwoRegime.InWindow (fun _ => τ) (fun _ => τ) y σ := by
-  intro i j hij
-  have := abs_le.1 (h i j hij)
-  constructor <;> linarith [this.1, this.2]
+    TwoRegime.InWindow (fun _ => τ) (fun _ => τ) y σ := by grind [TwoRegime.InWindow]
 
 /-- Termwise facts for the pairs of a minimal-pair configuration, slack version: the class minorant
 lies below `phi`, and a slack at most `delta` puts the inner product in the class predicate. -/
@@ -5821,10 +5711,9 @@ def CapSpec (a0 : ℝ) : Prop :=
 /-- A cap specification proves the cap claim for minimal-pair configurations. -/
 theorem capSpec_sound {a0 : ℝ} (h : CapSpec a0) :
     ∀ y ∈ SphereConfig 7, ⟪y 0, y 1⟫_ℝ ≤ a0 →
-      (∀ i j, i ≠ j → ⟪y 0, y 1⟫_ℝ ≤ ⟪y i, y j⟫_ℝ) → Concl y := by
-  obtain ⟨e, δ, τ, HA, HB, HC, hτ, hEδ, hTB, hA, hB, hC⟩ := h
-  exact cap_of_typed_tube HA HB HC (localGramA_of_le hτ) (tubeRigid_of_le (hτ.trans (by norm_num)))
-    (fun y hy hle hmin => hTB y hy hle hmin) hEδ hA hB hC
+      (∀ i j, i ≠ j → ⟪y 0, y 1⟫_ℝ ≤ ⟪y i, y j⟫_ℝ) → Concl y :=
+  let ⟨_, _, _, _, _, _, hτ, h⟩ := h
+  cap_of_typed_tube _ _ _ (localGramA_of_le hτ) (tubeRigid_of_le (by linarith)) h.2.1 h.1 h.2.2.1 h.2.2.2.1 h.2.2.2.2
 
 /-- **Slab specification.**  A margin certificate on the slab `lo ≤ ⟪y 0, y 1⟫ ≤ hi`: class
 minorants `HA HB HC` below `phi` whose typed sum is bounded below by some `e > E(P)` on
@@ -5966,13 +5855,8 @@ def bernSum (a b : List ℤ) (n : ℕ) : ℕ → List ℕ → List ℤ
 
 theorem bernSum_nonneg (a b : List ℤ) (n : ℕ) (y : ℝ) (ha : 0 ≤ peval a y) (hb : 0 ≤ peval b y)
     (bs : List ℕ) : ∀ i : ℕ, 0 ≤ peval (bernSum a b n i bs) y := by
-  induction bs with
-  | nil => intro i; simp [bernSum, peval]
-  | cons β bs ih =>
-    intro i
-    simp only [bernSum, peval_padd, peval_pscale, peval_pmul, peval_ppow]
-    exact add_nonneg (mul_nonneg (by positivity) (mul_nonneg (pow_nonneg ha _) (pow_nonneg hb _)))
-      (ih (i + 1))
+  induction bs <;> simp_all [bernSum, peval, peval_padd, peval_pscale, peval_pmul, peval_ppow]
+  bound
 
 /-- A Bernstein piece on the rational interval `[u1/u2, w1/w2]`:
 `Lam * P = Σ_i β_i (u2 y - u1)^i (w1 - w2 y)^(n-i)` with `β_i ≥ 0` and `n = length β - 1`. -/
@@ -6077,10 +5961,9 @@ theorem phi_sub_H {Q : List ℤ} {Dq : ℕ} (hD : 0 < Dq) {t : ℝ} (h : t < 1) 
 /-- If `F ≥ 0` at `y = yOf t` then `H t ≤ phi t`. -/
 theorem H_le_phi_of_F {Q : List ℤ} {Dq : ℕ} (hD : 0 < Dq) {t : ℝ} (h : t < 1)
     (hF : 0 ≤ peval (Fpoly Q Dq) (yOf t)) : peval Q t / Dq ≤ phi t := by
-  have hy := yOf_pos h
-  have := phi_sub_H hD h (Q := Q)
-  have h0 : 0 ≤ phi t - peval Q t / Dq := by rw [this]; positivity
-  linarith
+  have := yOf_pos h
+  rw [← sub_nonneg, phi_sub_H hD h]
+  positivity
 
 /-- The slack bound: `phi t - Q(t)/Dq ≤ δ` gives `F(y) ≤ 2 Dq δ` when `y ≤ 1` and `F ≥ 0`. -/
 theorem F_le_of_slack {Q : List ℤ} {Dq : ℕ} (hD : 0 < Dq) {t δ : ℝ} (h : t < 1)
@@ -6484,14 +6367,7 @@ lemma ev_linF (u v t : ℝ) : ∀ (τs : List (ℕ × ℕ × ℕ)) (xs : List �
     (linF τs xs).ev u v t
       = ∑ a ∈ Finset.range τs.length, (xs.getD a 0 : ℝ) * mv u v t (τs.getD a (0, 0, 0)) := by
   intro τs
-  induction τs with
-  | nil => intro xs; simp [linF]
-  | cons τ τs ih =>
-    intro xs
-    rw [List.length_cons, Finset.sum_range_succ', linF, ev_add, ev_smulNZ, ih xs.tail]
-    simp only [ev_mon, mv, List.getD_cons_succ, List.getD_cons_zero, getD_tail_succ]
-    rw [add_comm]
-    cases xs <;> simp
+  induction τs <;> rintro (_ | _) <;> simp_all [linF, Finset.sum_range_succ', ev_smulNZ, mv, add_comm]
 
 lemma ev_rowF (u v t : ℝ) (ta : ℕ × ℕ × ℕ) : ∀ (τs : List (ℕ × ℕ × ℕ)) (xs : List ℤ),
     (rowF ta τs xs).ev u v t
@@ -6673,8 +6549,7 @@ def tblkE (an : ℤ) (ad : ℕ) (bn : ℤ) (bd : ℕ) (s : TBlk) : Ex :=
 lemma tblkE_nonneg (an : ℤ) (ad : ℕ) (bn : ℤ) (bd : ℕ) {s : TBlk}
     (h : okF s.z.length s.B = true) {u v t : ℝ} (hg : GramCut an ad u v t)
     (hb : (bd : ℝ) * u ≤ bn) : 0 ≤ (tblkE an ad bn bd s).ev u v t := by
-  rw [tblkE, ev_mul, ev_sqfF]
-  exact mul_nonneg (gT_nonneg an ad bn bd s.g hg hb) (sqfE_nonneg (okF_sound h) _ _ _)
+  simp_all [tblkE, ev_sqfF, mul_nonneg, gT_nonneg, sqfE_nonneg (okF_sound h)]
 
 lemma tsum_nonneg (an : ℤ) (ad : ℕ) (bn : ℤ) (bd : ℕ) (S : List TBlk)
     (hS : S.all (fun s => okF s.z.length s.B) = true) {u v t : ℝ} (hg : GramCut an ad u v t)
@@ -6686,14 +6561,8 @@ lemma tsum_nonneg (an : ℤ) (ad : ℕ) (bn : ℤ) (bd : ℕ) (S : List TBlk)
 
 lemma cast_kev (w D : ℕ) (e : Ex) :
     ((e.kev w D : ℤ) : ℝ) = e.ev ((2 : ℝ) ^ w) ((2 : ℝ) ^ (w * D)) ((2 : ℝ) ^ (w * D * D)) := by
-  induction e with
-  | c n => simp [Ex.kev, Ex.ev]
-  | mon a b d =>
-    simp only [Ex.kev, Ex.ev]
-    push_cast
-    ring
-  | add p q ihp ihq => simp only [Ex.kev, Ex.ev, Int.cast_add, ihp, ihq]
-  | mul p q ihp ihq => simp only [Ex.kev, Ex.ev, Int.cast_mul, ihp, ihq]
+  induction e <;> simp_all [kev, ev]
+  ring
 
 /-- The Kronecker weight `2^(w · code)` of the `a`-th basis monomial. -/
 def kw (w D : ℕ) (zs : List (ℕ × ℕ × ℕ)) (a : ℕ) : ℤ :=
@@ -7039,16 +6908,8 @@ lemma dotN_spec (B : ℕ) : ∀ (ps : List ℕ) (x : ℕ),
     (dotN B ps x : ℤ) - offB B * (ps.sum : ℕ)
       = ∑ a ∈ Finset.range ps.length, (unpackI B ps.length x).getD a 0 * (ps.getD a 0 : ℤ) := by
   intro ps
-  induction ps with
-  | nil => intro x; simp [dotN]
-  | cons p ps ih =>
-    intro x
-    have h := ih (x >>> B)
-    rw [List.length_cons, Finset.sum_range_succ', unpackI]
-    simp only [dotN, List.getD_cons_succ, List.getD_cons_zero, List.sum_cons]
-    simp only [offB] at h ⊢
-    push_cast at h ⊢
-    linarith
+  induction ps <;> intro x <;> simp_all [dotN, unpackI, offB, Finset.sum_range_succ']
+  grind
 
 lemma rowsN_spec (B cols : ℕ) (ps : List ℕ) (hps : ps.length = cols) :
     ∀ (rows x q : ℕ), q < rows →
