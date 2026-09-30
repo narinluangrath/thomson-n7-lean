@@ -2665,9 +2665,6 @@ lemma g_0_5 : inner ℝ (pentBipyramid 0) (pentBipyramid 5) = 0 :=
 lemma g_0_6 : inner ℝ (pentBipyramid 0) (pentBipyramid 6) = 0 :=
   pent_inner_south (by decide)
 
-lemma g_1_0 : inner ℝ (pentBipyramid 1) (pentBipyramid 0) = c1 := by
-  rw [real_inner_comm]; exact g_0_1
-
 lemma g_1_2 : inner ℝ (pentBipyramid 1) (pentBipyramid 2) = c1 := by
   rw [pent_1, pent_2, inner_vec3]
   linear_combination (c1) * hF1 + (s1) * hF2 + (2*c1) * hF3 + (-2*c1) * hF4
@@ -2686,12 +2683,6 @@ lemma g_1_5 : inner ℝ (pentBipyramid 1) (pentBipyramid 5) = 0 :=
 lemma g_1_6 : inner ℝ (pentBipyramid 1) (pentBipyramid 6) = 0 :=
   pent_inner_south (by decide)
 
-lemma g_2_0 : inner ℝ (pentBipyramid 2) (pentBipyramid 0) = c2 := by
-  rw [real_inner_comm]; exact g_0_2
-
-lemma g_2_1 : inner ℝ (pentBipyramid 2) (pentBipyramid 1) = c1 := by
-  rw [real_inner_comm]; exact g_1_2
-
 lemma g_2_3 : inner ℝ (pentBipyramid 2) (pentBipyramid 3) = c1 := by
   rw [pent_2, pent_3, inner_vec3]
   linear_combination (-c1 + c2 - 1/2) * hF1 + (-2*c1*s1 - s2) * hF2 + (-4*c1^2) * hF3 + (4*c1^2 - 2*c1 - 1) * hF4
@@ -2706,15 +2697,6 @@ lemma g_2_5 : inner ℝ (pentBipyramid 2) (pentBipyramid 5) = 0 :=
 lemma g_2_6 : inner ℝ (pentBipyramid 2) (pentBipyramid 6) = 0 :=
   pent_inner_south (by decide)
 
-lemma g_3_0 : inner ℝ (pentBipyramid 3) (pentBipyramid 0) = c2 := by
-  rw [real_inner_comm]; exact g_0_3
-
-lemma g_3_1 : inner ℝ (pentBipyramid 3) (pentBipyramid 1) = c2 := by
-  rw [real_inner_comm]; exact g_1_3
-
-lemma g_3_2 : inner ℝ (pentBipyramid 3) (pentBipyramid 2) = c1 := by
-  rw [real_inner_comm]; exact g_2_3
-
 lemma g_3_4 : inner ℝ (pentBipyramid 3) (pentBipyramid 4) = c1 := by
   rw [pent_3, pent_4, inner_vec3]
   linear_combination (c1) * hF1 + (s1) * hF2 + (2*c1) * hF3 + (-2*c1) * hF4
@@ -2725,199 +2707,24 @@ lemma g_3_5 : inner ℝ (pentBipyramid 3) (pentBipyramid 5) = 0 :=
 lemma g_3_6 : inner ℝ (pentBipyramid 3) (pentBipyramid 6) = 0 :=
   pent_inner_south (by decide)
 
-lemma g_4_0 : inner ℝ (pentBipyramid 4) (pentBipyramid 0) = c1 := by
-  rw [real_inner_comm]; exact g_0_4
-
-lemma g_4_1 : inner ℝ (pentBipyramid 4) (pentBipyramid 1) = c2 := by
-  rw [real_inner_comm]; exact g_1_4
-
-lemma g_4_2 : inner ℝ (pentBipyramid 4) (pentBipyramid 2) = c2 := by
-  rw [real_inner_comm]; exact g_2_4
-
-lemma g_4_3 : inner ℝ (pentBipyramid 4) (pentBipyramid 3) = c1 := by
-  rw [real_inner_comm]; exact g_3_4
-
 lemma g_4_5 : inner ℝ (pentBipyramid 4) (pentBipyramid 5) = 0 :=
   pent_inner_north (by decide)
 
 lemma g_4_6 : inner ℝ (pentBipyramid 4) (pentBipyramid 6) = 0 :=
   pent_inner_south (by decide)
 
-lemma g_5_0 : inner ℝ (pentBipyramid 5) (pentBipyramid 0) = 0 := by
-  rw [real_inner_comm]; exact g_0_5
-
-lemma g_5_1 : inner ℝ (pentBipyramid 5) (pentBipyramid 1) = 0 := by
-  rw [real_inner_comm]; exact g_1_5
-
-lemma g_5_2 : inner ℝ (pentBipyramid 5) (pentBipyramid 2) = 0 := by
-  rw [real_inner_comm]; exact g_2_5
-
-lemma g_5_3 : inner ℝ (pentBipyramid 5) (pentBipyramid 3) = 0 := by
-  rw [real_inner_comm]; exact g_3_5
-
-lemma g_5_4 : inner ℝ (pentBipyramid 5) (pentBipyramid 4) = 0 := by
-  rw [real_inner_comm]; exact g_4_5
-
 lemma g_5_6 : inner ℝ (pentBipyramid 5) (pentBipyramid 6) = -1 := pent_inner_poles
 
-lemma g_6_0 : inner ℝ (pentBipyramid 6) (pentBipyramid 0) = 0 := by
-  rw [real_inner_comm]; exact g_0_6
+/-- The Gram matrix `⟪Pᵢ, Pⱼ⟫` of the bipyramid. -/
+noncomputable def gt : Fin 7 → Fin 7 → ℝ :=
+  ![![1, c1, c2, c2, c1, 0, 0], ![c1, 1, c1, c2, c2, 0, 0], ![c2, c1, 1, c1, c2, 0, 0], ![c2, c2, c1, 1, c1, 0, 0],
+    ![c1, c2, c2, c1, 1, 0, 0], ![0, 0, 0, 0, 0, 1, -1], ![0, 0, 0, 0, 0, -1, 1]]
 
-lemma g_6_1 : inner ℝ (pentBipyramid 6) (pentBipyramid 1) = 0 := by
-  rw [real_inner_comm]; exact g_1_6
+lemma gram (i j : Fin 7) : inner ℝ (pentBipyramid i) (pentBipyramid j) = gt i j := by
+  fin_cases i <;> fin_cases j <;> simp [gt, pent_norm] <;>
+    (first | simp only [g_0_1, g_0_2, g_0_3, g_0_4, g_0_5, g_0_6, g_1_2, g_1_3, g_1_4, g_1_5, g_1_6, g_2_3, g_2_4, g_2_5, g_2_6, g_3_4, g_3_5, g_3_6, g_4_5, g_4_6, g_5_6] | (rw [real_inner_comm]; simp only [g_0_1, g_0_2, g_0_3, g_0_4, g_0_5, g_0_6, g_1_2, g_1_3, g_1_4, g_1_5, g_1_6, g_2_3, g_2_4, g_2_5, g_2_6, g_3_4, g_3_5, g_3_6, g_4_5, g_4_6, g_5_6]))
 
-lemma g_6_2 : inner ℝ (pentBipyramid 6) (pentBipyramid 2) = 0 := by
-  rw [real_inner_comm]; exact g_2_6
-
-lemma g_6_3 : inner ℝ (pentBipyramid 6) (pentBipyramid 3) = 0 := by
-  rw [real_inner_comm]; exact g_3_6
-
-lemma g_6_4 : inner ℝ (pentBipyramid 6) (pentBipyramid 4) = 0 := by
-  rw [real_inner_comm]; exact g_4_6
-
-lemma g_6_5 : inner ℝ (pentBipyramid 6) (pentBipyramid 5) = -1 := by
-  rw [real_inner_comm]; exact g_5_6
-
-lemma W_0_0 : W 0 0 = 0 := W_diag _
-
-lemma W_0_1 : W 0 1 = phi c1 ^ 3 := by
-  rw [W_ne (show (0 : Fin 7) ≠ 1 by decide), g_0_1]
-
-lemma W_0_2 : W 0 2 = phi c2 ^ 3 := by
-  rw [W_ne (show (0 : Fin 7) ≠ 2 by decide), g_0_2]
-
-lemma W_0_3 : W 0 3 = phi c2 ^ 3 := by
-  rw [W_ne (show (0 : Fin 7) ≠ 3 by decide), g_0_3]
-
-lemma W_0_4 : W 0 4 = phi c1 ^ 3 := by
-  rw [W_ne (show (0 : Fin 7) ≠ 4 by decide), g_0_4]
-
-lemma W_0_5 : W 0 5 = phi 0 ^ 3 := by
-  rw [W_ne (show (0 : Fin 7) ≠ 5 by decide), g_0_5]
-
-lemma W_0_6 : W 0 6 = phi 0 ^ 3 := by
-  rw [W_ne (show (0 : Fin 7) ≠ 6 by decide), g_0_6]
-
-lemma W_1_0 : W 1 0 = phi c1 ^ 3 := by
-  rw [W_ne (show (1 : Fin 7) ≠ 0 by decide), g_1_0]
-
-lemma W_1_1 : W 1 1 = 0 := W_diag _
-
-lemma W_1_2 : W 1 2 = phi c1 ^ 3 := by
-  rw [W_ne (show (1 : Fin 7) ≠ 2 by decide), g_1_2]
-
-lemma W_1_3 : W 1 3 = phi c2 ^ 3 := by
-  rw [W_ne (show (1 : Fin 7) ≠ 3 by decide), g_1_3]
-
-lemma W_1_4 : W 1 4 = phi c2 ^ 3 := by
-  rw [W_ne (show (1 : Fin 7) ≠ 4 by decide), g_1_4]
-
-lemma W_1_5 : W 1 5 = phi 0 ^ 3 := by
-  rw [W_ne (show (1 : Fin 7) ≠ 5 by decide), g_1_5]
-
-lemma W_1_6 : W 1 6 = phi 0 ^ 3 := by
-  rw [W_ne (show (1 : Fin 7) ≠ 6 by decide), g_1_6]
-
-lemma W_2_0 : W 2 0 = phi c2 ^ 3 := by
-  rw [W_ne (show (2 : Fin 7) ≠ 0 by decide), g_2_0]
-
-lemma W_2_1 : W 2 1 = phi c1 ^ 3 := by
-  rw [W_ne (show (2 : Fin 7) ≠ 1 by decide), g_2_1]
-
-lemma W_2_2 : W 2 2 = 0 := W_diag _
-
-lemma W_2_3 : W 2 3 = phi c1 ^ 3 := by
-  rw [W_ne (show (2 : Fin 7) ≠ 3 by decide), g_2_3]
-
-lemma W_2_4 : W 2 4 = phi c2 ^ 3 := by
-  rw [W_ne (show (2 : Fin 7) ≠ 4 by decide), g_2_4]
-
-lemma W_2_5 : W 2 5 = phi 0 ^ 3 := by
-  rw [W_ne (show (2 : Fin 7) ≠ 5 by decide), g_2_5]
-
-lemma W_2_6 : W 2 6 = phi 0 ^ 3 := by
-  rw [W_ne (show (2 : Fin 7) ≠ 6 by decide), g_2_6]
-
-lemma W_3_0 : W 3 0 = phi c2 ^ 3 := by
-  rw [W_ne (show (3 : Fin 7) ≠ 0 by decide), g_3_0]
-
-lemma W_3_1 : W 3 1 = phi c2 ^ 3 := by
-  rw [W_ne (show (3 : Fin 7) ≠ 1 by decide), g_3_1]
-
-lemma W_3_2 : W 3 2 = phi c1 ^ 3 := by
-  rw [W_ne (show (3 : Fin 7) ≠ 2 by decide), g_3_2]
-
-lemma W_3_3 : W 3 3 = 0 := W_diag _
-
-lemma W_3_4 : W 3 4 = phi c1 ^ 3 := by
-  rw [W_ne (show (3 : Fin 7) ≠ 4 by decide), g_3_4]
-
-lemma W_3_5 : W 3 5 = phi 0 ^ 3 := by
-  rw [W_ne (show (3 : Fin 7) ≠ 5 by decide), g_3_5]
-
-lemma W_3_6 : W 3 6 = phi 0 ^ 3 := by
-  rw [W_ne (show (3 : Fin 7) ≠ 6 by decide), g_3_6]
-
-lemma W_4_0 : W 4 0 = phi c1 ^ 3 := by
-  rw [W_ne (show (4 : Fin 7) ≠ 0 by decide), g_4_0]
-
-lemma W_4_1 : W 4 1 = phi c2 ^ 3 := by
-  rw [W_ne (show (4 : Fin 7) ≠ 1 by decide), g_4_1]
-
-lemma W_4_2 : W 4 2 = phi c2 ^ 3 := by
-  rw [W_ne (show (4 : Fin 7) ≠ 2 by decide), g_4_2]
-
-lemma W_4_3 : W 4 3 = phi c1 ^ 3 := by
-  rw [W_ne (show (4 : Fin 7) ≠ 3 by decide), g_4_3]
-
-lemma W_4_4 : W 4 4 = 0 := W_diag _
-
-lemma W_4_5 : W 4 5 = phi 0 ^ 3 := by
-  rw [W_ne (show (4 : Fin 7) ≠ 5 by decide), g_4_5]
-
-lemma W_4_6 : W 4 6 = phi 0 ^ 3 := by
-  rw [W_ne (show (4 : Fin 7) ≠ 6 by decide), g_4_6]
-
-lemma W_5_0 : W 5 0 = phi 0 ^ 3 := by
-  rw [W_ne (show (5 : Fin 7) ≠ 0 by decide), g_5_0]
-
-lemma W_5_1 : W 5 1 = phi 0 ^ 3 := by
-  rw [W_ne (show (5 : Fin 7) ≠ 1 by decide), g_5_1]
-
-lemma W_5_2 : W 5 2 = phi 0 ^ 3 := by
-  rw [W_ne (show (5 : Fin 7) ≠ 2 by decide), g_5_2]
-
-lemma W_5_3 : W 5 3 = phi 0 ^ 3 := by
-  rw [W_ne (show (5 : Fin 7) ≠ 3 by decide), g_5_3]
-
-lemma W_5_4 : W 5 4 = phi 0 ^ 3 := by
-  rw [W_ne (show (5 : Fin 7) ≠ 4 by decide), g_5_4]
-
-lemma W_5_5 : W 5 5 = 0 := W_diag _
-
-lemma W_5_6 : W 5 6 = phi (-1) ^ 3 := by
-  rw [W_ne (show (5 : Fin 7) ≠ 6 by decide), g_5_6]
-
-lemma W_6_0 : W 6 0 = phi 0 ^ 3 := by
-  rw [W_ne (show (6 : Fin 7) ≠ 0 by decide), g_6_0]
-
-lemma W_6_1 : W 6 1 = phi 0 ^ 3 := by
-  rw [W_ne (show (6 : Fin 7) ≠ 1 by decide), g_6_1]
-
-lemma W_6_2 : W 6 2 = phi 0 ^ 3 := by
-  rw [W_ne (show (6 : Fin 7) ≠ 2 by decide), g_6_2]
-
-lemma W_6_3 : W 6 3 = phi 0 ^ 3 := by
-  rw [W_ne (show (6 : Fin 7) ≠ 3 by decide), g_6_3]
-
-lemma W_6_4 : W 6 4 = phi 0 ^ 3 := by
-  rw [W_ne (show (6 : Fin 7) ≠ 4 by decide), g_6_4]
-
-lemma W_6_5 : W 6 5 = phi (-1) ^ 3 := by
-  rw [W_ne (show (6 : Fin 7) ≠ 5 by decide), g_6_5]
-
-lemma W_6_6 : W 6 6 = 0 := W_diag _
-
+lemma Wt (i j : Fin 7) : W i j = if i = j then 0 else phi (gt i j) ^ 3 := by unfold W; rw [gram]
 lemma crit_1_x (w1 w2 : ℝ) :
     c1*w2 + c2*w1 + c2*w2 + w1 = c1*(2*c1*w1 + 2*c2*w2) := by
   linear_combination (-2*c1*w2 + w1 + w2) * hF1 + (-2*w1 + 2*w2) * hF4
@@ -2958,102 +2765,19 @@ lemma crit_6_x (w0 : ℝ) :
     2*c1*w0 + 2*c2*w0 + w0 = 0 := by
   linear_combination (2*w0) * hF1
 
-lemma muP_0 : muP 0 = 2 * c1 * phi c1 ^ 3 + 2 * c2 * phi c2 ^ 3 := by
-  simp only [muP, Fin.sum_univ_seven, W_0_0, W_0_1, W_0_2, W_0_3, W_0_4, W_0_5, W_0_6, g_0_1, g_0_2, g_0_3, g_0_4, g_0_5, g_0_6, zero_mul]
-  ring
+/-- The multiplier `μ` at an equatorial vertex. -/
+noncomputable def μ : ℝ := 2 * c1 * phi c1 ^ 3 + 2 * c2 * phi c2 ^ 3
 
-lemma muP_1 : muP 1 = 2 * c1 * phi c1 ^ 3 + 2 * c2 * phi c2 ^ 3 := by
-  simp only [muP, Fin.sum_univ_seven, W_1_0, W_1_1, W_1_2, W_1_3, W_1_4, W_1_5, W_1_6, g_1_0, g_1_2, g_1_3, g_1_4, g_1_5, g_1_6, zero_mul]
-  ring
-
-lemma muP_2 : muP 2 = 2 * c1 * phi c1 ^ 3 + 2 * c2 * phi c2 ^ 3 := by
-  simp only [muP, Fin.sum_univ_seven, W_2_0, W_2_1, W_2_2, W_2_3, W_2_4, W_2_5, W_2_6, g_2_0, g_2_1, g_2_3, g_2_4, g_2_5, g_2_6, zero_mul]
-  ring
-
-lemma muP_3 : muP 3 = 2 * c1 * phi c1 ^ 3 + 2 * c2 * phi c2 ^ 3 := by
-  simp only [muP, Fin.sum_univ_seven, W_3_0, W_3_1, W_3_2, W_3_3, W_3_4, W_3_5, W_3_6, g_3_0, g_3_1, g_3_2, g_3_4, g_3_5, g_3_6, zero_mul]
-  ring
-
-lemma muP_4 : muP 4 = 2 * c1 * phi c1 ^ 3 + 2 * c2 * phi c2 ^ 3 := by
-  simp only [muP, Fin.sum_univ_seven, W_4_0, W_4_1, W_4_2, W_4_3, W_4_4, W_4_5, W_4_6, g_4_0, g_4_1, g_4_2, g_4_3, g_4_5, g_4_6, zero_mul]
-  ring
-
-lemma muP_5 : muP 5 = -(phi (-1) ^ 3) := by
-  simp only [muP, Fin.sum_univ_seven, W_5_0, W_5_1, W_5_2, W_5_3, W_5_4, W_5_5, W_5_6, g_5_0, g_5_1, g_5_2, g_5_3, g_5_4, g_5_6, zero_mul]
-  ring
-
-lemma muP_6 : muP 6 = -(phi (-1) ^ 3) := by
-  simp only [muP, Fin.sum_univ_seven, W_6_0, W_6_1, W_6_2, W_6_3, W_6_4, W_6_5, W_6_6, g_6_0, g_6_1, g_6_2, g_6_3, g_6_4, g_6_5, zero_mul]
-  ring
-
-lemma pent_critical_0 : ∑ j, W 0 j • pentBipyramid j = muP 0 • pentBipyramid 0 := by
-  rw [muP_0]
-  ext m
-  fin_cases m
-  · simp [Fin.sum_univ_seven, W_0_0, W_0_1, W_0_2, W_0_3, W_0_4, W_0_5, W_0_6, pent_0, pent_1, pent_2, pent_3, pent_4, pent_5', pent_6'] <;> ring
-  · simp [Fin.sum_univ_seven, W_0_0, W_0_1, W_0_2, W_0_3, W_0_4, W_0_5, W_0_6, pent_0, pent_1, pent_2, pent_3, pent_4, pent_5', pent_6'] <;> ring
-  · simp [Fin.sum_univ_seven, W_0_0, W_0_1, W_0_2, W_0_3, W_0_4, W_0_5, W_0_6, pent_0, pent_1, pent_2, pent_3, pent_4, pent_5', pent_6'] <;> ring
-
-lemma pent_critical_1 : ∑ j, W 1 j • pentBipyramid j = muP 1 • pentBipyramid 1 := by
-  rw [muP_1]
-  ext m
-  fin_cases m
-  · simp [Fin.sum_univ_seven, W_1_0, W_1_1, W_1_2, W_1_3, W_1_4, W_1_5, W_1_6, pent_0, pent_1, pent_2, pent_3, pent_4, pent_5', pent_6'] <;> linear_combination crit_1_x (phi c1 ^ 3) (phi c2 ^ 3)
-  · simp [Fin.sum_univ_seven, W_1_0, W_1_1, W_1_2, W_1_3, W_1_4, W_1_5, W_1_6, pent_0, pent_1, pent_2, pent_3, pent_4, pent_5', pent_6'] <;> linear_combination crit_1_y (phi c1 ^ 3) (phi c2 ^ 3)
-  · simp [Fin.sum_univ_seven, W_1_0, W_1_1, W_1_2, W_1_3, W_1_4, W_1_5, W_1_6, pent_0, pent_1, pent_2, pent_3, pent_4, pent_5', pent_6'] <;> ring
-
-lemma pent_critical_2 : ∑ j, W 2 j • pentBipyramid j = muP 2 • pentBipyramid 2 := by
-  rw [muP_2]
-  ext m
-  fin_cases m
-  · simp [Fin.sum_univ_seven, W_2_0, W_2_1, W_2_2, W_2_3, W_2_4, W_2_5, W_2_6, pent_0, pent_1, pent_2, pent_3, pent_4, pent_5', pent_6'] <;> linear_combination crit_2_x (phi c1 ^ 3) (phi c2 ^ 3)
-  · simp [Fin.sum_univ_seven, W_2_0, W_2_1, W_2_2, W_2_3, W_2_4, W_2_5, W_2_6, pent_0, pent_1, pent_2, pent_3, pent_4, pent_5', pent_6'] <;> linear_combination crit_2_y (phi c1 ^ 3) (phi c2 ^ 3)
-  · simp [Fin.sum_univ_seven, W_2_0, W_2_1, W_2_2, W_2_3, W_2_4, W_2_5, W_2_6, pent_0, pent_1, pent_2, pent_3, pent_4, pent_5', pent_6'] <;> ring
-
-lemma pent_critical_3 : ∑ j, W 3 j • pentBipyramid j = muP 3 • pentBipyramid 3 := by
-  rw [muP_3]
-  ext m
-  fin_cases m
-  · simp [Fin.sum_univ_seven, W_3_0, W_3_1, W_3_2, W_3_3, W_3_4, W_3_5, W_3_6, pent_0, pent_1, pent_2, pent_3, pent_4, pent_5', pent_6'] <;> linear_combination crit_3_x (phi c1 ^ 3) (phi c2 ^ 3)
-  · simp [Fin.sum_univ_seven, W_3_0, W_3_1, W_3_2, W_3_3, W_3_4, W_3_5, W_3_6, pent_0, pent_1, pent_2, pent_3, pent_4, pent_5', pent_6'] <;> linear_combination crit_3_y (phi c1 ^ 3) (phi c2 ^ 3)
-  · simp [Fin.sum_univ_seven, W_3_0, W_3_1, W_3_2, W_3_3, W_3_4, W_3_5, W_3_6, pent_0, pent_1, pent_2, pent_3, pent_4, pent_5', pent_6'] <;> ring
-
-lemma pent_critical_4 : ∑ j, W 4 j • pentBipyramid j = muP 4 • pentBipyramid 4 := by
-  rw [muP_4]
-  ext m
-  fin_cases m
-  · simp [Fin.sum_univ_seven, W_4_0, W_4_1, W_4_2, W_4_3, W_4_4, W_4_5, W_4_6, pent_0, pent_1, pent_2, pent_3, pent_4, pent_5', pent_6'] <;> linear_combination crit_4_x (phi c1 ^ 3) (phi c2 ^ 3)
-  · simp [Fin.sum_univ_seven, W_4_0, W_4_1, W_4_2, W_4_3, W_4_4, W_4_5, W_4_6, pent_0, pent_1, pent_2, pent_3, pent_4, pent_5', pent_6'] <;> linear_combination crit_4_y (phi c1 ^ 3) (phi c2 ^ 3)
-  · simp [Fin.sum_univ_seven, W_4_0, W_4_1, W_4_2, W_4_3, W_4_4, W_4_5, W_4_6, pent_0, pent_1, pent_2, pent_3, pent_4, pent_5', pent_6'] <;> ring
-
-lemma pent_critical_5 : ∑ j, W 5 j • pentBipyramid j = muP 5 • pentBipyramid 5 := by
-  rw [muP_5]
-  ext m
-  fin_cases m
-  · simp [Fin.sum_univ_seven, W_5_0, W_5_1, W_5_2, W_5_3, W_5_4, W_5_5, W_5_6, pent_0, pent_1, pent_2, pent_3, pent_4, pent_5', pent_6'] <;> linear_combination crit_5_x (phi 0 ^ 3)
-  · simp [Fin.sum_univ_seven, W_5_0, W_5_1, W_5_2, W_5_3, W_5_4, W_5_5, W_5_6, pent_0, pent_1, pent_2, pent_3, pent_4, pent_5', pent_6'] <;> ring
-  · simp [Fin.sum_univ_seven, W_5_0, W_5_1, W_5_2, W_5_3, W_5_4, W_5_5, W_5_6, pent_0, pent_1, pent_2, pent_3, pent_4, pent_5', pent_6'] <;> ring
-
-lemma pent_critical_6 : ∑ j, W 6 j • pentBipyramid j = muP 6 • pentBipyramid 6 := by
-  rw [muP_6]
-  ext m
-  fin_cases m
-  · simp [Fin.sum_univ_seven, W_6_0, W_6_1, W_6_2, W_6_3, W_6_4, W_6_5, W_6_6, pent_0, pent_1, pent_2, pent_3, pent_4, pent_5', pent_6'] <;> linear_combination crit_6_x (phi 0 ^ 3)
-  · simp [Fin.sum_univ_seven, W_6_0, W_6_1, W_6_2, W_6_3, W_6_4, W_6_5, W_6_6, pent_0, pent_1, pent_2, pent_3, pent_4, pent_5', pent_6'] <;> ring
-  · simp [Fin.sum_univ_seven, W_6_0, W_6_1, W_6_2, W_6_3, W_6_4, W_6_5, W_6_6, pent_0, pent_1, pent_2, pent_3, pent_4, pent_5', pent_6'] <;> ring
-
-/-- **Criticality (Lagrange condition)**: the bipyramid satisfies `∑_j φ'(t_ij) P_j = μ_i P_i`. -/
+lemma muPv (i : Fin 7) :
+    muP i = ![μ, μ, μ, μ, μ, -(phi (-1) ^ 3), -(phi (-1) ^ 3)] i := by
+  fin_cases i <;> simp [muP, μ, Fin.sum_univ_seven, Wt, gram, gt] <;> ring
+/-- The bipyramid is a critical point: `∑ⱼ Wᵢⱼ Pⱼ = μᵢ Pᵢ`. -/
 theorem pent_critical (i : Fin 7) :
     ∑ j, W i j • pentBipyramid j = muP i • pentBipyramid i := by
-  fin_cases i
-  · exact pent_critical_0
-  · exact pent_critical_1
-  · exact pent_critical_2
-  · exact pent_critical_3
-  · exact pent_critical_4
-  · exact pent_critical_5
-  · exact pent_critical_6
-
+  rw [muPv]; unfold μ
+  ext m
+  fin_cases i <;> fin_cases m <;> simp [Fin.sum_univ_seven, Wt, gt, pent_0, pent_1, pent_2, pent_3, pent_4, pent_5', pent_6'] <;>
+    first | ring1 | (linear_combination crit_1_x (phi c1 ^ 3) (phi c2 ^ 3)) | (linear_combination crit_1_y (phi c1 ^ 3) (phi c2 ^ 3)) | (linear_combination crit_2_x (phi c1 ^ 3) (phi c2 ^ 3)) | (linear_combination crit_2_y (phi c1 ^ 3) (phi c2 ^ 3)) | (linear_combination crit_3_x (phi c1 ^ 3) (phi c2 ^ 3)) | (linear_combination crit_3_y (phi c1 ^ 3) (phi c2 ^ 3)) | (linear_combination crit_4_x (phi c1 ^ 3) (phi c2 ^ 3)) | (linear_combination crit_4_y (phi c1 ^ 3) (phi c2 ^ 3)) | (linear_combination crit_5_x (phi 0 ^ 3))
 lemma W_symm (i j : Fin 7) : W i j = W j i := by
   by_cases h : i = j
   · subst h; rfl
@@ -4298,70 +4022,12 @@ lemma inner_coord (u v : R3) : inner ℝ u v = u 0 * v 0 + u 1 * v 1 + u 2 * v 2
   simp [PiLp.inner_apply, Fin.sum_univ_three]
   ring
 
-lemma gP_0_1 : gP 0 1 = c1 := g_0_1
-lemma gP_0_2 : gP 0 2 = c2 := g_0_2
-lemma gP_0_3 : gP 0 3 = c2 := g_0_3
-lemma gP_0_4 : gP 0 4 = c1 := g_0_4
-lemma gP_0_5 : gP 0 5 = 0 := g_0_5
-lemma gP_0_6 : gP 0 6 = 0 := g_0_6
-lemma gP_1_2 : gP 1 2 = c1 := g_1_2
-lemma gP_1_3 : gP 1 3 = c2 := g_1_3
-lemma gP_1_4 : gP 1 4 = c2 := g_1_4
-lemma gP_1_5 : gP 1 5 = 0 := g_1_5
-lemma gP_1_6 : gP 1 6 = 0 := g_1_6
-lemma gP_2_3 : gP 2 3 = c1 := g_2_3
-lemma gP_2_4 : gP 2 4 = c2 := g_2_4
-lemma gP_2_5 : gP 2 5 = 0 := g_2_5
-lemma gP_2_6 : gP 2 6 = 0 := g_2_6
-lemma gP_3_4 : gP 3 4 = c1 := g_3_4
-lemma gP_3_5 : gP 3 5 = 0 := g_3_5
-lemma gP_3_6 : gP 3 6 = 0 := g_3_6
-lemma gP_4_5 : gP 4 5 = 0 := g_4_5
-lemma gP_4_6 : gP 4 6 = 0 := g_4_6
-lemma gP_5_6 : gP 5 6 = -1 := g_5_6
-lemma pc_0_0 : pentBipyramid 0 0 = 1 := by
-  rw [pent_0]; simp
-lemma pc_0_1 : pentBipyramid 0 1 = 0 := by
-  rw [pent_0]; simp
-lemma pc_0_2 : pentBipyramid 0 2 = 0 := by
-  rw [pent_0]; simp
-lemma pc_1_0 : pentBipyramid 1 0 = c1 := by
-  rw [pent_1]; simp
-lemma pc_1_1 : pentBipyramid 1 1 = s1 := by
-  rw [pent_1]; simp
-lemma pc_1_2 : pentBipyramid 1 2 = 0 := by
-  rw [pent_1]; simp
-lemma pc_2_0 : pentBipyramid 2 0 = c2 := by
-  rw [pent_2]; simp
-lemma pc_2_1 : pentBipyramid 2 1 = s2 := by
-  rw [pent_2]; simp
-lemma pc_2_2 : pentBipyramid 2 2 = 0 := by
-  rw [pent_2]; simp
-lemma pc_3_0 : pentBipyramid 3 0 = c2 := by
-  rw [pent_3]; simp
-lemma pc_3_1 : pentBipyramid 3 1 = -s2 := by
-  rw [pent_3]; simp
-lemma pc_3_2 : pentBipyramid 3 2 = 0 := by
-  rw [pent_3]; simp
-lemma pc_4_0 : pentBipyramid 4 0 = c1 := by
-  rw [pent_4]; simp
-lemma pc_4_1 : pentBipyramid 4 1 = -s1 := by
-  rw [pent_4]; simp
-lemma pc_4_2 : pentBipyramid 4 2 = 0 := by
-  rw [pent_4]; simp
-lemma pc_5_0 : pentBipyramid 5 0 = 0 := by
-  rw [pent_5']; simp
-lemma pc_5_1 : pentBipyramid 5 1 = 0 := by
-  rw [pent_5']; simp
-lemma pc_5_2 : pentBipyramid 5 2 = 1 := by
-  rw [pent_5']; simp
-lemma pc_6_0 : pentBipyramid 6 0 = 0 := by
-  rw [pent_6']; simp
-lemma pc_6_1 : pentBipyramid 6 1 = 0 := by
-  rw [pent_6']; simp
-lemma pc_6_2 : pentBipyramid 6 2 = -1 := by
-  rw [pent_6']; simp
+/-- Coordinates of the bipyramid. -/
+noncomputable def pt : Fin 7 → Fin 3 → ℝ :=
+  ![![1, 0, 0], ![c1, s1, 0], ![c2, s2, 0], ![c2, -s2, 0], ![c1, -s1, 0], ![0, 0, 1], ![0, 0, -1]]
 
+lemma pcv (i : Fin 7) (m : Fin 3) : pentBipyramid i m = pt i m := by
+  fin_cases i <;> fin_cases m <;> simp [pt, pent_0, pent_1, pent_2, pent_3, pent_4, pent_5', pent_6']
 /-- Quadratic part of the second-order lower bound for the energy at the bipyramid, in the chart
 `y = P + h`. -/
 noncomputable def Qhess (h : Fin 7 → R3) : ℝ :=
@@ -4632,69 +4298,9 @@ lemma phi_zero_le : phi 0 ≤ 8507 / 10000 := by
 
 lemma phi_neg_one_le : phi (-1) ≤ 8507 / 10000 := by
   rw [phi_neg_one]; norm_num
-lemma pb_0_1 : phi (gP 0 1) ≤ 8507 / 10000 := by
-  rw [gP_0_1]; exact phi_c1_le
-
-lemma pb_0_2 : phi (gP 0 2) ≤ 8507 / 10000 := by
-  rw [gP_0_2]; exact phi_c2_le
-
-lemma pb_0_3 : phi (gP 0 3) ≤ 8507 / 10000 := by
-  rw [gP_0_3]; exact phi_c2_le
-
-lemma pb_0_4 : phi (gP 0 4) ≤ 8507 / 10000 := by
-  rw [gP_0_4]; exact phi_c1_le
-
-lemma pb_0_5 : phi (gP 0 5) ≤ 8507 / 10000 := by
-  rw [gP_0_5]; exact phi_zero_le
-
-lemma pb_0_6 : phi (gP 0 6) ≤ 8507 / 10000 := by
-  rw [gP_0_6]; exact phi_zero_le
-
-lemma pb_1_2 : phi (gP 1 2) ≤ 8507 / 10000 := by
-  rw [gP_1_2]; exact phi_c1_le
-
-lemma pb_1_3 : phi (gP 1 3) ≤ 8507 / 10000 := by
-  rw [gP_1_3]; exact phi_c2_le
-
-lemma pb_1_4 : phi (gP 1 4) ≤ 8507 / 10000 := by
-  rw [gP_1_4]; exact phi_c2_le
-
-lemma pb_1_5 : phi (gP 1 5) ≤ 8507 / 10000 := by
-  rw [gP_1_5]; exact phi_zero_le
-
-lemma pb_1_6 : phi (gP 1 6) ≤ 8507 / 10000 := by
-  rw [gP_1_6]; exact phi_zero_le
-
-lemma pb_2_3 : phi (gP 2 3) ≤ 8507 / 10000 := by
-  rw [gP_2_3]; exact phi_c1_le
-
-lemma pb_2_4 : phi (gP 2 4) ≤ 8507 / 10000 := by
-  rw [gP_2_4]; exact phi_c2_le
-
-lemma pb_2_5 : phi (gP 2 5) ≤ 8507 / 10000 := by
-  rw [gP_2_5]; exact phi_zero_le
-
-lemma pb_2_6 : phi (gP 2 6) ≤ 8507 / 10000 := by
-  rw [gP_2_6]; exact phi_zero_le
-
-lemma pb_3_4 : phi (gP 3 4) ≤ 8507 / 10000 := by
-  rw [gP_3_4]; exact phi_c1_le
-
-lemma pb_3_5 : phi (gP 3 5) ≤ 8507 / 10000 := by
-  rw [gP_3_5]; exact phi_zero_le
-
-lemma pb_3_6 : phi (gP 3 6) ≤ 8507 / 10000 := by
-  rw [gP_3_6]; exact phi_zero_le
-
-lemma pb_4_5 : phi (gP 4 5) ≤ 8507 / 10000 := by
-  rw [gP_4_5]; exact phi_zero_le
-
-lemma pb_4_6 : phi (gP 4 6) ≤ 8507 / 10000 := by
-  rw [gP_4_6]; exact phi_zero_le
-
-lemma pb_5_6 : phi (gP 5 6) ≤ 8507 / 10000 := by
-  rw [gP_5_6]; exact phi_neg_one_le
-
+lemma pb {i j : Fin 7} (h : i ≠ j) : phi (gP i j) ≤ 8507 / 10000 := by
+  fin_cases i <;> fin_cases j <;> simp [gP, gram, gt] at h ⊢ <;>
+    first | exact phi_c1_le | exact phi_c2_le | exact phi_zero_le | exact phi_neg_one_le
 /-- Per-pair remainder bound: with `τ = t1 + q`, `|t1| ≤ ρᵢ + ρⱼ`, `|q| ≤ ρᵢρⱼ`, `ρ ≤ r ≤ 1/1000`,
 `3/2 A τ² + 5/2 B τ³ - 3/2 A t1² ≥ -(3A + 10.1 B) r (ρᵢ² + ρⱼ²)` for `A, B ≥ 0`. -/
 lemma pair_rem {A B t1 q ri rj r : ℝ} (hA : 0 ≤ A) (hB : 0 ≤ B) (hri : 0 ≤ ri) (hrj : 0 ≤ rj)
@@ -4796,27 +4402,27 @@ lemma sum_Dpair_lower {y : Fin 7 → R3} {r : ℝ} (hr : r ≤ 1 / 1000)
       ≤ ∑ i, ∑ j ∈ Finset.Ioi i, Dpair y i j := by
   have hr0 : 0 ≤ r := (norm_nonneg _).trans (hρ 0)
   rw [sum_Ioi_seven (fun i j => Dpair y i j)]
-  have p01 := Dpair_lower hr hρ (i := 0) (j := 1) (by decide) pb_0_1
-  have p02 := Dpair_lower hr hρ (i := 0) (j := 2) (by decide) pb_0_2
-  have p03 := Dpair_lower hr hρ (i := 0) (j := 3) (by decide) pb_0_3
-  have p04 := Dpair_lower hr hρ (i := 0) (j := 4) (by decide) pb_0_4
-  have p05 := Dpair_lower hr hρ (i := 0) (j := 5) (by decide) pb_0_5
-  have p06 := Dpair_lower hr hρ (i := 0) (j := 6) (by decide) pb_0_6
-  have p12 := Dpair_lower hr hρ (i := 1) (j := 2) (by decide) pb_1_2
-  have p13 := Dpair_lower hr hρ (i := 1) (j := 3) (by decide) pb_1_3
-  have p14 := Dpair_lower hr hρ (i := 1) (j := 4) (by decide) pb_1_4
-  have p15 := Dpair_lower hr hρ (i := 1) (j := 5) (by decide) pb_1_5
-  have p16 := Dpair_lower hr hρ (i := 1) (j := 6) (by decide) pb_1_6
-  have p23 := Dpair_lower hr hρ (i := 2) (j := 3) (by decide) pb_2_3
-  have p24 := Dpair_lower hr hρ (i := 2) (j := 4) (by decide) pb_2_4
-  have p25 := Dpair_lower hr hρ (i := 2) (j := 5) (by decide) pb_2_5
-  have p26 := Dpair_lower hr hρ (i := 2) (j := 6) (by decide) pb_2_6
-  have p34 := Dpair_lower hr hρ (i := 3) (j := 4) (by decide) pb_3_4
-  have p35 := Dpair_lower hr hρ (i := 3) (j := 5) (by decide) pb_3_5
-  have p36 := Dpair_lower hr hρ (i := 3) (j := 6) (by decide) pb_3_6
-  have p45 := Dpair_lower hr hρ (i := 4) (j := 5) (by decide) pb_4_5
-  have p46 := Dpair_lower hr hρ (i := 4) (j := 6) (by decide) pb_4_6
-  have p56 := Dpair_lower hr hρ (i := 5) (j := 6) (by decide) pb_5_6
+  have p01 := Dpair_lower hr hρ (i := 0) (j := 1) (by decide) (pb (by decide))
+  have p02 := Dpair_lower hr hρ (i := 0) (j := 2) (by decide) (pb (by decide))
+  have p03 := Dpair_lower hr hρ (i := 0) (j := 3) (by decide) (pb (by decide))
+  have p04 := Dpair_lower hr hρ (i := 0) (j := 4) (by decide) (pb (by decide))
+  have p05 := Dpair_lower hr hρ (i := 0) (j := 5) (by decide) (pb (by decide))
+  have p06 := Dpair_lower hr hρ (i := 0) (j := 6) (by decide) (pb (by decide))
+  have p12 := Dpair_lower hr hρ (i := 1) (j := 2) (by decide) (pb (by decide))
+  have p13 := Dpair_lower hr hρ (i := 1) (j := 3) (by decide) (pb (by decide))
+  have p14 := Dpair_lower hr hρ (i := 1) (j := 4) (by decide) (pb (by decide))
+  have p15 := Dpair_lower hr hρ (i := 1) (j := 5) (by decide) (pb (by decide))
+  have p16 := Dpair_lower hr hρ (i := 1) (j := 6) (by decide) (pb (by decide))
+  have p23 := Dpair_lower hr hρ (i := 2) (j := 3) (by decide) (pb (by decide))
+  have p24 := Dpair_lower hr hρ (i := 2) (j := 4) (by decide) (pb (by decide))
+  have p25 := Dpair_lower hr hρ (i := 2) (j := 5) (by decide) (pb (by decide))
+  have p26 := Dpair_lower hr hρ (i := 2) (j := 6) (by decide) (pb (by decide))
+  have p34 := Dpair_lower hr hρ (i := 3) (j := 4) (by decide) (pb (by decide))
+  have p35 := Dpair_lower hr hρ (i := 3) (j := 5) (by decide) (pb (by decide))
+  have p36 := Dpair_lower hr hρ (i := 3) (j := 6) (by decide) (pb (by decide))
+  have p45 := Dpair_lower hr hρ (i := 4) (j := 5) (by decide) (pb (by decide))
+  have p46 := Dpair_lower hr hρ (i := 4) (j := 6) (by decide) (pb (by decide))
+  have p56 := Dpair_lower hr hρ (i := 5) (j := 6) (by decide) (pb (by decide))
   simp only [Fin.sum_univ_seven]
   have hS : 0 ≤ r * (‖y 0 - pentBipyramid 0‖ ^ 2 + ‖y 1 - pentBipyramid 1‖ ^ 2
       + ‖y 2 - pentBipyramid 2‖ ^ 2 + ‖y 3 - pentBipyramid 3‖ ^ 2 + ‖y 4 - pentBipyramid 4‖ ^ 2
@@ -4860,15 +4466,10 @@ lemma hessian_lower (h : Fin 7 → R3) :
   norm_num at hq
   unfold Qhess Pen gaugeG
   simp only [sum_Ioi_seven]
-  simp only [Fin.sum_univ_seven, gP_0_1, gP_0_2, gP_0_3, gP_0_4, gP_0_5, gP_0_6,
-    gP_1_2, gP_1_3, gP_1_4, gP_1_5, gP_1_6, gP_2_3, gP_2_4, gP_2_5, gP_2_6, gP_3_4, gP_3_5,
-    gP_3_6, gP_4_5, gP_4_6, gP_5_6, inner_coord, norm_sq_coord,
-    W_0_0, W_0_1, W_0_2, W_0_3, W_0_4, W_0_5, W_0_6, W_1_0, W_1_1, W_1_2, W_1_3, W_1_4, W_1_5, W_1_6,
-    W_2_0, W_2_1, W_2_2, W_2_3, W_2_4, W_2_5, W_2_6, W_3_0, W_3_1, W_3_2, W_3_3, W_3_4, W_3_5, W_3_6,
-    W_4_0, W_4_1, W_4_2, W_4_3, W_4_4, W_4_5, W_4_6, W_5_0, W_5_1, W_5_2, W_5_3, W_5_4, W_5_5, W_5_6,
-    W_6_0, W_6_1, W_6_2, W_6_3, W_6_4, W_6_5, W_6_6,
-    muP_0, muP_1, muP_2, muP_3, muP_4, muP_5, muP_6,
-    pc_0_0, pc_0_1, pc_0_2, pc_1_0, pc_1_1, pc_1_2, pc_2_0, pc_2_1, pc_2_2, pc_3_0, pc_3_1, pc_3_2, pc_4_0, pc_4_1, pc_4_2, pc_5_0, pc_5_1, pc_5_2, pc_6_0, pc_6_1, pc_6_2]
+  simp only [gP, gram]
+  simp only [Fin.sum_univ_seven, inner_coord, norm_sq_coord, Wt, muPv, pcv]
+  simp only [gt, pt, μ, Fin.isValue, Matrix.cons_val', Matrix.cons_val, Matrix.cons_val_fin_one, Matrix.cons_val_one,
+    Matrix.cons_val_zero, Fin.reduceEq, ↓reduceIte]
   simp only [CP, Ps, Poly.ev, mono, List.getD_cons_succ, List.getD_cons_zero, List.map_cons, List.map_nil, List.sum_cons, List.sum_nil] at hq ⊢
   push_cast at hq ⊢
   simp only [phi_neg_one, s2_eq, hc2] at hq ⊢
