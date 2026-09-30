@@ -4148,1020 +4148,245 @@ end ThomsonN7
 namespace ThomsonN7
 namespace Reg
 
-noncomputable def CP_0 (c s p q r : ℝ) : ℝ := (2) + (1 / 2) * q ^ 3 + (3 / 4) * q ^ 5 + c * q ^ 3 + (3) * c * q ^ 5 - c * p ^ 3 + (3) * c ^ 2 * q ^ 5 + (3) * c ^ 2 * p ^ 5
-noncomputable def CP_1 (c s p q r : ℝ) : ℝ := p ^ 3 + (3) * c * p ^ 5
-noncomputable def CP_2 (c s p q r : ℝ) : ℝ := q ^ 3 + (-3 / 2) * q ^ 5 + (-3) * c * q ^ 5
-noncomputable def CP_3 (c s p q r : ℝ) : ℝ := r ^ 3
-noncomputable def CP_4 (c s p q r : ℝ) : ℝ := (2) + (1 / 2) * q ^ 3 + (3) * s ^ 2 * p ^ 5 + c * q ^ 3 - c * p ^ 3 + (12) * c ^ 2 * s ^ 2 * q ^ 5
-noncomputable def CP_5 (c s p q r : ℝ) : ℝ := (-4) * s + (3) * s * p ^ 5
-noncomputable def CP_6 (c s p q r : ℝ) : ℝ := p ^ 3 + (4) * c
-noncomputable def CP_7 (c s p q r : ℝ) : ℝ := (-8) * c * s + (6) * c * s * q ^ 5
-noncomputable def CP_8 (c s p q r : ℝ) : ℝ := (-2) + q ^ 3 + (-4) * c
-noncomputable def CP_9 (c s p q r : ℝ) : ℝ := (8) * c * s + (-6) * c * s * q ^ 5
-noncomputable def CP_10 (c s p q r : ℝ) : ℝ := (4) * s + (-3) * s * p ^ 5
-noncomputable def CP_11 (c s p q r : ℝ) : ℝ := (2) + (3) * r ^ 5 + (1 / 2) * q ^ 3 + c * q ^ 3 - c * p ^ 3
-noncomputable def CP_12 (c s p q r : ℝ) : ℝ := (-4) + (3) * r ^ 5
-noncomputable def CP_13 (c s p q r : ℝ) : ℝ := (4) + (-3) * r ^ 5
-noncomputable def CP_14 (c s p q r : ℝ) : ℝ := (1 / 2) * q ^ 3 + (3 / 8) * q ^ 5 + (15 / 8) * p ^ 5 + (2) * s ^ 2 + c * q ^ 3 + (3 / 2) * c * q ^ 5 - c * p ^ 3 + (3 / 2) * c * p ^ 5 + (2) * c ^ 2 + (3) * c ^ 2 * q ^ 5 + (3 / 2) * c ^ 2 * p ^ 5
-noncomputable def CP_15 (c s p q r : ℝ) : ℝ := (-3) * c * s * p ^ 5 + (6) * c ^ 2 * s * q ^ 5 + (-6) * c ^ 2 * s * p ^ 5
-noncomputable def CP_16 (c s p q r : ℝ) : ℝ := p ^ 3 + (-3 / 2) * c * p ^ 5 + (8) * c * s ^ 2 + (-3) * c ^ 2 * p ^ 5
-noncomputable def CP_17 (c s p q r : ℝ) : ℝ := (2) * s + (-3 / 2) * s * p ^ 5 + (4) * c * s + (-3) * c * s * p ^ 5
-noncomputable def CP_18 (c s p q r : ℝ) : ℝ := q ^ 3 + (-3 / 2) * c * q ^ 5 + (-8) * c * s ^ 2 + (-3) * c ^ 2 * q ^ 5
-noncomputable def CP_19 (c s p q r : ℝ) : ℝ := (2) * s + (-3 / 2) * s * q ^ 5 + (4) * c * s + (-3) * c * s * q ^ 5
-noncomputable def CP_20 (c s p q r : ℝ) : ℝ := q ^ 3 + (-4) * s ^ 2 + (3) * c ^ 2 * q ^ 5
-noncomputable def CP_21 (c s p q r : ℝ) : ℝ := (-4) * c * s + (3) * c * s * q ^ 5
-noncomputable def CP_22 (c s p q r : ℝ) : ℝ := (1 / 2) * q ^ 3 + (2) * s ^ 2 + (3 / 2) * s ^ 2 * q ^ 5 + c * q ^ 3 - c * p ^ 3 + (2) * c ^ 2 + (6) * c ^ 2 * s ^ 2 * q ^ 5 + (6) * c ^ 2 * s ^ 2 * p ^ 5
-noncomputable def CP_23 (c s p q r : ℝ) : ℝ := (-8) * c ^ 2 * s + (6) * c ^ 2 * s * p ^ 5
-noncomputable def CP_24 (c s p q r : ℝ) : ℝ := p ^ 3 + (-2) * c + (6) * c * s ^ 2 * p ^ 5 + (-4) * c ^ 2
-noncomputable def CP_25 (c s p q r : ℝ) : ℝ := (8) * c ^ 2 * s + (-6) * c ^ 2 * s * q ^ 5
-noncomputable def CP_26 (c s p q r : ℝ) : ℝ := q ^ 3 + (-2) * c + (-6) * c * s ^ 2 * q ^ 5 + (-4) * c ^ 2
-noncomputable def CP_27 (c s p q r : ℝ) : ℝ := (4) * c * s + (-3) * c * s * q ^ 5
-noncomputable def CP_28 (c s p q r : ℝ) : ℝ := q ^ 3 + (-3) * s ^ 2 * q ^ 5 + (4) * c ^ 2
-noncomputable def CP_29 (c s p q r : ℝ) : ℝ := (3) * r ^ 5 + (1 / 2) * q ^ 3 + (2) * s ^ 2 + c * q ^ 3 - c * p ^ 3 + (2) * c ^ 2
-noncomputable def CP_30 (c s p q r : ℝ) : ℝ := p ^ 3 + (-2) * c + (8) * c * s ^ 2 + (-4) * c ^ 2
-noncomputable def CP_31 (c s p q r : ℝ) : ℝ := q ^ 3 + (-2) * c + (-8) * c * s ^ 2 + (-4) * c ^ 2
-noncomputable def CP_32 (c s p q r : ℝ) : ℝ := q ^ 3 + (-4) * s ^ 2 + (4) * c ^ 2
-noncomputable def CP_33 (c s p q r : ℝ) : ℝ := (-4) * c + (3) * c * r ^ 5
-noncomputable def CP_34 (c s p q r : ℝ) : ℝ := (-4) * s + (3) * s * r ^ 5
-noncomputable def CP_35 (c s p q r : ℝ) : ℝ := (4) * c + (-3) * c * r ^ 5
-noncomputable def CP_36 (c s p q r : ℝ) : ℝ := (4) * s + (-3) * s * r ^ 5
-noncomputable def CP_37 (c s p q r : ℝ) : ℝ := (1 / 2) + (1 / 2) * q ^ 3 + (3 / 2) * q ^ 5 + (3 / 8) * p ^ 5 + (2) * c + c * q ^ 3 - c * p ^ 3 + (3 / 2) * c * p ^ 5 + (2) * c ^ 2 + (3 / 2) * c ^ 2 * q ^ 5 + (3) * c ^ 2 * p ^ 5 + (8) * c ^ 2 * s ^ 2
-noncomputable def CP_38 (c s p q r : ℝ) : ℝ := (-3) * c * s * q ^ 5 + (6) * c * s * p ^ 5 + (6) * c ^ 2 * s * p ^ 5
-noncomputable def CP_39 (c s p q r : ℝ) : ℝ := p ^ 3 + (3 / 4) * p ^ 5 + (3) * c * p ^ 5 + (3) * c ^ 2 * p ^ 5 + (-16) * c ^ 2 * s ^ 2
-noncomputable def CP_40 (c s p q r : ℝ) : ℝ := (4) * c * s + (-3) * c * s * p ^ 5 + (8) * c ^ 2 * s + (-6) * c ^ 2 * s * p ^ 5
-noncomputable def CP_41 (c s p q r : ℝ) : ℝ := (-8) * c ^ 2 * s + (6) * c ^ 2 * s * q ^ 5
-noncomputable def CP_42 (c s p q r : ℝ) : ℝ := (1 / 2) + (1 / 2) * q ^ 3 + (3 / 2) * s ^ 2 * q ^ 5 + (3 / 2) * s ^ 2 * p ^ 5 + (2) * c + c * q ^ 3 - c * p ^ 3 + (2) * c ^ 2 + (8) * c ^ 2 * s ^ 2 + (6) * c ^ 2 * s ^ 2 * p ^ 5
-noncomputable def CP_43 (c s p q r : ℝ) : ℝ := (-4) * c * s + (3) * c * s * p ^ 5 + (-8) * c ^ 2 * s + (6) * c ^ 2 * s * p ^ 5
-noncomputable def CP_44 (c s p q r : ℝ) : ℝ := (1) + p ^ 3 + (4) * c + (4) * c ^ 2 + (-12) * c ^ 2 * s ^ 2 * p ^ 5
-noncomputable def CP_45 (c s p q r : ℝ) : ℝ := (-2) * s + (3 / 2) * s * q ^ 5 + (-4) * c * s + (3) * c * s * q ^ 5
-noncomputable def CP_46 (c s p q r : ℝ) : ℝ := (1 / 2) + (3) * r ^ 5 + (1 / 2) * q ^ 3 + (2) * c + c * q ^ 3 - c * p ^ 3 + (2) * c ^ 2 + (8) * c ^ 2 * s ^ 2
-noncomputable def CP_47 (c s p q r : ℝ) : ℝ := (1) + p ^ 3 + (4) * c + (4) * c ^ 2 + (-16) * c ^ 2 * s ^ 2
-noncomputable def CP_48 (c s p q r : ℝ) : ℝ := (2) + (-3 / 2) * r ^ 5 + (4) * c + (-3) * c * r ^ 5
-noncomputable def CP_49 (c s p q r : ℝ) : ℝ := (-8) * c * s + (6) * c * s * r ^ 5
-noncomputable def CP_50 (c s p q r : ℝ) : ℝ := (-2) + (3 / 2) * r ^ 5 + (-4) * c + (3) * c * r ^ 5
-noncomputable def CP_51 (c s p q r : ℝ) : ℝ := (8) * c * s + (-6) * c * s * r ^ 5
-noncomputable def CP_52 (c s p q r : ℝ) : ℝ := (3) * c * s * q ^ 5 + (-6) * c * s * p ^ 5 + (-6) * c ^ 2 * s * p ^ 5
-noncomputable def CP_53 (c s p q r : ℝ) : ℝ := (8) * c ^ 2 * s + (-6) * c ^ 2 * s * p ^ 5
-noncomputable def CP_54 (c s p q r : ℝ) : ℝ := (-2) * s + (3 / 2) * s * p ^ 5 + (-4) * c * s + (3) * c * s * p ^ 5
-noncomputable def CP_55 (c s p q r : ℝ) : ℝ := (3) * c * s * p ^ 5 + (-6) * c ^ 2 * s * q ^ 5 + (6) * c ^ 2 * s * p ^ 5
-noncomputable def CP_56 (c s p q r : ℝ) : ℝ := (33 / 16) + (9 / 4) * r ^ 5 + (3) * c * r ^ 5 + (6) * c ^ 2 * r ^ 5
-noncomputable def CP_57 (c s p q r : ℝ) : ℝ := (-31 / 8)
-noncomputable def CP_58 (c s p q r : ℝ) : ℝ := (33 / 16) + (3) * s ^ 2 * r ^ 5 + (12) * c ^ 2 * s ^ 2 * r ^ 5
-noncomputable def CP_59 (c s p q r : ℝ) : ℝ := (135 / 64)
-noncomputable def CP_60 (c s p q r : ℝ) : ℝ := (1 / 32)
+/-- Polynomials in `c s p q r`: a list of (coefficient, exponents of `c s p q r`). -/
+abbrev Poly := List (ℚ × ℕ × ℕ × ℕ × ℕ × ℕ)
+
+/-- The monomial `c^a s^b p^d q^e r^f`. -/
+noncomputable def mono (e : ℕ × ℕ × ℕ × ℕ × ℕ) (c s p q r : ℝ) : ℝ :=
+  c ^ e.1 * s ^ e.2.1 * p ^ e.2.2.1 * q ^ e.2.2.2.1 * r ^ e.2.2.2.2
+
+noncomputable def Poly.ev (P : Poly) (c s p q r : ℝ) : ℝ := (P.map fun t => (t.1 : ℝ) * mono t.2 c s p q r).sum
+
+/-- The 61 coefficients of the Hessian form `Fq`. -/
+def Ps : List Poly := [
+  [(3, 2, 0, 5, 0, 0), (3, 2, 0, 0, 5, 0), (-1, 1, 0, 3, 0, 0), (3, 1, 0, 0, 5, 0), (1, 1, 0, 0, 3, 0), (3/4, 0, 0, 0, 5, 0), (1/2, 0, 0, 0, 3, 0), (2, 0, 0, 0, 0, 0)],
+  [(3, 1, 0, 5, 0, 0), (1, 0, 0, 3, 0, 0)],
+  [(-3, 1, 0, 0, 5, 0), (-3/2, 0, 0, 0, 5, 0), (1, 0, 0, 0, 3, 0)],
+  [(1, 0, 0, 0, 0, 3)],
+  [(12, 2, 2, 0, 5, 0), (-1, 1, 0, 3, 0, 0), (1, 1, 0, 0, 3, 0), (3, 0, 2, 5, 0, 0), (1/2, 0, 0, 0, 3, 0), (2, 0, 0, 0, 0, 0)],
+  [(3, 0, 1, 5, 0, 0), (-4, 0, 1, 0, 0, 0)],
+  [(4, 1, 0, 0, 0, 0), (1, 0, 0, 3, 0, 0)],
+  [(6, 1, 1, 0, 5, 0), (-8, 1, 1, 0, 0, 0)],
+  [(-4, 1, 0, 0, 0, 0), (1, 0, 0, 0, 3, 0), (-2, 0, 0, 0, 0, 0)],
+  [(-6, 1, 1, 0, 5, 0), (8, 1, 1, 0, 0, 0)],
+  [(-3, 0, 1, 5, 0, 0), (4, 0, 1, 0, 0, 0)],
+  [(-1, 1, 0, 3, 0, 0), (1, 1, 0, 0, 3, 0), (1/2, 0, 0, 0, 3, 0), (3, 0, 0, 0, 0, 5), (2, 0, 0, 0, 0, 0)],
+  [(3, 0, 0, 0, 0, 5), (-4, 0, 0, 0, 0, 0)],
+  [(-3, 0, 0, 0, 0, 5), (4, 0, 0, 0, 0, 0)],
+  [(3/2, 2, 0, 5, 0, 0), (3, 2, 0, 0, 5, 0), (2, 2, 0, 0, 0, 0), (3/2, 1, 0, 5, 0, 0), (-1, 1, 0, 3, 0, 0), (3/2, 1, 0, 0, 5, 0), (1, 1, 0, 0, 3, 0), (2, 0, 2, 0, 0, 0), (15/8, 0, 0, 5, 0, 0), (3/8, 0, 0, 0, 5, 0), (1/2, 0, 0, 0, 3, 0)],
+  [(-6, 2, 1, 5, 0, 0), (6, 2, 1, 0, 5, 0), (-3, 1, 1, 5, 0, 0)],
+  [(-3, 2, 0, 5, 0, 0), (8, 1, 2, 0, 0, 0), (-3/2, 1, 0, 5, 0, 0), (1, 0, 0, 3, 0, 0)],
+  [(-3, 1, 1, 5, 0, 0), (4, 1, 1, 0, 0, 0), (-3/2, 0, 1, 5, 0, 0), (2, 0, 1, 0, 0, 0)],
+  [(-3, 2, 0, 0, 5, 0), (-8, 1, 2, 0, 0, 0), (-3/2, 1, 0, 0, 5, 0), (1, 0, 0, 0, 3, 0)],
+  [(-3, 1, 1, 0, 5, 0), (4, 1, 1, 0, 0, 0), (-3/2, 0, 1, 0, 5, 0), (2, 0, 1, 0, 0, 0)],
+  [(3, 2, 0, 0, 5, 0), (-4, 0, 2, 0, 0, 0), (1, 0, 0, 0, 3, 0)],
+  [(3, 1, 1, 0, 5, 0), (-4, 1, 1, 0, 0, 0)],
+  [(6, 2, 2, 5, 0, 0), (6, 2, 2, 0, 5, 0), (2, 2, 0, 0, 0, 0), (-1, 1, 0, 3, 0, 0), (1, 1, 0, 0, 3, 0), (3/2, 0, 2, 0, 5, 0), (2, 0, 2, 0, 0, 0), (1/2, 0, 0, 0, 3, 0)],
+  [(6, 2, 1, 5, 0, 0), (-8, 2, 1, 0, 0, 0)],
+  [(-4, 2, 0, 0, 0, 0), (6, 1, 2, 5, 0, 0), (-2, 1, 0, 0, 0, 0), (1, 0, 0, 3, 0, 0)],
+  [(-6, 2, 1, 0, 5, 0), (8, 2, 1, 0, 0, 0)],
+  [(-4, 2, 0, 0, 0, 0), (-6, 1, 2, 0, 5, 0), (-2, 1, 0, 0, 0, 0), (1, 0, 0, 0, 3, 0)],
+  [(-3, 1, 1, 0, 5, 0), (4, 1, 1, 0, 0, 0)],
+  [(4, 2, 0, 0, 0, 0), (-3, 0, 2, 0, 5, 0), (1, 0, 0, 0, 3, 0)],
+  [(2, 2, 0, 0, 0, 0), (-1, 1, 0, 3, 0, 0), (1, 1, 0, 0, 3, 0), (2, 0, 2, 0, 0, 0), (1/2, 0, 0, 0, 3, 0), (3, 0, 0, 0, 0, 5)],
+  [(-4, 2, 0, 0, 0, 0), (8, 1, 2, 0, 0, 0), (-2, 1, 0, 0, 0, 0), (1, 0, 0, 3, 0, 0)],
+  [(-4, 2, 0, 0, 0, 0), (-8, 1, 2, 0, 0, 0), (-2, 1, 0, 0, 0, 0), (1, 0, 0, 0, 3, 0)],
+  [(4, 2, 0, 0, 0, 0), (-4, 0, 2, 0, 0, 0), (1, 0, 0, 0, 3, 0)],
+  [(3, 1, 0, 0, 0, 5), (-4, 1, 0, 0, 0, 0)],
+  [(3, 0, 1, 0, 0, 5), (-4, 0, 1, 0, 0, 0)],
+  [(-3, 1, 0, 0, 0, 5), (4, 1, 0, 0, 0, 0)],
+  [(-3, 0, 1, 0, 0, 5), (4, 0, 1, 0, 0, 0)],
+  [(8, 2, 2, 0, 0, 0), (3, 2, 0, 5, 0, 0), (3/2, 2, 0, 0, 5, 0), (2, 2, 0, 0, 0, 0), (3/2, 1, 0, 5, 0, 0), (-1, 1, 0, 3, 0, 0), (1, 1, 0, 0, 3, 0), (2, 1, 0, 0, 0, 0), (3/8, 0, 0, 5, 0, 0), (3/2, 0, 0, 0, 5, 0), (1/2, 0, 0, 0, 3, 0), (1/2, 0, 0, 0, 0, 0)],
+  [(6, 2, 1, 5, 0, 0), (6, 1, 1, 5, 0, 0), (-3, 1, 1, 0, 5, 0)],
+  [(-16, 2, 2, 0, 0, 0), (3, 2, 0, 5, 0, 0), (3, 1, 0, 5, 0, 0), (3/4, 0, 0, 5, 0, 0), (1, 0, 0, 3, 0, 0)],
+  [(-6, 2, 1, 5, 0, 0), (8, 2, 1, 0, 0, 0), (-3, 1, 1, 5, 0, 0), (4, 1, 1, 0, 0, 0)],
+  [(6, 2, 1, 0, 5, 0), (-8, 2, 1, 0, 0, 0)],
+  [(6, 2, 2, 5, 0, 0), (8, 2, 2, 0, 0, 0), (2, 2, 0, 0, 0, 0), (-1, 1, 0, 3, 0, 0), (1, 1, 0, 0, 3, 0), (2, 1, 0, 0, 0, 0), (3/2, 0, 2, 5, 0, 0), (3/2, 0, 2, 0, 5, 0), (1/2, 0, 0, 0, 3, 0), (1/2, 0, 0, 0, 0, 0)],
+  [(6, 2, 1, 5, 0, 0), (-8, 2, 1, 0, 0, 0), (3, 1, 1, 5, 0, 0), (-4, 1, 1, 0, 0, 0)],
+  [(-12, 2, 2, 5, 0, 0), (4, 2, 0, 0, 0, 0), (4, 1, 0, 0, 0, 0), (1, 0, 0, 3, 0, 0), (1, 0, 0, 0, 0, 0)],
+  [(3, 1, 1, 0, 5, 0), (-4, 1, 1, 0, 0, 0), (3/2, 0, 1, 0, 5, 0), (-2, 0, 1, 0, 0, 0)],
+  [(8, 2, 2, 0, 0, 0), (2, 2, 0, 0, 0, 0), (-1, 1, 0, 3, 0, 0), (1, 1, 0, 0, 3, 0), (2, 1, 0, 0, 0, 0), (1/2, 0, 0, 0, 3, 0), (3, 0, 0, 0, 0, 5), (1/2, 0, 0, 0, 0, 0)],
+  [(-16, 2, 2, 0, 0, 0), (4, 2, 0, 0, 0, 0), (4, 1, 0, 0, 0, 0), (1, 0, 0, 3, 0, 0), (1, 0, 0, 0, 0, 0)],
+  [(-3, 1, 0, 0, 0, 5), (4, 1, 0, 0, 0, 0), (-3/2, 0, 0, 0, 0, 5), (2, 0, 0, 0, 0, 0)],
+  [(6, 1, 1, 0, 0, 5), (-8, 1, 1, 0, 0, 0)],
+  [(3, 1, 0, 0, 0, 5), (-4, 1, 0, 0, 0, 0), (3/2, 0, 0, 0, 0, 5), (-2, 0, 0, 0, 0, 0)],
+  [(-6, 1, 1, 0, 0, 5), (8, 1, 1, 0, 0, 0)],
+  [(-6, 2, 1, 5, 0, 0), (-6, 1, 1, 5, 0, 0), (3, 1, 1, 0, 5, 0)],
+  [(-6, 2, 1, 5, 0, 0), (8, 2, 1, 0, 0, 0)],
+  [(3, 1, 1, 5, 0, 0), (-4, 1, 1, 0, 0, 0), (3/2, 0, 1, 5, 0, 0), (-2, 0, 1, 0, 0, 0)],
+  [(6, 2, 1, 5, 0, 0), (-6, 2, 1, 0, 5, 0), (3, 1, 1, 5, 0, 0)],
+  [(6, 2, 0, 0, 0, 5), (3, 1, 0, 0, 0, 5), (9/4, 0, 0, 0, 0, 5), (33/16, 0, 0, 0, 0, 0)],
+  [(-31/8, 0, 0, 0, 0, 0)],
+  [(12, 2, 2, 0, 0, 5), (3, 0, 2, 0, 0, 5), (33/16, 0, 0, 0, 0, 0)],
+  [(135/64, 0, 0, 0, 0, 0)],
+  [(1/32, 0, 0, 0, 0, 0)]]
+
+noncomputable def CP (k : ℕ) (c s p q r : ℝ) : ℝ := (Ps.getD k []).ev c s p q r
 
 noncomputable def Fq (c s p q r : ℝ) (x0 x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 x13 x14 x15 x16 x17 x18 x19 x20 : ℝ) : ℝ :=
-  CP_0 c s p q r * (x0 ^ 2)
-  + CP_1 c s p q r * (x0 * x3)
-  + CP_2 c s p q r * (x0 * x6)
-  + CP_2 c s p q r * (x0 * x9)
-  + CP_1 c s p q r * (x0 * x12)
-  + CP_3 c s p q r * (x0 * x15)
-  + CP_3 c s p q r * (x0 * x18)
-  + CP_4 c s p q r * (x1 ^ 2)
-  + CP_5 c s p q r * (x1 * x3)
-  + CP_6 c s p q r * (x1 * x4)
-  + CP_7 c s p q r * (x1 * x6)
-  + CP_8 c s p q r * (x1 * x7)
-  + CP_9 c s p q r * (x1 * x9)
-  + CP_8 c s p q r * (x1 * x10)
-  + CP_10 c s p q r * (x1 * x12)
-  + CP_6 c s p q r * (x1 * x13)
-  + CP_3 c s p q r * (x1 * x16)
-  + CP_3 c s p q r * (x1 * x19)
-  + CP_11 c s p q r * (x2 ^ 2)
-  + CP_6 c s p q r * (x2 * x5)
-  + CP_8 c s p q r * (x2 * x8)
-  + CP_8 c s p q r * (x2 * x11)
-  + CP_6 c s p q r * (x2 * x14)
-  + CP_12 c s p q r * (x2 * x15)
-  + CP_3 c s p q r * (x2 * x17)
-  + CP_13 c s p q r * (x2 * x18)
-  + CP_3 c s p q r * (x2 * x20)
-  + CP_14 c s p q r * (x3 ^ 2)
-  + CP_15 c s p q r * (x3 * x4)
-  + CP_16 c s p q r * (x3 * x6)
-  + CP_17 c s p q r * (x3 * x7)
-  + CP_18 c s p q r * (x3 * x9)
-  + CP_19 c s p q r * (x3 * x10)
-  + CP_20 c s p q r * (x3 * x12)
-  + CP_21 c s p q r * (x3 * x13)
-  + CP_3 c s p q r * (x3 * x15)
-  + CP_3 c s p q r * (x3 * x18)
-  + CP_22 c s p q r * (x4 ^ 2)
-  + CP_23 c s p q r * (x4 * x6)
-  + CP_24 c s p q r * (x4 * x7)
-  + CP_25 c s p q r * (x4 * x9)
-  + CP_26 c s p q r * (x4 * x10)
-  + CP_27 c s p q r * (x4 * x12)
-  + CP_28 c s p q r * (x4 * x13)
-  + CP_3 c s p q r * (x4 * x16)
-  + CP_3 c s p q r * (x4 * x19)
-  + CP_29 c s p q r * (x5 ^ 2)
-  + CP_30 c s p q r * (x5 * x8)
-  + CP_31 c s p q r * (x5 * x11)
-  + CP_32 c s p q r * (x5 * x14)
-  + CP_33 c s p q r * (x5 * x15)
-  + CP_34 c s p q r * (x5 * x16)
-  + CP_3 c s p q r * (x5 * x17)
-  + CP_35 c s p q r * (x5 * x18)
-  + CP_36 c s p q r * (x5 * x19)
-  + CP_3 c s p q r * (x5 * x20)
-  + CP_37 c s p q r * (x6 ^ 2)
-  + CP_38 c s p q r * (x6 * x7)
-  + CP_39 c s p q r * (x6 * x9)
-  + CP_40 c s p q r * (x6 * x10)
-  + CP_18 c s p q r * (x6 * x12)
-  + CP_41 c s p q r * (x6 * x13)
-  + CP_3 c s p q r * (x6 * x15)
-  + CP_3 c s p q r * (x6 * x18)
-  + CP_42 c s p q r * (x7 ^ 2)
-  + CP_43 c s p q r * (x7 * x9)
-  + CP_44 c s p q r * (x7 * x10)
-  + CP_45 c s p q r * (x7 * x12)
-  + CP_26 c s p q r * (x7 * x13)
-  + CP_3 c s p q r * (x7 * x16)
-  + CP_3 c s p q r * (x7 * x19)
-  + CP_46 c s p q r * (x8 ^ 2)
-  + CP_47 c s p q r * (x8 * x11)
-  + CP_31 c s p q r * (x8 * x14)
-  + CP_48 c s p q r * (x8 * x15)
-  + CP_49 c s p q r * (x8 * x16)
-  + CP_3 c s p q r * (x8 * x17)
-  + CP_50 c s p q r * (x8 * x18)
-  + CP_51 c s p q r * (x8 * x19)
-  + CP_3 c s p q r * (x8 * x20)
-  + CP_37 c s p q r * (x9 ^ 2)
-  + CP_52 c s p q r * (x9 * x10)
-  + CP_16 c s p q r * (x9 * x12)
-  + CP_53 c s p q r * (x9 * x13)
-  + CP_3 c s p q r * (x9 * x15)
-  + CP_3 c s p q r * (x9 * x18)
-  + CP_42 c s p q r * (x10 ^ 2)
-  + CP_54 c s p q r * (x10 * x12)
-  + CP_24 c s p q r * (x10 * x13)
-  + CP_3 c s p q r * (x10 * x16)
-  + CP_3 c s p q r * (x10 * x19)
-  + CP_46 c s p q r * (x11 ^ 2)
-  + CP_30 c s p q r * (x11 * x14)
-  + CP_48 c s p q r * (x11 * x15)
-  + CP_51 c s p q r * (x11 * x16)
-  + CP_3 c s p q r * (x11 * x17)
-  + CP_50 c s p q r * (x11 * x18)
-  + CP_49 c s p q r * (x11 * x19)
-  + CP_3 c s p q r * (x11 * x20)
-  + CP_14 c s p q r * (x12 ^ 2)
-  + CP_55 c s p q r * (x12 * x13)
-  + CP_3 c s p q r * (x12 * x15)
-  + CP_3 c s p q r * (x12 * x18)
-  + CP_22 c s p q r * (x13 ^ 2)
-  + CP_3 c s p q r * (x13 * x16)
-  + CP_3 c s p q r * (x13 * x19)
-  + CP_29 c s p q r * (x14 ^ 2)
-  + CP_33 c s p q r * (x14 * x15)
-  + CP_36 c s p q r * (x14 * x16)
-  + CP_3 c s p q r * (x14 * x17)
-  + CP_35 c s p q r * (x14 * x18)
-  + CP_34 c s p q r * (x14 * x19)
-  + CP_3 c s p q r * (x14 * x20)
-  + CP_56 c s p q r * (x15 ^ 2)
-  + CP_57 c s p q r * (x15 * x18)
-  + CP_58 c s p q r * (x16 ^ 2)
-  + CP_57 c s p q r * (x16 * x19)
-  + CP_59 c s p q r * (x17 ^ 2)
-  + CP_60 c s p q r * (x17 * x20)
-  + CP_56 c s p q r * (x18 ^ 2)
-  + CP_58 c s p q r * (x19 ^ 2)
-  + CP_59 c s p q r * (x20 ^ 2)
+  CP 0 c s p q r * (x0 ^ 2)
+  + CP 1 c s p q r * (x0 * x3)
+  + CP 2 c s p q r * (x0 * x6)
+  + CP 2 c s p q r * (x0 * x9)
+  + CP 1 c s p q r * (x0 * x12)
+  + CP 3 c s p q r * (x0 * x15)
+  + CP 3 c s p q r * (x0 * x18)
+  + CP 4 c s p q r * (x1 ^ 2)
+  + CP 5 c s p q r * (x1 * x3)
+  + CP 6 c s p q r * (x1 * x4)
+  + CP 7 c s p q r * (x1 * x6)
+  + CP 8 c s p q r * (x1 * x7)
+  + CP 9 c s p q r * (x1 * x9)
+  + CP 8 c s p q r * (x1 * x10)
+  + CP 10 c s p q r * (x1 * x12)
+  + CP 6 c s p q r * (x1 * x13)
+  + CP 3 c s p q r * (x1 * x16)
+  + CP 3 c s p q r * (x1 * x19)
+  + CP 11 c s p q r * (x2 ^ 2)
+  + CP 6 c s p q r * (x2 * x5)
+  + CP 8 c s p q r * (x2 * x8)
+  + CP 8 c s p q r * (x2 * x11)
+  + CP 6 c s p q r * (x2 * x14)
+  + CP 12 c s p q r * (x2 * x15)
+  + CP 3 c s p q r * (x2 * x17)
+  + CP 13 c s p q r * (x2 * x18)
+  + CP 3 c s p q r * (x2 * x20)
+  + CP 14 c s p q r * (x3 ^ 2)
+  + CP 15 c s p q r * (x3 * x4)
+  + CP 16 c s p q r * (x3 * x6)
+  + CP 17 c s p q r * (x3 * x7)
+  + CP 18 c s p q r * (x3 * x9)
+  + CP 19 c s p q r * (x3 * x10)
+  + CP 20 c s p q r * (x3 * x12)
+  + CP 21 c s p q r * (x3 * x13)
+  + CP 3 c s p q r * (x3 * x15)
+  + CP 3 c s p q r * (x3 * x18)
+  + CP 22 c s p q r * (x4 ^ 2)
+  + CP 23 c s p q r * (x4 * x6)
+  + CP 24 c s p q r * (x4 * x7)
+  + CP 25 c s p q r * (x4 * x9)
+  + CP 26 c s p q r * (x4 * x10)
+  + CP 27 c s p q r * (x4 * x12)
+  + CP 28 c s p q r * (x4 * x13)
+  + CP 3 c s p q r * (x4 * x16)
+  + CP 3 c s p q r * (x4 * x19)
+  + CP 29 c s p q r * (x5 ^ 2)
+  + CP 30 c s p q r * (x5 * x8)
+  + CP 31 c s p q r * (x5 * x11)
+  + CP 32 c s p q r * (x5 * x14)
+  + CP 33 c s p q r * (x5 * x15)
+  + CP 34 c s p q r * (x5 * x16)
+  + CP 3 c s p q r * (x5 * x17)
+  + CP 35 c s p q r * (x5 * x18)
+  + CP 36 c s p q r * (x5 * x19)
+  + CP 3 c s p q r * (x5 * x20)
+  + CP 37 c s p q r * (x6 ^ 2)
+  + CP 38 c s p q r * (x6 * x7)
+  + CP 39 c s p q r * (x6 * x9)
+  + CP 40 c s p q r * (x6 * x10)
+  + CP 18 c s p q r * (x6 * x12)
+  + CP 41 c s p q r * (x6 * x13)
+  + CP 3 c s p q r * (x6 * x15)
+  + CP 3 c s p q r * (x6 * x18)
+  + CP 42 c s p q r * (x7 ^ 2)
+  + CP 43 c s p q r * (x7 * x9)
+  + CP 44 c s p q r * (x7 * x10)
+  + CP 45 c s p q r * (x7 * x12)
+  + CP 26 c s p q r * (x7 * x13)
+  + CP 3 c s p q r * (x7 * x16)
+  + CP 3 c s p q r * (x7 * x19)
+  + CP 46 c s p q r * (x8 ^ 2)
+  + CP 47 c s p q r * (x8 * x11)
+  + CP 31 c s p q r * (x8 * x14)
+  + CP 48 c s p q r * (x8 * x15)
+  + CP 49 c s p q r * (x8 * x16)
+  + CP 3 c s p q r * (x8 * x17)
+  + CP 50 c s p q r * (x8 * x18)
+  + CP 51 c s p q r * (x8 * x19)
+  + CP 3 c s p q r * (x8 * x20)
+  + CP 37 c s p q r * (x9 ^ 2)
+  + CP 52 c s p q r * (x9 * x10)
+  + CP 16 c s p q r * (x9 * x12)
+  + CP 53 c s p q r * (x9 * x13)
+  + CP 3 c s p q r * (x9 * x15)
+  + CP 3 c s p q r * (x9 * x18)
+  + CP 42 c s p q r * (x10 ^ 2)
+  + CP 54 c s p q r * (x10 * x12)
+  + CP 24 c s p q r * (x10 * x13)
+  + CP 3 c s p q r * (x10 * x16)
+  + CP 3 c s p q r * (x10 * x19)
+  + CP 46 c s p q r * (x11 ^ 2)
+  + CP 30 c s p q r * (x11 * x14)
+  + CP 48 c s p q r * (x11 * x15)
+  + CP 51 c s p q r * (x11 * x16)
+  + CP 3 c s p q r * (x11 * x17)
+  + CP 50 c s p q r * (x11 * x18)
+  + CP 49 c s p q r * (x11 * x19)
+  + CP 3 c s p q r * (x11 * x20)
+  + CP 14 c s p q r * (x12 ^ 2)
+  + CP 55 c s p q r * (x12 * x13)
+  + CP 3 c s p q r * (x12 * x15)
+  + CP 3 c s p q r * (x12 * x18)
+  + CP 22 c s p q r * (x13 ^ 2)
+  + CP 3 c s p q r * (x13 * x16)
+  + CP 3 c s p q r * (x13 * x19)
+  + CP 29 c s p q r * (x14 ^ 2)
+  + CP 33 c s p q r * (x14 * x15)
+  + CP 36 c s p q r * (x14 * x16)
+  + CP 3 c s p q r * (x14 * x17)
+  + CP 35 c s p q r * (x14 * x18)
+  + CP 34 c s p q r * (x14 * x19)
+  + CP 3 c s p q r * (x14 * x20)
+  + CP 56 c s p q r * (x15 ^ 2)
+  + CP 57 c s p q r * (x15 * x18)
+  + CP 58 c s p q r * (x16 ^ 2)
+  + CP 57 c s p q r * (x16 * x19)
+  + CP 59 c s p q r * (x17 ^ 2)
+  + CP 60 c s p q r * (x17 * x20)
+  + CP 56 c s p q r * (x18 ^ 2)
+  + CP 58 c s p q r * (x19 ^ 2)
+  + CP 59 c s p q r * (x20 ^ 2)
 
 /-- The box in which the five atoms live. -/
 def InBox (c s p q r : ℝ) : Prop :=
   (30901699 / 100000000 : ℝ) ≤ c ∧ c ≤ (309017 / 1000000 : ℝ) ∧ (95105651 / 100000000 : ℝ) ≤ s ∧ s ≤ (23776413 / 25000000 : ℝ) ∧ (2126627 / 2500000 : ℝ) ≤ p ∧ p ≤ (85065081 / 100000000 : ℝ) ∧
     (52573111 / 100000000 : ℝ) ≤ q ∧ q ≤ (6571639 / 12500000 : ℝ) ∧ (35355339 / 50000000 : ℝ) ≤ r ∧ r ≤ (70710679 / 100000000 : ℝ)
 
-lemma mon_lo (c s p q r : ℝ) (hb : InBox c s p q r) (i j k l m : ℕ) (t : ℝ)
-    (ht : t ≤ (30901699 / 100000000 : ℝ) ^ i * (95105651 / 100000000 : ℝ) ^ j * (2126627 / 2500000 : ℝ) ^ k * (52573111 / 100000000 : ℝ) ^ l * (35355339 / 50000000 : ℝ) ^ m) :
-    t ≤ c ^ i * s ^ j * p ^ k * q ^ l * r ^ m := by
+/-- The box's lower and upper ends; all positive. -/
+def boxLo : List ℚ := [30901699/100000000, 95105651/100000000, 2126627/2500000, 52573111/100000000, 35355339/50000000]
+def boxHi : List ℚ := [309017/1000000, 23776413/25000000, 85065081/100000000, 6571639/12500000, 70710679/100000000]
+
+namespace Poly
+
+def monQ (b : List ℚ) (e : ℕ × ℕ × ℕ × ℕ × ℕ) : ℚ :=
+  b.getD 0 0 ^ e.1 * b.getD 1 0 ^ e.2.1 * b.getD 2 0 ^ e.2.2.1 * b.getD 3 0 ^ e.2.2.2.1 * b.getD 4 0 ^ e.2.2.2.2
+
+/-- Enclosure of a polynomial on the box, term by term. -/
+def lo (P : Poly) : ℚ := (P.map fun t => if 0 ≤ t.1 then t.1 * monQ boxLo t.2 else t.1 * monQ boxHi t.2).sum
+def hi (P : Poly) : ℚ := (P.map fun t => if 0 ≤ t.1 then t.1 * monQ boxHi t.2 else t.1 * monQ boxLo t.2).sum
+
+lemma mono_mem {c s p q r : ℝ} (hb : InBox c s p q r) (e : ℕ × ℕ × ℕ × ℕ × ℕ) :
+    (monQ boxLo e : ℝ) ≤ mono e c s p q r ∧ mono e c s p q r ≤ monQ boxHi e := by
   obtain ⟨h1, h2, h3, h4, h5, h6, h7, h8, h9, h10⟩ := hb
-  refine ht.trans ?_
-  gcongr
+  simp only [monQ, mono, boxLo, boxHi, List.getD_cons_succ, List.getD_cons_zero]; push_cast
+  constructor <;> gcongr
 
-lemma mon_hi (c s p q r : ℝ) (hb : InBox c s p q r) (i j k l m : ℕ) (t : ℝ)
-    (ht : (309017 / 1000000 : ℝ) ^ i * (23776413 / 25000000 : ℝ) ^ j * (85065081 / 100000000 : ℝ) ^ k * (6571639 / 12500000 : ℝ) ^ l * (70710679 / 100000000 : ℝ) ^ m ≤ t) :
-    c ^ i * s ^ j * p ^ k * q ^ l * r ^ m ≤ t := by
-  obtain ⟨h1, h2, h3, h4, h5, h6, h7, h8, h9, h10⟩ := hb
-  refine le_trans ?_ ht
-  gcongr
+lemma ev_mem {c s p q r : ℝ} (hb : InBox c s p q r) (P : Poly) :
+    (P.lo : ℝ) ≤ P.ev c s p q r ∧ P.ev c s p q r ≤ P.hi := by
+  have key : ∀ t ∈ P, (((if 0 ≤ t.1 then t.1 * monQ boxLo t.2 else t.1 * monQ boxHi t.2 : ℚ)) : ℝ)
+      ≤ t.1 * mono t.2 c s p q r ∧ (t.1 : ℝ) * mono t.2 c s p q r
+      ≤ ((if 0 ≤ t.1 then t.1 * monQ boxHi t.2 else t.1 * monQ boxLo t.2 : ℚ) : ℝ) := by
+    intro t _
+    obtain ⟨m1, m2⟩ := mono_mem hb t.2
+    split_ifs with h
+    · have h' : (0 : ℝ) ≤ t.1 := by exact_mod_cast h
+      push_cast; exact ⟨mul_le_mul_of_nonneg_left m1 h', mul_le_mul_of_nonneg_left m2 h'⟩
+    · have h' : (t.1 : ℝ) ≤ 0 := by exact_mod_cast (not_le.1 h).le
+      push_cast; exact ⟨mul_le_mul_of_nonpos_left m2 h', mul_le_mul_of_nonpos_left m1 h'⟩
+  simp only [lo, hi, ev, Rat.cast_list_sum, List.map_map, Function.comp_def]
+  exact ⟨List.sum_le_sum fun t ht => (key t ht).1, List.sum_le_sum fun t ht => (key t ht).2⟩
 
-lemma mlo_0 (c s p q r : ℝ) (hb : InBox c s p q r) : (55242717 / 156250000 : ℝ) ≤ c ^ 0 * s ^ 0 * p ^ 0 * q ^ 0 * r ^ 3 :=
-  mon_lo c s p q r hb 0 0 0 0 3 _ (by norm_num)
-lemma mhi_0 (c s p q r : ℝ) (hb : InBox c s p q r) : c ^ 0 * s ^ 0 * p ^ 0 * q ^ 0 * r ^ 3 ≤ (3535534039 / 10000000000 : ℝ) :=
-  mon_hi c s p q r hb 0 0 0 0 3 _ (by norm_num)
-lemma mlo_1 (c s p q r : ℝ) (hb : InBox c s p q r) : (883883469 / 5000000000 : ℝ) ≤ c ^ 0 * s ^ 0 * p ^ 0 * q ^ 0 * r ^ 5 :=
-  mon_lo c s p q r hb 0 0 0 0 5 _ (by norm_num)
-lemma mhi_1 (c s p q r : ℝ) (hb : InBox c s p q r) : c ^ 0 * s ^ 0 * p ^ 0 * q ^ 0 * r ^ 5 ≤ (220970883 / 1250000000 : ℝ) :=
-  mon_hi c s p q r hb 0 0 0 0 5 _ (by norm_num)
-lemma mlo_2 (c s p q r : ℝ) (hb : InBox c s p q r) : (726542519 / 5000000000 : ℝ) ≤ c ^ 0 * s ^ 0 * p ^ 0 * q ^ 3 * r ^ 0 :=
-  mon_lo c s p q r hb 0 0 0 3 0 _ (by norm_num)
-lemma mhi_2 (c s p q r : ℝ) (hb : InBox c s p q r) : c ^ 0 * s ^ 0 * p ^ 0 * q ^ 3 * r ^ 0 ≤ (726542561 / 5000000000 : ℝ) :=
-  mon_hi c s p q r hb 0 0 0 3 0 _ (by norm_num)
-lemma mlo_3 (c s p q r : ℝ) (hb : InBox c s p q r) : (401622823 / 10000000000 : ℝ) ≤ c ^ 0 * s ^ 0 * p ^ 0 * q ^ 5 * r ^ 0 :=
-  mon_lo c s p q r hb 0 0 0 5 0 _ (by norm_num)
-lemma mhi_3 (c s p q r : ℝ) (hb : InBox c s p q r) : c ^ 0 * s ^ 0 * p ^ 0 * q ^ 5 * r ^ 0 ≤ (200811431 / 5000000000 : ℝ) :=
-  mon_hi c s p q r hb 0 0 0 5 0 _ (by norm_num)
-lemma mlo_4 (c s p q r : ℝ) (hb : InBox c s p q r) : (6155366893 / 10000000000 : ℝ) ≤ c ^ 0 * s ^ 0 * p ^ 3 * q ^ 0 * r ^ 0 :=
-  mon_lo c s p q r hb 0 0 3 0 0 _ (by norm_num)
-lemma mhi_4 (c s p q r : ℝ) (hb : InBox c s p q r) : c ^ 0 * s ^ 0 * p ^ 3 * q ^ 0 * r ^ 0 ≤ (6155367111 / 10000000000 : ℝ) :=
-  mon_hi c s p q r hb 0 0 3 0 0 _ (by norm_num)
-lemma mlo_5 (c s p q r : ℝ) (hb : InBox c s p q r) : (2227032619 / 5000000000 : ℝ) ≤ c ^ 0 * s ^ 0 * p ^ 5 * q ^ 0 * r ^ 0 :=
-  mon_lo c s p q r hb 0 0 5 0 0 _ (by norm_num)
-lemma mhi_5 (c s p q r : ℝ) (hb : InBox c s p q r) : c ^ 0 * s ^ 0 * p ^ 5 * q ^ 0 * r ^ 0 ≤ (4454065501 / 10000000000 : ℝ) :=
-  mon_hi c s p q r hb 0 0 5 0 0 _ (by norm_num)
-lemma mlo_6 (c s p q r : ℝ) (hb : InBox c s p q r) : (95105651 / 100000000 : ℝ) ≤ c ^ 0 * s ^ 1 * p ^ 0 * q ^ 0 * r ^ 0 :=
-  mon_lo c s p q r hb 0 1 0 0 0 _ (by norm_num)
-lemma mhi_6 (c s p q r : ℝ) (hb : InBox c s p q r) : c ^ 0 * s ^ 1 * p ^ 0 * q ^ 0 * r ^ 0 ≤ (23776413 / 25000000 : ℝ) :=
-  mon_hi c s p q r hb 0 1 0 0 0 _ (by norm_num)
-lemma mlo_7 (c s p q r : ℝ) (hb : InBox c s p q r) : (840623127 / 5000000000 : ℝ) ≤ c ^ 0 * s ^ 1 * p ^ 0 * q ^ 0 * r ^ 5 :=
-  mon_lo c s p q r hb 0 1 0 0 5 _ (by norm_num)
-lemma mhi_7 (c s p q r : ℝ) (hb : InBox c s p q r) : c ^ 0 * s ^ 1 * p ^ 0 * q ^ 0 * r ^ 5 ≤ (210155799 / 1250000000 : ℝ) :=
-  mon_hi c s p q r hb 0 1 0 0 5 _ (by norm_num)
-lemma mlo_8 (c s p q r : ℝ) (hb : InBox c s p q r) : (381966001 / 10000000000 : ℝ) ≤ c ^ 0 * s ^ 1 * p ^ 0 * q ^ 5 * r ^ 0 :=
-  mon_lo c s p q r hb 0 1 0 5 0 _ (by norm_num)
-lemma mhi_8 (c s p q r : ℝ) (hb : InBox c s p q r) : c ^ 0 * s ^ 1 * p ^ 0 * q ^ 5 * r ^ 0 ≤ (190983021 / 5000000000 : ℝ) :=
-  mon_hi c s p q r hb 0 1 0 5 0 _ (by norm_num)
-lemma mlo_9 (c s p q r : ℝ) (hb : InBox c s p q r) : (4236067741 / 10000000000 : ℝ) ≤ c ^ 0 * s ^ 1 * p ^ 5 * q ^ 0 * r ^ 0 :=
-  mon_lo c s p q r hb 0 1 5 0 0 _ (by norm_num)
-lemma mhi_9 (c s p q r : ℝ) (hb : InBox c s p q r) : c ^ 0 * s ^ 1 * p ^ 5 * q ^ 0 * r ^ 0 ≤ (1059017009 / 2500000000 : ℝ) :=
-  mon_hi c s p q r hb 0 1 5 0 0 _ (by norm_num)
-lemma mlo_10 (c s p q r : ℝ) (hb : InBox c s p q r) : (2261271213 / 2500000000 : ℝ) ≤ c ^ 0 * s ^ 2 * p ^ 0 * q ^ 0 * r ^ 0 :=
-  mon_lo c s p q r hb 0 2 0 0 0 _ (by norm_num)
-lemma mhi_10 (c s p q r : ℝ) (hb : InBox c s p q r) : c ^ 0 * s ^ 2 * p ^ 0 * q ^ 0 * r ^ 0 ≤ (9045085043 / 10000000000 : ℝ) :=
-  mon_hi c s p q r hb 0 2 0 0 0 _ (by norm_num)
-lemma mlo_11 (c s p q r : ℝ) (hb : InBox c s p q r) : (319792039 / 2000000000 : ℝ) ≤ c ^ 0 * s ^ 2 * p ^ 0 * q ^ 0 * r ^ 5 :=
-  mon_lo c s p q r hb 0 2 0 0 5 _ (by norm_num)
-lemma mhi_11 (c s p q r : ℝ) (hb : InBox c s p q r) : c ^ 0 * s ^ 2 * p ^ 0 * q ^ 0 * r ^ 5 ≤ (1598960343 / 10000000000 : ℝ) :=
-  mon_hi c s p q r hb 0 2 0 0 5 _ (by norm_num)
-lemma mlo_12 (c s p q r : ℝ) (hb : InBox c s p q r) : (363271251 / 10000000000 : ℝ) ≤ c ^ 0 * s ^ 2 * p ^ 0 * q ^ 5 * r ^ 0 :=
-  mon_lo c s p q r hb 0 2 0 5 0 _ (by norm_num)
-lemma mhi_12 (c s p q r : ℝ) (hb : InBox c s p q r) : c ^ 0 * s ^ 2 * p ^ 0 * q ^ 5 * r ^ 0 ≤ (72654259 / 2000000000 : ℝ) :=
-  mon_hi c s p q r hb 0 2 0 5 0 _ (by norm_num)
-lemma mlo_13 (c s p q r : ℝ) (hb : InBox c s p q r) : (2014369901 / 5000000000 : ℝ) ≤ c ^ 0 * s ^ 2 * p ^ 5 * q ^ 0 * r ^ 0 :=
-  mon_lo c s p q r hb 0 2 5 0 0 _ (by norm_num)
-lemma mhi_13 (c s p q r : ℝ) (hb : InBox c s p q r) : c ^ 0 * s ^ 2 * p ^ 5 * q ^ 0 * r ^ 0 ≤ (1007185031 / 2500000000 : ℝ) :=
-  mon_hi c s p q r hb 0 2 5 0 0 _ (by norm_num)
-lemma mlo_14 (c s p q r : ℝ) (hb : InBox c s p q r) : (30901699 / 100000000 : ℝ) ≤ c ^ 1 * s ^ 0 * p ^ 0 * q ^ 0 * r ^ 0 :=
-  mon_lo c s p q r hb 1 0 0 0 0 _ (by norm_num)
-lemma mhi_14 (c s p q r : ℝ) (hb : InBox c s p q r) : c ^ 1 * s ^ 0 * p ^ 0 * q ^ 0 * r ^ 0 ≤ (309017 / 1000000 : ℝ) :=
-  mon_hi c s p q r hb 1 0 0 0 0 _ (by norm_num)
-lemma mlo_15 (c s p q r : ℝ) (hb : InBox c s p q r) : (273135009 / 5000000000 : ℝ) ≤ c ^ 1 * s ^ 0 * p ^ 0 * q ^ 0 * r ^ 5 :=
-  mon_lo c s p q r hb 1 0 0 0 5 _ (by norm_num)
-lemma mhi_15 (c s p q r : ℝ) (hb : InBox c s p q r) : c ^ 1 * s ^ 0 * p ^ 0 * q ^ 0 * r ^ 5 ≤ (21850803 / 400000000 : ℝ) :=
-  mon_hi c s p q r hb 1 0 0 0 5 _ (by norm_num)
-lemma mlo_16 (c s p q r : ℝ) (hb : InBox c s p q r) : (112256991 / 2500000000 : ℝ) ≤ c ^ 1 * s ^ 0 * p ^ 0 * q ^ 3 * r ^ 0 :=
-  mon_lo c s p q r hb 1 0 0 3 0 _ (by norm_num)
-lemma mhi_16 (c s p q r : ℝ) (hb : InBox c s p q r) : c ^ 1 * s ^ 0 * p ^ 0 * q ^ 3 * r ^ 0 ≤ (89805601 / 2000000000 : ℝ) :=
-  mon_hi c s p q r hb 1 0 0 3 0 _ (by norm_num)
-lemma mlo_17 (c s p q r : ℝ) (hb : InBox c s p q r) : (31027069 / 2500000000 : ℝ) ≤ c ^ 1 * s ^ 0 * p ^ 0 * q ^ 5 * r ^ 0 :=
-  mon_lo c s p q r hb 1 0 0 5 0 _ (by norm_num)
-lemma mhi_17 (c s p q r : ℝ) (hb : InBox c s p q r) : c ^ 1 * s ^ 0 * p ^ 0 * q ^ 5 * r ^ 0 ≤ (31027073 / 2500000000 : ℝ) :=
-  mon_hi c s p q r hb 1 0 0 5 0 _ (by norm_num)
-lemma mlo_18 (c s p q r : ℝ) (hb : InBox c s p q r) : (1902112949 / 10000000000 : ℝ) ≤ c ^ 1 * s ^ 0 * p ^ 3 * q ^ 0 * r ^ 0 :=
-  mon_lo c s p q r hb 1 0 3 0 0 _ (by norm_num)
-lemma mhi_18 (c s p q r : ℝ) (hb : InBox c s p q r) : c ^ 1 * s ^ 0 * p ^ 3 * q ^ 0 * r ^ 0 ≤ (1902113079 / 10000000000 : ℝ) :=
-  mon_hi c s p q r hb 1 0 3 0 0 _ (by norm_num)
-lemma mlo_19 (c s p q r : ℝ) (hb : InBox c s p q r) : (1376381833 / 10000000000 : ℝ) ≤ c ^ 1 * s ^ 0 * p ^ 5 * q ^ 0 * r ^ 0 :=
-  mon_lo c s p q r hb 1 0 5 0 0 _ (by norm_num)
-lemma mhi_19 (c s p q r : ℝ) (hb : InBox c s p q r) : c ^ 1 * s ^ 0 * p ^ 5 * q ^ 0 * r ^ 0 ≤ (1376381959 / 10000000000 : ℝ) :=
-  mon_hi c s p q r hb 1 0 5 0 0 _ (by norm_num)
-lemma mlo_20 (c s p q r : ℝ) (hb : InBox c s p q r) : (14694631 / 50000000 : ℝ) ≤ c ^ 1 * s ^ 1 * p ^ 0 * q ^ 0 * r ^ 0 :=
-  mon_lo c s p q r hb 1 1 0 0 0 _ (by norm_num)
-lemma mhi_20 (c s p q r : ℝ) (hb : InBox c s p q r) : c ^ 1 * s ^ 1 * p ^ 0 * q ^ 0 * r ^ 0 ≤ (2938926327 / 10000000000 : ℝ) :=
-  mon_hi c s p q r hb 1 1 0 0 0 _ (by norm_num)
-lemma mlo_21 (c s p q r : ℝ) (hb : InBox c s p q r) : (519533657 / 10000000000 : ℝ) ≤ c ^ 1 * s ^ 1 * p ^ 0 * q ^ 0 * r ^ 5 :=
-  mon_lo c s p q r hb 1 1 0 0 5 _ (by norm_num)
-lemma mhi_21 (c s p q r : ℝ) (hb : InBox c s p q r) : c ^ 1 * s ^ 1 * p ^ 0 * q ^ 0 * r ^ 5 ≤ (519533717 / 10000000000 : ℝ) :=
-  mon_hi c s p q r hb 1 1 0 0 5 _ (by norm_num)
-lemma mlo_22 (c s p q r : ℝ) (hb : InBox c s p q r) : (118033983 / 10000000000 : ℝ) ≤ c ^ 1 * s ^ 1 * p ^ 0 * q ^ 5 * r ^ 0 :=
-  mon_lo c s p q r hb 1 1 0 5 0 _ (by norm_num)
-lemma mhi_22 (c s p q r : ℝ) (hb : InBox c s p q r) : c ^ 1 * s ^ 1 * p ^ 0 * q ^ 5 * r ^ 0 ≤ (118034001 / 10000000000 : ℝ) :=
-  mon_hi c s p q r hb 1 1 0 5 0 _ (by norm_num)
-lemma mlo_23 (c s p q r : ℝ) (hb : InBox c s p q r) : (654508451 / 5000000000 : ℝ) ≤ c ^ 1 * s ^ 1 * p ^ 5 * q ^ 0 * r ^ 0 :=
-  mon_lo c s p q r hb 1 1 5 0 0 _ (by norm_num)
-lemma mhi_23 (c s p q r : ℝ) (hb : InBox c s p q r) : c ^ 1 * s ^ 1 * p ^ 5 * q ^ 0 * r ^ 0 ≤ (327254259 / 2500000000 : ℝ) :=
-  mon_hi c s p q r hb 1 1 5 0 0 _ (by norm_num)
-lemma mlo_24 (c s p q r : ℝ) (hb : InBox c s p q r) : (559016979 / 2000000000 : ℝ) ≤ c ^ 1 * s ^ 2 * p ^ 0 * q ^ 0 * r ^ 0 :=
-  mon_lo c s p q r hb 1 2 0 0 0 _ (by norm_num)
-lemma mhi_24 (c s p q r : ℝ) (hb : InBox c s p q r) : c ^ 1 * s ^ 2 * p ^ 0 * q ^ 0 * r ^ 0 ≤ (559017009 / 2000000000 : ℝ) :=
-  mon_hi c s p q r hb 1 2 0 0 0 _ (by norm_num)
-lemma mlo_25 (c s p q r : ℝ) (hb : InBox c s p q r) : (28064247 / 2500000000 : ℝ) ≤ c ^ 1 * s ^ 2 * p ^ 0 * q ^ 5 * r ^ 0 :=
-  mon_lo c s p q r hb 1 2 0 5 0 _ (by norm_num)
-lemma mhi_25 (c s p q r : ℝ) (hb : InBox c s p q r) : c ^ 1 * s ^ 2 * p ^ 0 * q ^ 5 * r ^ 0 ≤ (56128503 / 5000000000 : ℝ) :=
-  mon_hi c s p q r hb 1 2 0 5 0 _ (by norm_num)
-lemma mlo_26 (c s p q r : ℝ) (hb : InBox c s p q r) : (1244949047 / 10000000000 : ℝ) ≤ c ^ 1 * s ^ 2 * p ^ 5 * q ^ 0 * r ^ 0 :=
-  mon_lo c s p q r hb 1 2 5 0 0 _ (by norm_num)
-lemma mhi_26 (c s p q r : ℝ) (hb : InBox c s p q r) : c ^ 1 * s ^ 2 * p ^ 5 * q ^ 0 * r ^ 0 ≤ (1244949187 / 10000000000 : ℝ) :=
-  mon_hi c s p q r hb 1 2 5 0 0 _ (by norm_num)
-lemma mlo_27 (c s p q r : ℝ) (hb : InBox c s p q r) : (954915001 / 10000000000 : ℝ) ≤ c ^ 2 * s ^ 0 * p ^ 0 * q ^ 0 * r ^ 0 :=
-  mon_lo c s p q r hb 2 0 0 0 0 _ (by norm_num)
-lemma mhi_27 (c s p q r : ℝ) (hb : InBox c s p q r) : c ^ 2 * s ^ 0 * p ^ 0 * q ^ 0 * r ^ 0 ≤ (954915063 / 10000000000 : ℝ) :=
-  mon_hi c s p q r hb 2 0 0 0 0 _ (by norm_num)
-lemma mlo_28 (c s p q r : ℝ) (hb : InBox c s p q r) : (42201679 / 2500000000 : ℝ) ≤ c ^ 2 * s ^ 0 * p ^ 0 * q ^ 0 * r ^ 5 :=
-  mon_lo c s p q r hb 2 0 0 0 5 _ (by norm_num)
-lemma mhi_28 (c s p q r : ℝ) (hb : InBox c s p q r) : c ^ 2 * s ^ 0 * p ^ 0 * q ^ 0 * r ^ 5 ≤ (8440337 / 500000000 : ℝ) :=
-  mon_hi c s p q r hb 2 0 0 0 5 _ (by norm_num)
-lemma mlo_29 (c s p q r : ℝ) (hb : InBox c s p q r) : (7670313 / 2000000000 : ℝ) ≤ c ^ 2 * s ^ 0 * p ^ 0 * q ^ 5 * r ^ 0 :=
-  mon_lo c s p q r hb 2 0 0 5 0 _ (by norm_num)
-lemma mhi_29 (c s p q r : ℝ) (hb : InBox c s p q r) : c ^ 2 * s ^ 0 * p ^ 0 * q ^ 5 * r ^ 0 ≤ (38351573 / 10000000000 : ℝ) :=
-  mon_hi c s p q r hb 2 0 0 5 0 _ (by norm_num)
-lemma mlo_30 (c s p q r : ℝ) (hb : InBox c s p q r) : (425325371 / 10000000000 : ℝ) ≤ c ^ 2 * s ^ 0 * p ^ 5 * q ^ 0 * r ^ 0 :=
-  mon_lo c s p q r hb 2 0 5 0 0 _ (by norm_num)
-lemma mhi_30 (c s p q r : ℝ) (hb : InBox c s p q r) : c ^ 2 * s ^ 0 * p ^ 5 * q ^ 0 * r ^ 0 ≤ (26582839 / 625000000 : ℝ) :=
-  mon_hi c s p q r hb 2 0 5 0 0 _ (by norm_num)
-lemma mlo_31 (c s p q r : ℝ) (hb : InBox c s p q r) : (56761133 / 625000000 : ℝ) ≤ c ^ 2 * s ^ 1 * p ^ 0 * q ^ 0 * r ^ 0 :=
-  mon_lo c s p q r hb 2 1 0 0 0 _ (by norm_num)
-lemma mhi_31 (c s p q r : ℝ) (hb : InBox c s p q r) : c ^ 2 * s ^ 1 * p ^ 0 * q ^ 0 * r ^ 0 ≤ (908178197 / 10000000000 : ℝ) :=
-  mon_hi c s p q r hb 2 1 0 0 0 _ (by norm_num)
-lemma mlo_32 (c s p q r : ℝ) (hb : InBox c s p q r) : (18237253 / 5000000000 : ℝ) ≤ c ^ 2 * s ^ 1 * p ^ 0 * q ^ 5 * r ^ 0 :=
-  mon_lo c s p q r hb 2 1 0 5 0 _ (by norm_num)
-lemma mhi_32 (c s p q r : ℝ) (hb : InBox c s p q r) : c ^ 2 * s ^ 1 * p ^ 0 * q ^ 5 * r ^ 0 ≤ (36474513 / 10000000000 : ℝ) :=
-  mon_hi c s p q r hb 2 1 0 5 0 _ (by norm_num)
-lemma mlo_33 (c s p q r : ℝ) (hb : InBox c s p q r) : (404508463 / 10000000000 : ℝ) ≤ c ^ 2 * s ^ 1 * p ^ 5 * q ^ 0 * r ^ 0 :=
-  mon_lo c s p q r hb 2 1 5 0 0 _ (by norm_num)
-lemma mhi_33 (c s p q r : ℝ) (hb : InBox c s p q r) : c ^ 2 * s ^ 1 * p ^ 5 * q ^ 0 * r ^ 0 ≤ (202254259 / 5000000000 : ℝ) :=
-  mon_hi c s p q r hb 2 1 5 0 0 _ (by norm_num)
-lemma mlo_34 (c s p q r : ℝ) (hb : InBox c s p q r) : (863728721 / 10000000000 : ℝ) ≤ c ^ 2 * s ^ 2 * p ^ 0 * q ^ 0 * r ^ 0 :=
-  mon_lo c s p q r hb 2 2 0 0 0 _ (by norm_num)
-lemma mhi_34 (c s p q r : ℝ) (hb : InBox c s p q r) : c ^ 2 * s ^ 2 * p ^ 0 * q ^ 0 * r ^ 0 ≤ (215932199 / 2500000000 : ℝ) :=
-  mon_hi c s p q r hb 2 2 0 0 0 _ (by norm_num)
-lemma mlo_35 (c s p q r : ℝ) (hb : InBox c s p q r) : (152687107 / 10000000000 : ℝ) ≤ c ^ 2 * s ^ 2 * p ^ 0 * q ^ 0 * r ^ 5 :=
-  mon_lo c s p q r hb 2 2 0 0 5 _ (by norm_num)
-lemma mhi_35 (c s p q r : ℝ) (hb : InBox c s p q r) : c ^ 2 * s ^ 2 * p ^ 0 * q ^ 0 * r ^ 5 ≤ (38171783 / 2500000000 : ℝ) :=
-  mon_hi c s p q r hb 2 2 0 0 5 _ (by norm_num)
-lemma mlo_36 (c s p q r : ℝ) (hb : InBox c s p q r) : (8672329 / 2500000000 : ℝ) ≤ c ^ 2 * s ^ 2 * p ^ 0 * q ^ 5 * r ^ 0 :=
-  mon_lo c s p q r hb 2 2 0 5 0 _ (by norm_num)
-lemma mhi_36 (c s p q r : ℝ) (hb : InBox c s p q r) : c ^ 2 * s ^ 2 * p ^ 0 * q ^ 5 * r ^ 0 ≤ (8672331 / 2500000000 : ℝ) :=
-  mon_hi c s p q r hb 2 2 0 5 0 _ (by norm_num)
-lemma mlo_37 (c s p q r : ℝ) (hb : InBox c s p q r) : (384710407 / 10000000000 : ℝ) ≤ c ^ 2 * s ^ 2 * p ^ 5 * q ^ 0 * r ^ 0 :=
-  mon_lo c s p q r hb 2 2 5 0 0 _ (by norm_num)
-lemma mhi_37 (c s p q r : ℝ) (hb : InBox c s p q r) : c ^ 2 * s ^ 2 * p ^ 5 * q ^ 0 * r ^ 0 ≤ (384710463 / 10000000000 : ℝ) :=
-  mon_hi c s p q r hb 2 2 5 0 0 _ (by norm_num)
-lemma enc_0 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (21338030157 / 10000000000 : ℝ) ≤ CP_0 c s p q r ∧ CP_0 c s p q r ≤ (21338030631 / 10000000000 : ℝ) := by
-  have a2 := mlo_2 c s p q r hb
-  have b2 := mhi_2 c s p q r hb
-  have a3 := mlo_3 c s p q r hb
-  have b3 := mhi_3 c s p q r hb
-  have a16 := mlo_16 c s p q r hb
-  have b16 := mhi_16 c s p q r hb
-  have a17 := mlo_17 c s p q r hb
-  have b17 := mhi_17 c s p q r hb
-  have a18 := mlo_18 c s p q r hb
-  have b18 := mhi_18 c s p q r hb
-  have a29 := mlo_29 c s p q r hb
-  have b29 := mhi_29 c s p q r hb
-  have a30 := mlo_30 c s p q r hb
-  have b30 := mhi_30 c s p q r hb
-  unfold CP_0
-  constructor <;> linarith
-lemma enc_1 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (1285564049 / 1250000000 : ℝ) ≤ CP_1 c s p q r ∧ CP_1 c s p q r ≤ (2571128247 / 2500000000 : ℝ) := by
-  have a4 := mlo_4 c s p q r hb
-  have b4 := mhi_4 c s p q r hb
-  have a19 := mlo_19 c s p q r hb
-  have b19 := mhi_19 c s p q r hb
-  unfold CP_1
-  constructor <;> linarith
-lemma enc_2 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (478325869 / 10000000000 : ℝ) ≤ CP_2 c s p q r ∧ CP_2 c s p q r ≤ (23916303 / 500000000 : ℝ) := by
-  have a2 := mlo_2 c s p q r hb
-  have b2 := mhi_2 c s p q r hb
-  have a3 := mlo_3 c s p q r hb
-  have b3 := mhi_3 c s p q r hb
-  have a17 := mlo_17 c s p q r hb
-  have b17 := mhi_17 c s p q r hb
-  unfold CP_2
-  constructor <;> linarith
-lemma enc_3 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (55242717 / 156250000 : ℝ) ≤ CP_3 c s p q r ∧ CP_3 c s p q r ≤ (3535534039 / 10000000000 : ℝ) := by
-  have a0 := mlo_0 c s p q r hb
-  have b0 := mhi_0 c s p q r hb
-  unfold CP_3
-  constructor <;> linarith
-lemma enc_4 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (15887974301 / 5000000000 : ℝ) ≤ CP_4 c s p q r ∧ CP_4 c s p q r ≤ (31775949877 / 10000000000 : ℝ) := by
-  have a2 := mlo_2 c s p q r hb
-  have b2 := mhi_2 c s p q r hb
-  have a13 := mlo_13 c s p q r hb
-  have b13 := mhi_13 c s p q r hb
-  have a16 := mlo_16 c s p q r hb
-  have b16 := mhi_16 c s p q r hb
-  have a18 := mlo_18 c s p q r hb
-  have b18 := mhi_18 c s p q r hb
-  have a36 := mlo_36 c s p q r hb
-  have b36 := mhi_36 c s p q r hb
-  unfold CP_4
-  constructor <;> linarith
-lemma enc_5 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (-25334057577 / 10000000000 : ℝ) ≤ CP_5 c s p q r ∧ CP_5 c s p q r ≤ (-6333514073 / 2500000000 : ℝ) := by
-  have a6 := mlo_6 c s p q r hb
-  have b6 := mhi_6 c s p q r hb
-  have a9 := mlo_9 c s p q r hb
-  have b9 := mhi_9 c s p q r hb
-  unfold CP_5
-  constructor <;> linarith
-lemma enc_6 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (18516046493 / 10000000000 : ℝ) ≤ CP_6 c s p q r ∧ CP_6 c s p q r ≤ (18516047111 / 10000000000 : ℝ) := by
-  have a4 := mlo_4 c s p q r hb
-  have b4 := mhi_4 c s p q r hb
-  have a14 := mlo_14 c s p q r hb
-  have b14 := mhi_14 c s p q r hb
-  unfold CP_6
-  constructor <;> linarith
-lemma enc_7 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (-11401603359 / 5000000000 : ℝ) ≤ CP_7 c s p q r ∧ CP_7 c s p q r ≤ (-11401602797 / 5000000000 : ℝ) := by
-  have a20 := mlo_20 c s p q r hb
-  have b20 := mhi_20 c s p q r hb
-  have a22 := mlo_22 c s p q r hb
-  have b22 := mhi_22 c s p q r hb
-  unfold CP_7
-  constructor <;> linarith
-lemma enc_8 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (-15453797481 / 5000000000 : ℝ) ≤ CP_8 c s p q r ∧ CP_8 c s p q r ≤ (-15453797239 / 5000000000 : ℝ) := by
-  have a2 := mlo_2 c s p q r hb
-  have b2 := mhi_2 c s p q r hb
-  have a14 := mlo_14 c s p q r hb
-  have b14 := mhi_14 c s p q r hb
-  unfold CP_8
-  constructor <;> linarith
-lemma enc_9 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (11401602797 / 5000000000 : ℝ) ≤ CP_9 c s p q r ∧ CP_9 c s p q r ≤ (11401603359 / 5000000000 : ℝ) := by
-  have a20 := mlo_20 c s p q r hb
-  have b20 := mhi_20 c s p q r hb
-  have a22 := mlo_22 c s p q r hb
-  have b22 := mhi_22 c s p q r hb
-  unfold CP_9
-  constructor <;> linarith
-lemma enc_10 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (6333514073 / 2500000000 : ℝ) ≤ CP_10 c s p q r ∧ CP_10 c s p q r ≤ (25334057577 / 10000000000 : ℝ) := by
-  have a6 := mlo_6 c s p q r hb
-  have b6 := mhi_6 c s p q r hb
-  have a9 := mlo_9 c s p q r hb
-  have b9 := mhi_9 c s p q r hb
-  unfold CP_10
-  constructor <;> linarith
-lemma enc_11 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (12288379109 / 5000000000 : ℝ) ≤ CP_11 c s p q r ∧ CP_11 c s p q r ≤ (24576758809 / 10000000000 : ℝ) := by
-  have a1 := mlo_1 c s p q r hb
-  have b1 := mhi_1 c s p q r hb
-  have a2 := mlo_2 c s p q r hb
-  have b2 := mhi_2 c s p q r hb
-  have a16 := mlo_16 c s p q r hb
-  have b16 := mhi_16 c s p q r hb
-  have a18 := mlo_18 c s p q r hb
-  have b18 := mhi_18 c s p q r hb
-  unfold CP_11
-  constructor <;> linarith
-lemma enc_12 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (-17348349593 / 5000000000 : ℝ) ≤ CP_12 c s p q r ∧ CP_12 c s p q r ≤ (-4337087351 / 1250000000 : ℝ) := by
-  have a1 := mlo_1 c s p q r hb
-  have b1 := mhi_1 c s p q r hb
-  unfold CP_12
-  constructor <;> linarith
-lemma enc_13 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (4337087351 / 1250000000 : ℝ) ≤ CP_13 c s p q r ∧ CP_13 c s p q r ≤ (17348349593 / 5000000000 : ℝ) := by
-  have a1 := mlo_1 c s p q r hb
-  have b1 := mhi_1 c s p q r hb
-  unfold CP_13
-  constructor <;> linarith
-lemma enc_14 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (961850497 / 312500000 : ℝ) ≤ CP_14 c s p q r ∧ CP_14 c s p q r ≤ (30779217449 / 10000000000 : ℝ) := by
-  have a2 := mlo_2 c s p q r hb
-  have b2 := mhi_2 c s p q r hb
-  have a3 := mlo_3 c s p q r hb
-  have b3 := mhi_3 c s p q r hb
-  have a5 := mlo_5 c s p q r hb
-  have b5 := mhi_5 c s p q r hb
-  have a10 := mlo_10 c s p q r hb
-  have b10 := mhi_10 c s p q r hb
-  have a16 := mlo_16 c s p q r hb
-  have b16 := mhi_16 c s p q r hb
-  have a17 := mlo_17 c s p q r hb
-  have b17 := mhi_17 c s p q r hb
-  have a18 := mlo_18 c s p q r hb
-  have b18 := mhi_18 c s p q r hb
-  have a19 := mlo_19 c s p q r hb
-  have b19 := mhi_19 c s p q r hb
-  have a27 := mlo_27 c s p q r hb
-  have b27 := mhi_27 c s p q r hb
-  have a29 := mlo_29 c s p q r hb
-  have b29 := mhi_29 c s p q r hb
-  have a30 := mlo_30 c s p q r hb
-  have b30 := mhi_30 c s p q r hb
-  unfold CP_14
-  constructor <;> linarith
-lemma enc_15 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (-306762759 / 500000000 : ℝ) ≤ CP_15 c s p q r ∧ CP_15 c s p q r ≤ (-3067627203 / 5000000000 : ℝ) := by
-  have a23 := mlo_23 c s p q r hb
-  have b23 := mhi_23 c s p q r hb
-  have a32 := mlo_32 c s p q r hb
-  have b32 := mhi_32 c s p q r hb
-  have a33 := mlo_33 c s p q r hb
-  have b33 := mhi_33 c s p q r hb
-  unfold CP_15
-  constructor <;> linarith
-lemma enc_16 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (12587748421 / 5000000000 : ℝ) ≤ CP_16 c s p q r ∧ CP_16 c s p q r ≤ (25175498609 / 10000000000 : ℝ) := by
-  have a4 := mlo_4 c s p q r hb
-  have b4 := mhi_4 c s p q r hb
-  have a19 := mlo_19 c s p q r hb
-  have b19 := mhi_19 c s p q r hb
-  have a24 := mlo_24 c s p q r hb
-  have b24 := mhi_24 c s p q r hb
-  have a30 := mlo_30 c s p q r hb
-  have b30 := mhi_30 c s p q r hb
-  unfold CP_16
-  constructor <;> linarith
-lemma enc_17 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (10247840919 / 5000000000 : ℝ) ≤ CP_17 c s p q r ∧ CP_17 c s p q r ≤ (20495683391 / 10000000000 : ℝ) := by
-  have a6 := mlo_6 c s p q r hb
-  have b6 := mhi_6 c s p q r hb
-  have a9 := mlo_9 c s p q r hb
-  have b9 := mhi_9 c s p q r hb
-  have a20 := mlo_20 c s p q r hb
-  have b20 := mhi_20 c s p q r hb
-  have a23 := mlo_23 c s p q r hb
-  have b23 := mhi_23 c s p q r hb
-  unfold CP_17
-  constructor <;> linarith
-lemma enc_18 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (-21208812479 / 10000000000 : ℝ) ≤ CP_18 c s p q r ∧ CP_18 c s p q r ≤ (-21208811147 / 10000000000 : ℝ) := by
-  have a2 := mlo_2 c s p q r hb
-  have b2 := mhi_2 c s p q r hb
-  have a17 := mlo_17 c s p q r hb
-  have b17 := mhi_17 c s p q r hb
-  have a24 := mlo_24 c s p q r hb
-  have b24 := mhi_24 c s p q r hb
-  have a29 := mlo_29 c s p q r hb
-  have b29 := mhi_29 c s p q r hb
-  unfold CP_18
-  constructor <;> linarith
-lemma enc_19 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (14924891967 / 5000000000 : ℝ) ≤ CP_19 c s p q r ∧ CP_19 c s p q r ≤ (14924892379 / 5000000000 : ℝ) := by
-  have a6 := mlo_6 c s p q r hb
-  have b6 := mhi_6 c s p q r hb
-  have a8 := mlo_8 c s p q r hb
-  have b8 := mhi_8 c s p q r hb
-  have a20 := mlo_20 c s p q r hb
-  have b20 := mhi_20 c s p q r hb
-  have a22 := mlo_22 c s p q r hb
-  have b22 := mhi_22 c s p q r hb
-  unfold CP_19
-  constructor <;> linarith
-lemma enc_20 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (-34612200439 / 10000000000 : ℝ) ≤ CP_20 c s p q r ∧ CP_20 c s p q r ≤ (-34612199567 / 10000000000 : ℝ) := by
-  have a2 := mlo_2 c s p q r hb
-  have b2 := mhi_2 c s p q r hb
-  have a10 := mlo_10 c s p q r hb
-  have b10 := mhi_10 c s p q r hb
-  have a29 := mlo_29 c s p q r hb
-  have b29 := mhi_29 c s p q r hb
-  unfold CP_20
-  constructor <;> linarith
-lemma enc_21 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (-11401603359 / 10000000000 : ℝ) ≤ CP_21 c s p q r ∧ CP_21 c s p q r ≤ (-11401602797 / 10000000000 : ℝ) := by
-  have a20 := mlo_20 c s p q r hb
-  have b20 := mhi_20 c s p q r hb
-  have a22 := mlo_22 c s p q r hb
-  have b22 := mhi_22 c s p q r hb
-  unfold CP_21
-  constructor <;> linarith
-lemma enc_22 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (5583690581 / 2500000000 : ℝ) ≤ CP_22 c s p q r ∧ CP_22 c s p q r ≤ (11167381747 / 5000000000 : ℝ) := by
-  have a2 := mlo_2 c s p q r hb
-  have b2 := mhi_2 c s p q r hb
-  have a10 := mlo_10 c s p q r hb
-  have b10 := mhi_10 c s p q r hb
-  have a12 := mlo_12 c s p q r hb
-  have b12 := mhi_12 c s p q r hb
-  have a16 := mlo_16 c s p q r hb
-  have b16 := mhi_16 c s p q r hb
-  have a18 := mlo_18 c s p q r hb
-  have b18 := mhi_18 c s p q r hb
-  have a27 := mlo_27 c s p q r hb
-  have b27 := mhi_27 c s p q r hb
-  have a36 := mlo_36 c s p q r hb
-  have b36 := mhi_36 c s p q r hb
-  have a37 := mlo_37 c s p q r hb
-  have b37 := mhi_37 c s p q r hb
-  unfold CP_22
-  constructor <;> linarith
-lemma enc_23 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (-2419187399 / 5000000000 : ℝ) ≤ CP_23 c s p q r ∧ CP_23 c s p q r ≤ (-1209593479 / 2500000000 : ℝ) := by
-  have a31 := mlo_31 c s p q r hb
-  have b31 := mhi_31 c s p q r hb
-  have a33 := mlo_33 c s p q r hb
-  have b33 := mhi_33 c s p q r hb
-  unfold CP_23
-  constructor <;> linarith
-lemma enc_24 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (3625060923 / 10000000000 : ℝ) ≤ CP_24 c s p q r ∧ CP_24 c s p q r ≤ (3625062429 / 10000000000 : ℝ) := by
-  have a4 := mlo_4 c s p q r hb
-  have b4 := mhi_4 c s p q r hb
-  have a14 := mlo_14 c s p q r hb
-  have b14 := mhi_14 c s p q r hb
-  have a26 := mlo_26 c s p q r hb
-  have b26 := mhi_26 c s p q r hb
-  have a27 := mlo_27 c s p q r hb
-  have b27 := mhi_27 c s p q r hb
-  unfold CP_24
-  constructor <;> linarith
-lemma enc_25 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (3523288973 / 5000000000 : ℝ) ≤ CP_25 c s p q r ∧ CP_25 c s p q r ≤ (352328927 / 500000000 : ℝ) := by
-  have a31 := mlo_31 c s p q r hb
-  have b31 := mhi_31 c s p q r hb
-  have a32 := mlo_32 c s p q r hb
-  have b32 := mhi_32 c s p q r hb
-  unfold CP_25
-  constructor <;> linarith
-lemma enc_26 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (-36881829 / 40000000 : ℝ) ≤ CP_26 c s p q r ∧ CP_26 c s p q r ≤ (-922045661 / 1000000000 : ℝ) := by
-  have a2 := mlo_2 c s p q r hb
-  have b2 := mhi_2 c s p q r hb
-  have a14 := mlo_14 c s p q r hb
-  have b14 := mhi_14 c s p q r hb
-  have a25 := mlo_25 c s p q r hb
-  have b25 := mhi_25 c s p q r hb
-  have a27 := mlo_27 c s p q r hb
-  have b27 := mhi_27 c s p q r hb
-  unfold CP_26
-  constructor <;> linarith
-lemma enc_27 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (11401602797 / 10000000000 : ℝ) ≤ CP_27 c s p q r ∧ CP_27 c s p q r ≤ (11401603359 / 10000000000 : ℝ) := by
-  have a20 := mlo_20 c s p q r hb
-  have b20 := mhi_20 c s p q r hb
-  have a22 := mlo_22 c s p q r hb
-  have b22 := mhi_22 c s p q r hb
-  unfold CP_27
-  constructor <;> linarith
-lemma enc_28 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (4182931157 / 10000000000 : ℝ) ≤ CP_28 c s p q r ∧ CP_28 c s p q r ≤ (4182931621 / 10000000000 : ℝ) := by
-  have a2 := mlo_2 c s p q r hb
-  have b2 := mhi_2 c s p q r hb
-  have a12 := mlo_12 c s p q r hb
-  have b12 := mhi_12 c s p q r hb
-  have a27 := mlo_27 c s p q r hb
-  have b27 := mhi_27 c s p q r hb
-  unfold CP_28
-  constructor <;> linarith
-lemma enc_29 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (6144189481 / 2500000000 : ℝ) ≤ CP_29 c s p q r ∧ CP_29 c s p q r ≤ (24576759021 / 10000000000 : ℝ) := by
-  have a1 := mlo_1 c s p q r hb
-  have b1 := mhi_1 c s p q r hb
-  have a2 := mlo_2 c s p q r hb
-  have b2 := mhi_2 c s p q r hb
-  have a10 := mlo_10 c s p q r hb
-  have b10 := mhi_10 c s p q r hb
-  have a16 := mlo_16 c s p q r hb
-  have b16 := mhi_16 c s p q r hb
-  have a18 := mlo_18 c s p q r hb
-  have b18 := mhi_18 c s p q r hb
-  have a27 := mlo_27 c s p q r hb
-  have b27 := mhi_27 c s p q r hb
-  unfold CP_29
-  constructor <;> linarith
-lemma enc_30 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (18516045801 / 10000000000 : ℝ) ≤ CP_30 c s p q r ∧ CP_30 c s p q r ≤ (18516047667 / 10000000000 : ℝ) := by
-  have a4 := mlo_4 c s p q r hb
-  have b4 := mhi_4 c s p q r hb
-  have a14 := mlo_14 c s p q r hb
-  have b14 := mhi_14 c s p q r hb
-  have a24 := mlo_24 c s p q r hb
-  have b24 := mhi_24 c s p q r hb
-  have a27 := mlo_27 c s p q r hb
-  have b27 := mhi_27 c s p q r hb
-  unfold CP_30
-  constructor <;> linarith
-lemma enc_31 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (-15453797787 / 5000000000 : ℝ) ≤ CP_31 c s p q r ∧ CP_31 c s p q r ≤ (-15453796921 / 5000000000 : ℝ) := by
-  have a2 := mlo_2 c s p q r hb
-  have b2 := mhi_2 c s p q r hb
-  have a14 := mlo_14 c s p q r hb
-  have b14 := mhi_14 c s p q r hb
-  have a24 := mlo_24 c s p q r hb
-  have b24 := mhi_24 c s p q r hb
-  have a27 := mlo_27 c s p q r hb
-  have b27 := mhi_27 c s p q r hb
-  unfold CP_31
-  constructor <;> linarith
-lemma enc_32 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (-3090759513 / 1000000000 : ℝ) ≤ CP_32 c s p q r ∧ CP_32 c s p q r ≤ (-15453797017 / 5000000000 : ℝ) := by
-  have a2 := mlo_2 c s p q r hb
-  have b2 := mhi_2 c s p q r hb
-  have a10 := mlo_10 c s p q r hb
-  have b10 := mhi_10 c s p q r hb
-  have a27 := mlo_27 c s p q r hb
-  have b27 := mhi_27 c s p q r hb
-  unfold CP_32
-  constructor <;> linarith
-lemma enc_33 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (-5360934973 / 5000000000 : ℝ) ≤ CP_33 c s p q r ∧ CP_33 c s p q r ≤ (-17154991 / 16000000 : ℝ) := by
-  have a14 := mlo_14 c s p q r hb
-  have b14 := mhi_14 c s p q r hb
-  have a15 := mlo_15 c s p q r hb
-  have b15 := mhi_15 c s p q r hb
-  unfold CP_33
-  constructor <;> linarith
-lemma enc_34 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (-16499261019 / 5000000000 : ℝ) ≤ CP_34 c s p q r ∧ CP_34 c s p q r ≤ (-4124815153 / 1250000000 : ℝ) := by
-  have a6 := mlo_6 c s p q r hb
-  have b6 := mhi_6 c s p q r hb
-  have a7 := mlo_7 c s p q r hb
-  have b7 := mhi_7 c s p q r hb
-  unfold CP_34
-  constructor <;> linarith
-lemma enc_35 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (17154991 / 16000000 : ℝ) ≤ CP_35 c s p q r ∧ CP_35 c s p q r ≤ (5360934973 / 5000000000 : ℝ) := by
-  have a14 := mlo_14 c s p q r hb
-  have b14 := mhi_14 c s p q r hb
-  have a15 := mlo_15 c s p q r hb
-  have b15 := mhi_15 c s p q r hb
-  unfold CP_35
-  constructor <;> linarith
-lemma enc_36 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (4124815153 / 1250000000 : ℝ) ≤ CP_36 c s p q r ∧ CP_36 c s p q r ≤ (16499261019 / 5000000000 : ℝ) := by
-  have a6 := mlo_6 c s p q r hb
-  have b6 := mhi_6 c s p q r hb
-  have a7 := mlo_7 c s p q r hb
-  have b7 := mhi_7 c s p q r hb
-  unfold CP_36
-  constructor <;> linarith
-lemma enc_37 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (12472120941 / 5000000000 : ℝ) ≤ CP_37 c s p q r ∧ CP_37 c s p q r ≤ (24944243537 / 10000000000 : ℝ) := by
-  have a2 := mlo_2 c s p q r hb
-  have b2 := mhi_2 c s p q r hb
-  have a3 := mlo_3 c s p q r hb
-  have b3 := mhi_3 c s p q r hb
-  have a5 := mlo_5 c s p q r hb
-  have b5 := mhi_5 c s p q r hb
-  have a14 := mlo_14 c s p q r hb
-  have b14 := mhi_14 c s p q r hb
-  have a16 := mlo_16 c s p q r hb
-  have b16 := mhi_16 c s p q r hb
-  have a18 := mlo_18 c s p q r hb
-  have b18 := mhi_18 c s p q r hb
-  have a19 := mlo_19 c s p q r hb
-  have b19 := mhi_19 c s p q r hb
-  have a27 := mlo_27 c s p q r hb
-  have b27 := mhi_27 c s p q r hb
-  have a29 := mlo_29 c s p q r hb
-  have b29 := mhi_29 c s p q r hb
-  have a30 := mlo_30 c s p q r hb
-  have b30 := mhi_30 c s p q r hb
-  have a34 := mlo_34 c s p q r hb
-  have b34 := mhi_34 c s p q r hb
-  unfold CP_37
-  constructor <;> linarith
-lemma enc_38 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (9927050187 / 10000000000 : ℝ) ≤ CP_38 c s p q r ∧ CP_38 c s p q r ≤ (79416411 / 80000000 : ℝ) := by
-  have a22 := mlo_22 c s p q r hb
-  have b22 := mhi_22 c s p q r hb
-  have a23 := mlo_23 c s p q r hb
-  have b23 := mhi_23 c s p q r hb
-  have a33 := mlo_33 c s p q r hb
-  have b33 := mhi_33 c s p q r hb
-  unfold CP_38
-  constructor <;> linarith
-lemma enc_39 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (1081376697 / 10000000000 : ℝ) ≤ CP_39 c s p q r ∧ CP_39 c s p q r ≤ (21627577 / 200000000 : ℝ) := by
-  have a4 := mlo_4 c s p q r hb
-  have b4 := mhi_4 c s p q r hb
-  have a5 := mlo_5 c s p q r hb
-  have b5 := mhi_5 c s p q r hb
-  have a19 := mlo_19 c s p q r hb
-  have b19 := mhi_19 c s p q r hb
-  have a30 := mlo_30 c s p q r hb
-  have b30 := mhi_30 c s p q r hb
-  have a34 := mlo_34 c s p q r hb
-  have b34 := mhi_34 c s p q r hb
-  unfold CP_39
-  constructor <;> linarith
-lemma enc_40 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (1583378451 / 1250000000 : ℝ) ≤ CP_40 c s p q r ∧ CP_40 c s p q r ≤ (63335147 / 50000000 : ℝ) := by
-  have a20 := mlo_20 c s p q r hb
-  have b20 := mhi_20 c s p q r hb
-  have a23 := mlo_23 c s p q r hb
-  have b23 := mhi_23 c s p q r hb
-  have a31 := mlo_31 c s p q r hb
-  have b31 := mhi_31 c s p q r hb
-  have a33 := mlo_33 c s p q r hb
-  have b33 := mhi_33 c s p q r hb
-  unfold CP_40
-  constructor <;> linarith
-lemma enc_41 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (-352328927 / 500000000 : ℝ) ≤ CP_41 c s p q r ∧ CP_41 c s p q r ≤ (-3523288973 / 5000000000 : ℝ) := by
-  have a31 := mlo_31 c s p q r hb
-  have b31 := mhi_31 c s p q r hb
-  have a32 := mlo_32 c s p q r hb
-  have b32 := mhi_32 c s p q r hb
-  unfold CP_41
-  constructor <;> linarith
-lemma enc_42 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (5633947199 / 2000000000 : ℝ) ≤ CP_42 c s p q r ∧ CP_42 c s p q r ≤ (14084869009 / 5000000000 : ℝ) := by
-  have a2 := mlo_2 c s p q r hb
-  have b2 := mhi_2 c s p q r hb
-  have a12 := mlo_12 c s p q r hb
-  have b12 := mhi_12 c s p q r hb
-  have a13 := mlo_13 c s p q r hb
-  have b13 := mhi_13 c s p q r hb
-  have a14 := mlo_14 c s p q r hb
-  have b14 := mhi_14 c s p q r hb
-  have a16 := mlo_16 c s p q r hb
-  have b16 := mhi_16 c s p q r hb
-  have a18 := mlo_18 c s p q r hb
-  have b18 := mhi_18 c s p q r hb
-  have a27 := mlo_27 c s p q r hb
-  have b27 := mhi_27 c s p q r hb
-  have a34 := mlo_34 c s p q r hb
-  have b34 := mhi_34 c s p q r hb
-  have a37 := mlo_37 c s p q r hb
-  have b37 := mhi_37 c s p q r hb
-  unfold CP_42
-  constructor <;> linarith
-lemma enc_43 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (-63335147 / 50000000 : ℝ) ≤ CP_43 c s p q r ∧ CP_43 c s p q r ≤ (-1583378451 / 1250000000 : ℝ) := by
-  have a20 := mlo_20 c s p q r hb
-  have b20 := mhi_20 c s p q r hb
-  have a23 := mlo_23 c s p q r hb
-  have b23 := mhi_23 c s p q r hb
-  have a31 := mlo_31 c s p q r hb
-  have b31 := mhi_31 c s p q r hb
-  have a33 := mlo_33 c s p q r hb
-  have b33 := mhi_33 c s p q r hb
-  unfold CP_43
-  constructor <;> linarith
-lemma enc_44 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (27719180941 / 10000000000 : ℝ) ≤ CP_44 c s p q r ∧ CP_44 c s p q r ≤ (27719182479 / 10000000000 : ℝ) := by
-  have a4 := mlo_4 c s p q r hb
-  have b4 := mhi_4 c s p q r hb
-  have a14 := mlo_14 c s p q r hb
-  have b14 := mhi_14 c s p q r hb
-  have a27 := mlo_27 c s p q r hb
-  have b27 := mhi_27 c s p q r hb
-  have a37 := mlo_37 c s p q r hb
-  have b37 := mhi_37 c s p q r hb
-  unfold CP_44
-  constructor <;> linarith
-lemma enc_45 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (-14924892379 / 5000000000 : ℝ) ≤ CP_45 c s p q r ∧ CP_45 c s p q r ≤ (-14924891967 / 5000000000 : ℝ) := by
-  have a6 := mlo_6 c s p q r hb
-  have b6 := mhi_6 c s p q r hb
-  have a8 := mlo_8 c s p q r hb
-  have b8 := mhi_8 c s p q r hb
-  have a20 := mlo_20 c s p q r hb
-  have b20 := mhi_20 c s p q r hb
-  have a22 := mlo_22 c s p q r hb
-  have b22 := mhi_22 c s p q r hb
-  unfold CP_45
-  constructor <;> linarith
-lemma enc_46 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (6144189447 / 2500000000 : ℝ) ≤ CP_46 c s p q r ∧ CP_46 c s p q r ≤ (24576759303 / 10000000000 : ℝ) := by
-  have a1 := mlo_1 c s p q r hb
-  have b1 := mhi_1 c s p q r hb
-  have a2 := mlo_2 c s p q r hb
-  have b2 := mhi_2 c s p q r hb
-  have a14 := mlo_14 c s p q r hb
-  have b14 := mhi_14 c s p q r hb
-  have a16 := mlo_16 c s p q r hb
-  have b16 := mhi_16 c s p q r hb
-  have a18 := mlo_18 c s p q r hb
-  have b18 := mhi_18 c s p q r hb
-  have a27 := mlo_27 c s p q r hb
-  have b27 := mhi_27 c s p q r hb
-  have a34 := mlo_34 c s p q r hb
-  have b34 := mhi_34 c s p q r hb
-  unfold CP_46
-  constructor <;> linarith
-lemma enc_47 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (18516045761 / 10000000000 : ℝ) ≤ CP_47 c s p q r ∧ CP_47 c s p q r ≤ (18516047827 / 10000000000 : ℝ) := by
-  have a4 := mlo_4 c s p q r hb
-  have b4 := mhi_4 c s p q r hb
-  have a14 := mlo_14 c s p q r hb
-  have b14 := mhi_14 c s p q r hb
-  have a27 := mlo_27 c s p q r hb
-  have b27 := mhi_27 c s p q r hb
-  have a34 := mlo_34 c s p q r hb
-  have b34 := mhi_34 c s p q r hb
-  unfold CP_47
-  constructor <;> linarith
-lemma enc_48 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (28070218779 / 10000000000 : ℝ) ≤ CP_48 c s p q r ∧ CP_48 c s p q r ≤ (28070219539 / 10000000000 : ℝ) := by
-  have a1 := mlo_1 c s p q r hb
-  have b1 := mhi_1 c s p q r hb
-  have a14 := mlo_14 c s p q r hb
-  have b14 := mhi_14 c s p q r hb
-  have a15 := mlo_15 c s p q r hb
-  have b15 := mhi_15 c s p q r hb
-  unfold CP_48
-  constructor <;> linarith
-lemma enc_49 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (-10197104337 / 5000000000 : ℝ) ≤ CP_49 c s p q r ∧ CP_49 c s p q r ≤ (-10197103649 / 5000000000 : ℝ) := by
-  have a20 := mlo_20 c s p q r hb
-  have b20 := mhi_20 c s p q r hb
-  have a21 := mlo_21 c s p q r hb
-  have b21 := mhi_21 c s p q r hb
-  unfold CP_49
-  constructor <;> linarith
-lemma enc_50 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (-28070219539 / 10000000000 : ℝ) ≤ CP_50 c s p q r ∧ CP_50 c s p q r ≤ (-28070218779 / 10000000000 : ℝ) := by
-  have a1 := mlo_1 c s p q r hb
-  have b1 := mhi_1 c s p q r hb
-  have a14 := mlo_14 c s p q r hb
-  have b14 := mhi_14 c s p q r hb
-  have a15 := mlo_15 c s p q r hb
-  have b15 := mhi_15 c s p q r hb
-  unfold CP_50
-  constructor <;> linarith
-lemma enc_51 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (10197103649 / 5000000000 : ℝ) ≤ CP_51 c s p q r ∧ CP_51 c s p q r ≤ (10197104337 / 5000000000 : ℝ) := by
-  have a20 := mlo_20 c s p q r hb
-  have b20 := mhi_20 c s p q r hb
-  have a21 := mlo_21 c s p q r hb
-  have b21 := mhi_21 c s p q r hb
-  unfold CP_51
-  constructor <;> linarith
-lemma enc_52 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (-79416411 / 80000000 : ℝ) ≤ CP_52 c s p q r ∧ CP_52 c s p q r ≤ (-9927050187 / 10000000000 : ℝ) := by
-  have a22 := mlo_22 c s p q r hb
-  have b22 := mhi_22 c s p q r hb
-  have a23 := mlo_23 c s p q r hb
-  have b23 := mhi_23 c s p q r hb
-  have a33 := mlo_33 c s p q r hb
-  have b33 := mhi_33 c s p q r hb
-  unfold CP_52
-  constructor <;> linarith
-lemma enc_53 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (1209593479 / 2500000000 : ℝ) ≤ CP_53 c s p q r ∧ CP_53 c s p q r ≤ (2419187399 / 5000000000 : ℝ) := by
-  have a31 := mlo_31 c s p q r hb
-  have b31 := mhi_31 c s p q r hb
-  have a33 := mlo_33 c s p q r hb
-  have b33 := mhi_33 c s p q r hb
-  unfold CP_53
-  constructor <;> linarith
-lemma enc_54 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (-20495683391 / 10000000000 : ℝ) ≤ CP_54 c s p q r ∧ CP_54 c s p q r ≤ (-10247840919 / 5000000000 : ℝ) := by
-  have a6 := mlo_6 c s p q r hb
-  have b6 := mhi_6 c s p q r hb
-  have a9 := mlo_9 c s p q r hb
-  have b9 := mhi_9 c s p q r hb
-  have a20 := mlo_20 c s p q r hb
-  have b20 := mhi_20 c s p q r hb
-  have a23 := mlo_23 c s p q r hb
-  have b23 := mhi_23 c s p q r hb
-  unfold CP_54
-  constructor <;> linarith
-lemma enc_55 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (3067627203 / 5000000000 : ℝ) ≤ CP_55 c s p q r ∧ CP_55 c s p q r ≤ (306762759 / 500000000 : ℝ) := by
-  have a23 := mlo_23 c s p q r hb
-  have b23 := mhi_23 c s p q r hb
-  have a32 := mlo_32 c s p q r hb
-  have b32 := mhi_32 c s p q r hb
-  have a33 := mlo_33 c s p q r hb
-  have b33 := mhi_33 c s p q r hb
-  unfold CP_55
-  constructor <;> linarith
-lemma enc_56 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (681353149 / 250000000 : ℝ) ≤ CP_56 c s p q r ∧ CP_56 c s p q r ≤ (27254126559 / 10000000000 : ℝ) := by
-  have a1 := mlo_1 c s p q r hb
-  have b1 := mhi_1 c s p q r hb
-  have a15 := mlo_15 c s p q r hb
-  have b15 := mhi_15 c s p q r hb
-  have a28 := mlo_28 c s p q r hb
-  have b28 := mhi_28 c s p q r hb
-  unfold CP_56
-  constructor <;> linarith
-lemma enc_57 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (-31 / 8 : ℝ) ≤ CP_57 c s p q r ∧ CP_57 c s p q r ≤ (-31 / 8 : ℝ) := by
-
-  unfold CP_57
-  constructor <;> linarith
-lemma enc_58 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (27254125869 / 10000000000 : ℝ) ≤ CP_58 c s p q r ∧ CP_58 c s p q r ≤ (27254126613 / 10000000000 : ℝ) := by
-  have a11 := mlo_11 c s p q r hb
-  have b11 := mhi_11 c s p q r hb
-  have a35 := mlo_35 c s p q r hb
-  have b35 := mhi_35 c s p q r hb
-  unfold CP_58
-  constructor <;> linarith
-lemma enc_59 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (135 / 64 : ℝ) ≤ CP_59 c s p q r ∧ CP_59 c s p q r ≤ (135 / 64 : ℝ) := by
-
-  unfold CP_59
-  constructor <;> linarith
-lemma enc_60 (c s p q r : ℝ) (hb : InBox c s p q r) :
-    (1 / 32 : ℝ) ≤ CP_60 c s p q r ∧ CP_60 c s p q r ≤ (1 / 32 : ℝ) := by
-
-  unfold CP_60
-  constructor <;> linarith
+end Poly
 end Reg
 end ThomsonN7
 /- END QCORE1 -/
@@ -5291,7 +4516,8 @@ lemma expansion (h : Fin 7 → R3) :
     W_6_0, W_6_1, W_6_2, W_6_3, W_6_4, W_6_5, W_6_6,
     muP_0, muP_1, muP_2, muP_3, muP_4, muP_5, muP_6,
     pc_0_0, pc_0_1, pc_0_2, pc_1_0, pc_1_1, pc_1_2, pc_2_0, pc_2_1, pc_2_2, pc_3_0, pc_3_1, pc_3_2, pc_4_0, pc_4_1, pc_4_2, pc_5_0, pc_5_1, pc_5_2, pc_6_0, pc_6_1, pc_6_2]
-  simp only [CP_0, CP_1, CP_2, CP_3, CP_4, CP_5, CP_6, CP_7, CP_8, CP_9, CP_10, CP_11, CP_12, CP_13, CP_14, CP_15, CP_16, CP_17, CP_18, CP_19, CP_20, CP_21, CP_22, CP_23, CP_24, CP_25, CP_26, CP_27, CP_28, CP_29, CP_30, CP_31, CP_32, CP_33, CP_34, CP_35, CP_36, CP_37, CP_38, CP_39, CP_40, CP_41, CP_42, CP_43, CP_44, CP_45, CP_46, CP_47, CP_48, CP_49, CP_50, CP_51, CP_52, CP_53, CP_54, CP_55, CP_56, CP_57, CP_58, CP_59, CP_60]
+  simp only [CP, Ps, Poly.ev, mono, List.getD_cons_succ, List.getD_cons_zero, List.map_cons, List.map_nil, List.sum_cons, List.sum_nil]
+  push_cast
   simp only [phi_neg_one, s2_eq]
   generalize phi c1 = p
   generalize phi c2 = q
@@ -5316,12 +4542,9 @@ namespace Reg
 
 namespace Hess
 
-/-- The coefficients `CP_k`, indexed (`0` past the end). -/
-noncomputable def cp (c s p q r : ℝ) (k : ℕ) : ℝ := [CP_0 c s p q r, CP_1 c s p q r, CP_2 c s p q r, CP_3 c s p q r, CP_4 c s p q r, CP_5 c s p q r, CP_6 c s p q r, CP_7 c s p q r, CP_8 c s p q r, CP_9 c s p q r, CP_10 c s p q r, CP_11 c s p q r, CP_12 c s p q r, CP_13 c s p q r, CP_14 c s p q r, CP_15 c s p q r, CP_16 c s p q r, CP_17 c s p q r, CP_18 c s p q r, CP_19 c s p q r, CP_20 c s p q r, CP_21 c s p q r, CP_22 c s p q r, CP_23 c s p q r, CP_24 c s p q r, CP_25 c s p q r, CP_26 c s p q r, CP_27 c s p q r, CP_28 c s p q r, CP_29 c s p q r, CP_30 c s p q r, CP_31 c s p q r, CP_32 c s p q r, CP_33 c s p q r, CP_34 c s p q r, CP_35 c s p q r, CP_36 c s p q r, CP_37 c s p q r, CP_38 c s p q r, CP_39 c s p q r, CP_40 c s p q r, CP_41 c s p q r, CP_42 c s p q r, CP_43 c s p q r, CP_44 c s p q r, CP_45 c s p q r, CP_46 c s p q r, CP_47 c s p q r, CP_48 c s p q r, CP_49 c s p q r, CP_50 c s p q r, CP_51 c s p q r, CP_52 c s p q r, CP_53 c s p q r, CP_54 c s p q r, CP_55 c s p q r, CP_56 c s p q r, CP_57 c s p q r, CP_58 c s p q r, CP_59 c s p q r, CP_60 c s p q r].getD k 0
+/-- The coefficients, indexed. -/
+noncomputable def cp (c s p q r : ℝ) (k : ℕ) : ℝ := CP k c s p q r
 
-/-- Lower and upper ends of the enclosures `enc_k`. -/
-def lo : List ℚ := [21338030157/10000000000, 1285564049/1250000000, 478325869/10000000000, 55242717/156250000, 15887974301/5000000000, -25334057577/10000000000, 18516046493/10000000000, -11401603359/5000000000, -15453797481/5000000000, 11401602797/5000000000, 6333514073/2500000000, 12288379109/5000000000, -17348349593/5000000000, 4337087351/1250000000, 961850497/312500000, -306762759/500000000, 12587748421/5000000000, 10247840919/5000000000, -21208812479/10000000000, 14924891967/5000000000, -34612200439/10000000000, -11401603359/10000000000, 5583690581/2500000000, -2419187399/5000000000, 3625060923/10000000000, 3523288973/5000000000, -36881829/40000000, 11401602797/10000000000, 4182931157/10000000000, 6144189481/2500000000, 18516045801/10000000000, -15453797787/5000000000, -3090759513/1000000000, -5360934973/5000000000, -16499261019/5000000000, 17154991/16000000, 4124815153/1250000000, 12472120941/5000000000, 9927050187/10000000000, 1081376697/10000000000, 1583378451/1250000000, -352328927/500000000, 5633947199/2000000000, -63335147/50000000, 27719180941/10000000000, -14924892379/5000000000, 6144189447/2500000000, 18516045761/10000000000, 28070218779/10000000000, -10197104337/5000000000, -28070219539/10000000000, 10197103649/5000000000, -79416411/80000000, 1209593479/2500000000, -20495683391/10000000000, 3067627203/5000000000, 681353149/250000000, -31/8, 27254125869/10000000000, 135/64, 1/32]
-def hi : List ℚ := [21338030631/10000000000, 2571128247/2500000000, 23916303/500000000, 3535534039/10000000000, 31775949877/10000000000, -6333514073/2500000000, 18516047111/10000000000, -11401602797/5000000000, -15453797239/5000000000, 11401603359/5000000000, 25334057577/10000000000, 24576758809/10000000000, -4337087351/1250000000, 17348349593/5000000000, 30779217449/10000000000, -3067627203/5000000000, 25175498609/10000000000, 20495683391/10000000000, -21208811147/10000000000, 14924892379/5000000000, -34612199567/10000000000, -11401602797/10000000000, 11167381747/5000000000, -1209593479/2500000000, 3625062429/10000000000, 352328927/500000000, -922045661/1000000000, 11401603359/10000000000, 4182931621/10000000000, 24576759021/10000000000, 18516047667/10000000000, -15453796921/5000000000, -15453797017/5000000000, -17154991/16000000, -4124815153/1250000000, 5360934973/5000000000, 16499261019/5000000000, 24944243537/10000000000, 79416411/80000000, 21627577/200000000, 63335147/50000000, -3523288973/5000000000, 14084869009/5000000000, -1583378451/1250000000, 27719182479/10000000000, -14924891967/5000000000, 24576759303/10000000000, 18516047827/10000000000, 28070219539/10000000000, -10197103649/5000000000, -28070218779/10000000000, 10197104337/5000000000, -9927050187/10000000000, 2419187399/5000000000, -10247840919/5000000000, 306762759/500000000, 27254126559/10000000000, -31/8, 27254126613/10000000000, 135/64, 1/32]
 
 /-- Entry `(i, j)` of the Hessian matrix is `wt i j * cp (ix i j)`; index 61 means zero. -/
 def idx : List (List ℕ) := [[0, 61, 61, 1, 61, 61, 2, 61, 61, 2, 61, 61, 1, 61, 61, 3, 61, 61, 3, 61, 61], [61, 4, 61, 5, 6, 61, 7, 8, 61, 9, 8, 61, 10, 6, 61, 61, 3, 61, 61, 3, 61], [61, 61, 11, 61, 61, 6, 61, 61, 8, 61, 61, 8, 61, 61, 6, 12, 61, 3, 13, 61, 3], [1, 5, 61, 14, 15, 61, 16, 17, 61, 18, 19, 61, 20, 21, 61, 3, 61, 61, 3, 61, 61], [61, 6, 61, 15, 22, 61, 23, 24, 61, 25, 26, 61, 27, 28, 61, 61, 3, 61, 61, 3, 61], [61, 61, 6, 61, 61, 29, 61, 61, 30, 61, 61, 31, 61, 61, 32, 33, 34, 3, 35, 36, 3], [2, 7, 61, 16, 23, 61, 37, 38, 61, 39, 40, 61, 18, 41, 61, 3, 61, 61, 3, 61, 61], [61, 8, 61, 17, 24, 61, 38, 42, 61, 43, 44, 61, 45, 26, 61, 61, 3, 61, 61, 3, 61], [61, 61, 8, 61, 61, 30, 61, 61, 46, 61, 61, 47, 61, 61, 31, 48, 49, 3, 50, 51, 3], [2, 9, 61, 18, 25, 61, 39, 43, 61, 37, 52, 61, 16, 53, 61, 3, 61, 61, 3, 61, 61], [61, 8, 61, 19, 26, 61, 40, 44, 61, 52, 42, 61, 54, 24, 61, 61, 3, 61, 61, 3, 61], [61, 61, 8, 61, 61, 31, 61, 61, 47, 61, 61, 46, 61, 61, 30, 48, 51, 3, 50, 49, 3], [1, 10, 61, 20, 27, 61, 18, 45, 61, 16, 54, 61, 14, 55, 61, 3, 61, 61, 3, 61, 61], [61, 6, 61, 21, 28, 61, 41, 26, 61, 53, 24, 61, 55, 22, 61, 61, 3, 61, 61, 3, 61], [61, 61, 6, 61, 61, 32, 61, 61, 31, 61, 61, 30, 61, 61, 29, 33, 36, 3, 35, 34, 3], [3, 61, 12, 3, 61, 33, 3, 61, 48, 3, 61, 48, 3, 61, 33, 56, 61, 61, 57, 61, 61], [61, 3, 61, 61, 3, 34, 61, 3, 49, 61, 3, 51, 61, 3, 36, 61, 58, 61, 61, 57, 61], [61, 61, 3, 61, 61, 3, 61, 61, 3, 61, 61, 3, 61, 61, 3, 61, 61, 59, 61, 61, 60], [3, 61, 13, 3, 61, 35, 3, 61, 50, 3, 61, 50, 3, 61, 35, 57, 61, 61, 56, 61, 61], [61, 3, 61, 61, 3, 36, 61, 3, 51, 61, 3, 49, 61, 3, 34, 61, 57, 61, 61, 58, 61], [61, 61, 3, 61, 61, 3, 61, 61, 3, 61, 61, 3, 61, 61, 3, 61, 61, 60, 61, 61, 59]]
@@ -5332,8 +4555,8 @@ def Dd : List ℚ := [1116347/524288, 3327189/1048576, 2572299/1048576, 2562215/
 
 def ix (i j : ℕ) : ℕ := (idx.getD i []).getD j 61
 def wt (i j : ℕ) : ℚ := if i = j then 1 else 1 / 2
-def mid (k : ℕ) : ℚ := (lo.getD k 0 + hi.getD k 0) / 2
-def rad (k : ℕ) : ℚ := (hi.getD k 0 - lo.getD k 0) / 2
+def mid (k : ℕ) : ℚ := ((Ps.getD k []).lo + (Ps.getD k []).hi) / 2
+def rad (k : ℕ) : ℚ := ((Ps.getD k []).hi - (Ps.getD k []).lo) / 2
 def M0 (i j : ℕ) : ℚ := wt i j * mid (ix i j)
 def dl (i j : ℕ) : ℚ := wt i j * rad (ix i j)
 def Lq (i j : ℕ) : ℚ := if i = j then 1 else (Ld.getD i []).getD j 0
@@ -5360,11 +4583,8 @@ open Finset
 noncomputable def Hm (c s p q r : ℝ) (i j : ℕ) : ℝ := (wt i j : ℝ) * cp c s p q r (ix i j)
 
 lemma cp_mem {c s p q r : ℝ} (hb : InBox c s p q r) (k : ℕ) :
-    (lo.getD k 0 : ℝ) ≤ cp c s p q r k ∧ cp c s p q r k ≤ (hi.getD k 0 : ℝ) := by
-  rcases lt_or_ge k 61 with hk | hk
-  · interval_cases k <;> simp only [cp, lo, hi, List.getD_cons_succ, List.getD_cons_zero] <;> push_cast
-    exacts [enc_0 c s p q r hb, enc_1 c s p q r hb, enc_2 c s p q r hb, enc_3 c s p q r hb, enc_4 c s p q r hb, enc_5 c s p q r hb, enc_6 c s p q r hb, enc_7 c s p q r hb, enc_8 c s p q r hb, enc_9 c s p q r hb, enc_10 c s p q r hb, enc_11 c s p q r hb, enc_12 c s p q r hb, enc_13 c s p q r hb, enc_14 c s p q r hb, enc_15 c s p q r hb, enc_16 c s p q r hb, enc_17 c s p q r hb, enc_18 c s p q r hb, enc_19 c s p q r hb, enc_20 c s p q r hb, enc_21 c s p q r hb, enc_22 c s p q r hb, enc_23 c s p q r hb, enc_24 c s p q r hb, enc_25 c s p q r hb, enc_26 c s p q r hb, enc_27 c s p q r hb, enc_28 c s p q r hb, enc_29 c s p q r hb, enc_30 c s p q r hb, enc_31 c s p q r hb, enc_32 c s p q r hb, enc_33 c s p q r hb, enc_34 c s p q r hb, enc_35 c s p q r hb, enc_36 c s p q r hb, enc_37 c s p q r hb, enc_38 c s p q r hb, enc_39 c s p q r hb, enc_40 c s p q r hb, enc_41 c s p q r hb, enc_42 c s p q r hb, enc_43 c s p q r hb, enc_44 c s p q r hb, enc_45 c s p q r hb, enc_46 c s p q r hb, enc_47 c s p q r hb, enc_48 c s p q r hb, enc_49 c s p q r hb, enc_50 c s p q r hb, enc_51 c s p q r hb, enc_52 c s p q r hb, enc_53 c s p q r hb, enc_54 c s p q r hb, enc_55 c s p q r hb, enc_56 c s p q r hb, enc_57 c s p q r hb, enc_58 c s p q r hb, enc_59 c s p q r hb, enc_60 c s p q r hb]
-  · simp [cp, lo, hi, hk]
+    ((Ps.getD k []).lo : ℝ) ≤ cp c s p q r k ∧ cp c s p q r k ≤ ((Ps.getD k []).hi : ℝ) :=
+  Poly.ev_mem hb _
 
 lemma Hm_err {c s p q r : ℝ} (hb : InBox c s p q r) (i j : ℕ) :
     |Hm c s p q r i j - M0 i j| ≤ dl i j := by
@@ -5440,9 +4660,10 @@ end Hess
 
 lemma core (c s p q r x0 x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 x13 x14 x15 x16 x17 x18 x19 x20 : ℝ) (hb : InBox c s p q r) :
     (449 / 100000 : ℝ) * (x0 ^ 2 + x1 ^ 2 + x2 ^ 2 + x3 ^ 2 + x4 ^ 2 + x5 ^ 2 + x6 ^ 2 + x7 ^ 2 + x8 ^ 2 + x9 ^ 2 + x10 ^ 2 + x11 ^ 2 + x12 ^ 2 + x13 ^ 2 + x14 ^ 2 + x15 ^ 2 + x16 ^ 2 + x17 ^ 2 + x18 ^ 2 + x19 ^ 2 + x20 ^ 2) ≤ Fq c s p q r x0 x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 x13 x14 x15 x16 x17 x18 x19 x20 := by
+  have h0 : CP 61 c s p q r = 0 := by simp [CP, Ps, Poly.ev]
   have h := Hess.qform hb fun i => [x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17, x18, x19, x20].getD i 0
   simp only [Finset.sum_range_succ, Finset.sum_range_zero, Hess.Hm, Hess.ix, Hess.idx, Hess.wt, Hess.cp,
-    Hess.lam, List.getD_cons_succ, List.getD_cons_zero, List.getD_nil] at h
+    Hess.lam, List.getD_cons_succ, List.getD_cons_zero, h0] at h
   norm_num at h
   unfold Fq
   linear_combination h
