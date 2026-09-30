@@ -2741,27 +2741,15 @@ lemma crit_2_y (w1 w2 : ℝ) :
     s1*w1 - s1*w2 - s2*w1 = s2*(2*c1*w1 + 2*c2*w2) := by
   linear_combination (-2*s2*w2) * hF1 + (-2*c1*w1 + 2*c1*w2 - w1 + w2) * hF2 + (-4*s1*w1 + 4*s1*w2) * hF4
 
-lemma crit_3_x (w1 w2 : ℝ) :
-    c1*w1 + c1*w2 + c2*w1 + w2 = c2*(2*c1*w1 + 2*c2*w2) := by
-  linear_combination (-2*c1*w1 + 2*c1*w2 - 2*c2*w2 + w1 + w2) * hF1 + (2*w1 - 2*w2) * hF4
-
 lemma crit_3_y (w1 w2 : ℝ) :
     -s1*w1 + s1*w2 + s2*w1 = -s2*(2*c1*w1 + 2*c2*w2) := by
   linear_combination (2*s2*w2) * hF1 + (2*c1*w1 - 2*c1*w2 + w1 - w2) * hF2 + (4*s1*w1 - 4*s1*w2) * hF4
-
-lemma crit_4_x (w1 w2 : ℝ) :
-    c1*w2 + c2*w1 + c2*w2 + w1 = c1*(2*c1*w1 + 2*c2*w2) := by
-  linear_combination (-2*c1*w2 + w1 + w2) * hF1 + (-2*w1 + 2*w2) * hF4
 
 lemma crit_4_y (w1 w2 : ℝ) :
     s1*w2 - s2*w1 + s2*w2 = -s1*(2*c1*w1 + 2*c2*w2) := by
   linear_combination (2*s1*w2) * hF1 + (-w1 + w2) * hF2
 
 lemma crit_5_x (w0 : ℝ) :
-    2*c1*w0 + 2*c2*w0 + w0 = 0 := by
-  linear_combination (2*w0) * hF1
-
-lemma crit_6_x (w0 : ℝ) :
     2*c1*w0 + 2*c2*w0 + w0 = 0 := by
   linear_combination (2*w0) * hF1
 
@@ -2777,7 +2765,7 @@ theorem pent_critical (i : Fin 7) :
   rw [muPv]; unfold μ
   ext m
   fin_cases i <;> fin_cases m <;> simp [Fin.sum_univ_seven, Wt, gt, pent_0, pent_1, pent_2, pent_3, pent_4, pent_5', pent_6'] <;>
-    first | ring1 | (linear_combination crit_1_x (phi c1 ^ 3) (phi c2 ^ 3)) | (linear_combination crit_1_y (phi c1 ^ 3) (phi c2 ^ 3)) | (linear_combination crit_2_x (phi c1 ^ 3) (phi c2 ^ 3)) | (linear_combination crit_2_y (phi c1 ^ 3) (phi c2 ^ 3)) | (linear_combination crit_3_x (phi c1 ^ 3) (phi c2 ^ 3)) | (linear_combination crit_3_y (phi c1 ^ 3) (phi c2 ^ 3)) | (linear_combination crit_4_x (phi c1 ^ 3) (phi c2 ^ 3)) | (linear_combination crit_4_y (phi c1 ^ 3) (phi c2 ^ 3)) | (linear_combination crit_5_x (phi 0 ^ 3))
+    first | ring1 | (linear_combination crit_1_x (phi c1 ^ 3) (phi c2 ^ 3)) | (linear_combination crit_1_y (phi c1 ^ 3) (phi c2 ^ 3)) | (linear_combination crit_2_x (phi c1 ^ 3) (phi c2 ^ 3)) | (linear_combination crit_2_y (phi c1 ^ 3) (phi c2 ^ 3)) | (linear_combination crit_3_y (phi c1 ^ 3) (phi c2 ^ 3)) | (linear_combination crit_4_y (phi c1 ^ 3) (phi c2 ^ 3)) | (linear_combination crit_5_x (phi 0 ^ 3))
 lemma W_symm (i j : Fin 7) : W i j = W j i := by
   by_cases h : i = j
   · subst h; rfl
@@ -7050,12 +7038,7 @@ lemma inner_P_six_ring (a : Fin 5) : ⟪pentBipyramid 6, pentBipyramid (pentIdx 
   rw [M3.inner_P, ite_eq_right (pentIdx_ne_six a).symm, h]
   simp [M3.val]
 
-lemma pentIdx_injective : Function.Injective pentIdx := by
-  intro a b h
-  have := congrArg Fin.val h
-  simp [pentIdx] at this
-  exact Fin.ext this
-
+lemma pentIdx_injective : Function.Injective pentIdx := by decide
 lemma inner_P_ring (i j : Fin 5) (hij : i ≠ j) :
     ⟪pentBipyramid (pentIdx i), pentBipyramid (pentIdx j)⟫_ℝ =
       if pentc i j = true then M3.cosB else M3.cosA := by
@@ -8600,10 +8583,7 @@ def okF (r : ℕ) (b : Blk) : Bool :=
   domAll 0 b.Δ
 
 lemma getD_map_list (f : List ℤ → List ℤ) (hf : f [] = []) (M : List (List ℤ)) (i : ℕ) :
-    (M.map f).getD i [] = f (M.getD i []) := by
-  have := List.getD_map M ([] : List ℤ) (n := i) f
-  rwa [hf] at this
-
+    (M.map f).getD i [] = f (M.getD i []) := by grind
 lemma transposeSq_getD : ∀ (n : ℕ) (M : List (List ℤ)) (i : ℕ), i < n → ∀ j,
     ((transposeSq n M).getD i []).getD j 0 = (M.getD j []).getD i 0 := by
   intro n
@@ -9661,11 +9641,7 @@ lemma gramCut_of_le' (an : ℤ) (ad : ℕ) (hA : 0 < ad) {u v t : ℝ} (hg : Gra
   · rw [div_le_iff₀ hp] at hv; linarith
   · rw [div_le_iff₀ hp] at ht; linarith
 
-lemma nonneg_of_scaled {L A S : ℝ} (hL : 0 < L) (hS : 0 ≤ S) (h : L * A - S = 0) : 0 ≤ A := by
-  by_contra hneg
-  have := mul_neg_of_pos_of_neg hL (not_le.1 hneg)
-  linarith
-
+lemma nonneg_of_scaled {L A S : ℝ} (hL : 0 < L) (hS : 0 ≤ S) (h : L * A - S = 0) : 0 ≤ A := by nlinarith
 lemma le_one_of_gramOK {u v t : ℝ} (hg : GramOK u v t) : u ≤ 1 :=
   (abs_le.1 ((sq_le_one_iff_abs_le_one u).1 hg.1)).2
 
