@@ -256,50 +256,13 @@ lemma pent_dist_poles : ‖pentBipyramid 5 - pentBipyramid 6‖ = 2 := by
 theorem pentBipyramid_energy :
     coulombEnergy pentBipyramid =
       1 / 2 + 5 * √2 + 5 / (2 * sin (π / 5)) + 5 / (2 * sin (2 * π / 5)) := by
-  have hs3 : sin (3 * π / 5) = sin (2 * π / 5) := by
-    rw [← sin_pi_sub]; congr 1; ring
-  have hs4 : sin (4 * π / 5) = sin (π / 5) := by
-    rw [← sin_pi_sub]; congr 1; ring
-  have d01 : ‖pentBipyramid 0 - pentBipyramid 1‖ = 2 * sin (π / 5) := by
-    rw [pent_dist_pent (by decide) (by decide) (by decide)]; norm_num
-  have d12 : ‖pentBipyramid 1 - pentBipyramid 2‖ = 2 * sin (π / 5) := by
-    rw [pent_dist_pent (by decide) (by decide) (by decide)]; norm_num
-  have d23 : ‖pentBipyramid 2 - pentBipyramid 3‖ = 2 * sin (π / 5) := by
-    rw [pent_dist_pent (by decide) (by decide) (by decide)]; norm_num
-  have d34 : ‖pentBipyramid 3 - pentBipyramid 4‖ = 2 * sin (π / 5) := by
-    rw [pent_dist_pent (by decide) (by decide) (by decide)]; norm_num
-  have d04 : ‖pentBipyramid 0 - pentBipyramid 4‖ = 2 * sin (π / 5) := by
-    rw [pent_dist_pent (by decide) (by decide) (by decide)]; norm_num
-    rw [← hs4]; congr 2; ring
-  have d02 : ‖pentBipyramid 0 - pentBipyramid 2‖ = 2 * sin (2 * π / 5) := by
-    rw [pent_dist_pent (by decide) (by decide) (by decide)]; norm_num
-    congr 2; ring
-  have d13 : ‖pentBipyramid 1 - pentBipyramid 3‖ = 2 * sin (2 * π / 5) := by
-    rw [pent_dist_pent (by decide) (by decide) (by decide)]; norm_num
-    congr 2; ring
-  have d24 : ‖pentBipyramid 2 - pentBipyramid 4‖ = 2 * sin (2 * π / 5) := by
-    rw [pent_dist_pent (by decide) (by decide) (by decide)]; norm_num
-    congr 2; ring
-  have d03 : ‖pentBipyramid 0 - pentBipyramid 3‖ = 2 * sin (2 * π / 5) := by
-    rw [pent_dist_pent (by decide) (by decide) (by decide)]; norm_num
-    rw [← hs3]; congr 2; ring
-  have d14 : ‖pentBipyramid 1 - pentBipyramid 4‖ = 2 * sin (2 * π / 5) := by
-    rw [pent_dist_pent (by decide) (by decide) (by decide)]; norm_num
-    rw [← hs3]; congr 2; ring
-  have hp2 : 0 < sin (2 * π / 5) :=
-    sin_pos_of_pos_of_lt_pi (by positivity) (by linarith [Real.pi_pos])
-  rw [coulombEnergy_seven, d01, d12, d23, d34, d04, d02, d13, d24, d03, d14,
-    pent_dist_north (i := 0) (by decide), pent_dist_north (i := 1) (by decide),
-    pent_dist_north (i := 2) (by decide), pent_dist_north (i := 3) (by decide),
-    pent_dist_north (i := 4) (by decide), pent_dist_south (i := 0) (by decide),
-    pent_dist_south (i := 1) (by decide), pent_dist_south (i := 2) (by decide),
-    pent_dist_south (i := 3) (by decide), pent_dist_south (i := 4) (by decide),
-    pent_dist_poles]
-  have h3 : (√2)⁻¹ = √2 / 2 := by
-    field_simp
-    rw [Real.sq_sqrt (by norm_num)]
-  rw [h3]
-  ring
+  rw [coulombEnergy_seven]
+  have h3 : sin (π * 3 / 5) = sin (π * 2 / 5) := by rw [← sin_pi_sub]; ring_nf
+  have h4 : sin (π * 4 / 5) = sin (π / 5) := by rw [← sin_pi_sub]; ring_nf
+  norm_num [pent_dist_pent, pent_dist_north, pent_dist_south, pent_dist_poles, h3, h4,
+    show 2 * π / 5 = π * 2 / 5 by ring]
+  linear_combination (-5 * (√2)⁻¹) * Real.mul_self_sqrt (show (0:ℝ) ≤ 2 by norm_num)
+    + 5 * √2 * inv_mul_cancel₀ (show √2 ≠ 0 by positivity)
 namespace Base
 
 open Finset
@@ -510,35 +473,20 @@ theorem quad_Y3_nonneg (m k : ℕ) {n : ℕ} (u : Fin n → ℝ) (t : Fin n → 
     (ht : ∀ j l, t j l - u j * u l = a j * a l + b j * b l)
     (w : Fin m → ℝ) :
     0 ≤ ∑ j, ∑ l, w ⬝ᵥ (Y3 m k (u j) (u l) (t j l)).mulVec w := by
-  set z : Fin n → ℂ := fun j => ⟨a j, b j⟩ with hz
+  set z : Fin n → ℂ := fun j => ⟨a j, b j⟩
   have hQ : ∀ j l, Q3 k (u j) (u l) (t j l)
-      = ((z j) ^ k).re * ((z l) ^ k).re + ((z j) ^ k).im * ((z l) ^ k).im := by
-    intro j l
-    rw [Q3_eq_re (u j) (u l) (t j l) (z j) (z l)
-      (by rw [hu j]; simp [hz, Complex.normSq_apply, sq])
-      (by rw [hu l]; simp [hz, Complex.normSq_apply, sq])
-      (by simp [hz, ht])]
-    rw [mul_pow, Complex.mul_re, ← map_pow, Complex.conj_re, Complex.conj_im]
-    ring
-  have key : ∀ j l, w ⬝ᵥ (Y3 m k (u j) (u l) (t j l)).mulVec w
-      = (∑ p, w p * u j ^ (p : ℕ)) * (∑ p, w p * u l ^ (p : ℕ))
-        * (((z j) ^ k).re * ((z l) ^ k).re + ((z j) ^ k).im * ((z l) ^ k).im) := by
-    intro j l
-    rw [← hQ j l]
-    simp only [dotProduct, mulVec, Y3, Matrix.of_apply]
-    rw [Finset.sum_mul_sum, Finset.sum_mul]
-    refine Finset.sum_congr rfl fun p _ => ?_
-    rw [Finset.mul_sum, Finset.sum_mul]
-    ring
-  simp only [key]
-  have hsq : ∀ (g c s : Fin n → ℝ), ∑ j, ∑ l, g j * g l * (c j * c l + s j * s l)
-      = (∑ j, g j * c j) ^ 2 + (∑ j, g j * s j) ^ 2 := by
-    intro g c s
-    simp only [sq, Finset.sum_mul_sum, ← Finset.sum_add_distrib]
-    refine Finset.sum_congr rfl fun j _ => Finset.sum_congr rfl fun l _ => ?_
-    ring
-  rw [hsq (fun j => ∑ p, w p * u j ^ (p : ℕ)) (fun j => ((z j) ^ k).re) (fun j => ((z j) ^ k).im)]
-  positivity
+      = (z j ^ k).re * (z l ^ k).re + (z j ^ k).im * (z l ^ k).im := fun j l => by
+    rw [Q3_eq_re _ _ _ (z j) (z l) (by rw [hu]; simp [z, sq]) (by rw [hu]; simp [z, sq])
+      (by simp [z, ht])]
+    simp [mul_pow, ← map_pow]
+  convert add_nonneg (sq_nonneg (∑ j, (∑ p, w p * u j ^ (p : ℕ)) * (z j ^ k).re))
+    (sq_nonneg (∑ j, (∑ p, w p * u j ^ (p : ℕ)) * (z j ^ k).im)) using 1
+  simp only [sq, sum_mul_sum, ← sum_add_distrib]
+  congr! 2
+  simp only [dotProduct, mulVec, Y3, of_apply, hQ, sum_mul_sum, mul_sum, sum_mul, ← sum_add_distrib]
+  rw [sum_comm]
+  congr! 2
+  ring
 
 /-- Relabelling lemmas for triple sums. -/
 theorem tsum_swap12 {ι : Type*} [Fintype ι] (g : ι → ι → ι → ℝ) :
@@ -555,24 +503,13 @@ theorem sum_S3_eq_sum_Y3 (m k : ℕ) {n : ℕ} (t : Fin n → Fin n → ℝ) (hs
     (w : Fin m → ℝ) :
     ∑ i, ∑ j, ∑ l, w ⬝ᵥ (S3 m k (t i j) (t i l) (t j l)).mulVec w
       = ∑ i, ∑ j, ∑ l, w ⬝ᵥ (Y3 m k (t i j) (t i l) (t j l)).mulVec w := by
-  set Φ : Fin n → Fin n → Fin n → ℝ :=
-    fun i j l => w ⬝ᵥ (Y3 m k (t i j) (t i l) (t j l)).mulVec w with hΦ
-  have expand : ∀ i j l, w ⬝ᵥ (S3 m k (t i j) (t i l) (t j l)).mulVec w
-      = (1 / 6 : ℝ) * (Φ i j l + Φ j i l + Φ i l j + Φ l i j + Φ j l i + Φ l j i) := by
-    intro i j l
-    simp only [S3, Matrix.smul_mulVec, Matrix.add_mulVec, dotProduct_smul, dotProduct_add,
-      smul_eq_mul, hΦ, hsym]
-  have e1 : ∑ i, ∑ j, ∑ l, Φ j i l = ∑ i, ∑ j, ∑ l, Φ i j l := (tsum_swap12 Φ).symm
-  have e2 : ∑ i, ∑ j, ∑ l, Φ i l j = ∑ i, ∑ j, ∑ l, Φ i j l := (tsum_swap23 Φ).symm
-  have e3 : ∑ i, ∑ j, ∑ l, Φ l i j = ∑ i, ∑ j, ∑ l, Φ i j l := by
-    rw [tsum_swap23 (fun i j l => Φ l i j)]; exact (tsum_swap12 Φ).symm
-  have e4 : ∑ i, ∑ j, ∑ l, Φ j l i = ∑ i, ∑ j, ∑ l, Φ i j l := by
-    rw [tsum_swap12 (fun i j l => Φ j l i)]; exact (tsum_swap23 Φ).symm
-  have e5 : ∑ i, ∑ j, ∑ l, Φ l j i = ∑ i, ∑ j, ∑ l, Φ i j l := by
-    rw [tsum_swap12 (fun i j l => Φ l j i), tsum_swap23 (fun i j l => Φ l i j)]
-    exact (tsum_swap12 Φ).symm
-  simp only [expand, ← Finset.mul_sum, Finset.sum_add_distrib, e1, e2, e3, e4, e5]
-  ring
+  set Φ := fun i j l => w ⬝ᵥ (Y3 m k (t i j) (t i l) (t j l)).mulVec w
+  have : ∀ i j l, w ⬝ᵥ (S3 m k (t i j) (t i l) (t j l)).mulVec w
+      = (Φ i j l + Φ j i l + Φ i l j + Φ l i j + Φ j l i + Φ l j i) / 6 := by
+    intros; simp [S3, Matrix.smul_mulVec, Matrix.add_mulVec, Φ, hsym]; ring
+  simp only [this, ← Finset.sum_div, Finset.sum_add_distrib]
+  linarith [tsum_swap12 Φ, tsum_swap23 Φ, tsum_swap23 fun i j l => Φ l i j,
+    tsum_swap12 fun i j l => Φ j l i, tsum_swap12 fun i j l => Φ l j i]
 
 /-- Every unit vector of `ℝ³` has an orthonormal frame of its orthogonal complement, giving
 tangent-plane coordinates with Parseval's identity: extend `{x}` to an orthonormal basis. -/
@@ -624,32 +561,11 @@ theorem matDot_moment_nonneg (m k : ℕ) {n : ℕ} (x : Fin n → R3) (hx : ∀ 
     (F : Matrix (Fin m) (Fin m) ℝ) (hF : F.PosSemidef) :
     0 ≤ ∑ i, ∑ j, ∑ l, matDot F (S3 m k ⟪x i, x j⟫ ⟪x i, x l⟫ ⟪x j, x l⟫) := by
   obtain ⟨r, v, hFv⟩ := Matrix.posSemidef_iff_eq_sum_vecMulVec.mp hF
-  have key3 : ∀ X : Fin m → Fin m → Fin r → ℝ,
-      ∑ a, ∑ b, ∑ s, X a b s = ∑ s, ∑ a, ∑ b, X a b s := by
-    intro X
-    calc ∑ a, ∑ b, ∑ s, X a b s = ∑ a, ∑ s, ∑ b, X a b s :=
-          Finset.sum_congr rfl fun a _ => Finset.sum_comm
-      _ = ∑ s, ∑ a, ∑ b, X a b s := Finset.sum_comm
-  have hdot : ∀ M : Matrix (Fin m) (Fin m) ℝ, matDot F M = ∑ s, v s ⬝ᵥ M.mulVec (v s) := by
-    intro M
-    rw [hFv]
-    simp only [matDot, Matrix.sum_apply, Matrix.vecMulVec_apply, Pi.star_apply, star_trivial,
-      dotProduct, Matrix.mulVec, Finset.sum_mul, Finset.mul_sum]
-    rw [key3 (fun a b s => v s a * v s b * M a b)]
-    refine Finset.sum_congr rfl fun s _ => Finset.sum_congr rfl fun a _ =>
-      Finset.sum_congr rfl fun b _ => ?_
-    ring
-  have hswap : ∀ f : Fin n → Fin n → Fin n → Fin r → ℝ,
-      ∑ i, ∑ j, ∑ l, ∑ s, f i j l s = ∑ s, ∑ i, ∑ j, ∑ l, f i j l s := by
-    intro f
-    calc ∑ i, ∑ j, ∑ l, ∑ s, f i j l s
-        = ∑ i, ∑ j, ∑ s, ∑ l, f i j l s :=
-          Finset.sum_congr rfl fun i _ => Finset.sum_congr rfl fun j _ => Finset.sum_comm
-      _ = ∑ i, ∑ s, ∑ j, ∑ l, f i j l s := Finset.sum_congr rfl fun i _ => Finset.sum_comm
-      _ = ∑ s, ∑ i, ∑ j, ∑ l, f i j l s := Finset.sum_comm
-  simp only [hdot]
-  rw [hswap]
-  exact Finset.sum_nonneg fun s _ => bv_positivity m k x hx (v s)
+  convert sum_nonneg (s := univ) fun s _ => bv_positivity m k x hx (v s) using 1
+  simp only [matDot, hFv, Matrix.sum_apply, vecMulVec_apply, star_trivial, dotProduct, mulVec, sum_mul,
+    mul_sum, Finset.sum_comm (α := Fin r)]
+  congr! 6
+  ring
 
 /-! ### Combinatorics of ordered triple sums -/
 
@@ -665,29 +581,13 @@ theorem sum_all_eq (f : Fin n → Fin n → Fin n → ℝ) :
     ∑ i, ∑ j, ∑ l, f i j l
       = dsum f + ∑ i, ∑ l, f i i l + ∑ i, ∑ j, f i j i + ∑ i, ∑ j, f i j j
           - 2 * ∑ i, f i i i := by
-  have pt : ∀ i j l, f i j l
-      = (if i ≠ j ∧ i ≠ l ∧ j ≠ l then f i j l else 0) + (if i = j then f i j l else 0)
-        + (if i = l then f i j l else 0) + (if j = l then f i j l else 0)
-        - 2 * (if i = j then (if j = l then f i j l else 0) else 0) := by
-    intro i j l
-    by_cases h1 : i = j <;> by_cases h2 : i = l <;> by_cases h3 : j = l <;> simp_all <;> ring
-  have e1 : ∑ i, ∑ j, ∑ l, (if i = j then f i j l else 0) = ∑ i, ∑ l, f i i l := by
-    simp [Finset.sum_ite_eq]
-  have e2 : ∑ i, ∑ j, ∑ l, (if i = l then f i j l else 0) = ∑ i, ∑ j, f i j i := by
-    simp [Finset.sum_ite_eq]
-  have e3 : ∑ i, ∑ j, ∑ l, (if j = l then f i j l else 0) = ∑ i, ∑ j, f i j j := by
-    simp [Finset.sum_ite_eq]
-  have e4 : ∑ i, ∑ j, ∑ l, (if i = j then (if j = l then f i j l else 0) else 0)
-      = ∑ i, f i i i := by
-    simp [Finset.sum_ite_eq]
-  calc ∑ i, ∑ j, ∑ l, f i j l
-      = ∑ i, ∑ j, ∑ l, ((if i ≠ j ∧ i ≠ l ∧ j ≠ l then f i j l else 0) + (if i = j then f i j l else 0)
-        + (if i = l then f i j l else 0) + (if j = l then f i j l else 0)
-        - 2 * (if i = j then (if j = l then f i j l else 0) else 0)) := by
-          simp only [← pt]
-    _ = _ := by
-      simp only [Finset.sum_add_distrib, Finset.sum_sub_distrib, ← Finset.mul_sum, e1, e2, e3, e4]
-      rfl
+  rw [show ∑ i, ∑ l, f i i l = ∑ i, ∑ j, ∑ l, if i = j then f i j l else 0 by simp,
+    show ∑ i, ∑ j, f i j i = ∑ i, ∑ j, ∑ l, if i = l then f i j l else 0 by simp,
+    show ∑ i, ∑ j, f i j j = ∑ i, ∑ j, ∑ l, if j = l then f i j l else 0 by simp,
+    show ∑ i, f i i i = ∑ i, ∑ j, ∑ l, if i = j ∧ j = l then f i j l else 0 by simp [ite_and]]
+  simp only [dsum, mul_sum, ← sum_add_distrib, ← sum_sub_distrib]
+  congr! 3
+  grind
 
 end Comb
 
@@ -857,40 +757,12 @@ theorem dsum_Rs (hn : 3 ≤ n) (s : ℝ → ℝ → ℝ → ℝ)
     (τ : Fin n → Fin n → ℝ) (hsymm : ∀ i j, τ i j = τ j i) (hdiag : ∀ i, τ i i = 1) :
     dsum (fun i j l => Rs s n (τ i j) (τ i l) (τ j l))
       = ((n : ℝ) - 2) * ∑ i, ∑ j, ∑ l, s (τ i j) (τ i l) (τ j l) := by
-  have hn2 : 2 ≤ n := by omega
-  have hn1 : ((n : ℝ) - 1) ≠ 0 := by
-    have : (3 : ℝ) ≤ n := by exact_mod_cast hn
-    linarith
-  obtain ⟨g, hg⟩ : ∃ g : Fin n → Fin n → ℝ, ∀ i j, g i j = s (τ i j) (τ i j) 1 :=
-    ⟨fun i j => s (τ i j) (τ i j) 1, fun _ _ => rfl⟩
-  have hgd : ∀ i, g i i = s 1 1 1 := by intro i; rw [hg, hdiag]
-  have hQ : ∑ i, ∑ j, (if i ≠ j then g i j else 0)
-      = ∑ i, ∑ j, g i j - (n : ℝ) * s 1 1 1 := by
-    simp only [sum_ne_eq_sub, hgd, Finset.sum_sub_distrib, Finset.sum_const, Finset.card_univ,
-      Fintype.card_fin, nsmul_eq_mul]
-  have hall := sum_all_eq (n := n) (fun i j l => s (τ i j) (τ i l) (τ j l))
-  have e1 : ∑ i, ∑ l, s (τ i i) (τ i l) (τ i l) = ∑ i, ∑ j, g i j := by
-    refine Finset.sum_congr rfl fun i _ => Finset.sum_congr rfl fun l _ => ?_
-    rw [hdiag i, hs12 1 (τ i l) (τ i l), hs23 (τ i l) 1 (τ i l), hg]
-  have e2 : ∑ i, ∑ j, s (τ i j) (τ i i) (τ j i) = ∑ i, ∑ j, g i j := by
-    refine Finset.sum_congr rfl fun i _ => Finset.sum_congr rfl fun j _ => ?_
-    rw [hdiag i, hsymm j i, hs23 (τ i j) 1 (τ i j), hg]
-  have e3 : ∑ i, ∑ j, s (τ i j) (τ i j) (τ j j) = ∑ i, ∑ j, g i j := by
-    refine Finset.sum_congr rfl fun i _ => Finset.sum_congr rfl fun j _ => ?_
-    rw [hdiag j, hg]
-  have e4 : ∑ i, s (τ i i) (τ i i) (τ i i) = (n : ℝ) * s 1 1 1 := by
-    simp only [hdiag, Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul]
-  have hR : dsum (fun i j l => Rs s n (τ i j) (τ i l) (τ j l))
-      = ((n : ℝ) - 2) * dsum (fun i j l => s (τ i j) (τ i l) (τ j l))
-        + (dsum (fun i j _ => g i j) + dsum (fun i _ l => g i l) + dsum (fun _ j l => g j l))
-        + dsum (n := n) (fun _ _ _ => s 1 1 1 / ((n : ℝ) - 1)) := by
-    have hfun : (fun i j l => Rs s n (τ i j) (τ i l) (τ j l))
-        = fun i j l => (((n : ℝ) - 2) * s (τ i j) (τ i l) (τ j l) + (g i j + g i l + g j l))
-            + s 1 1 1 / ((n : ℝ) - 1) := by
-      simp only [Rs, hg]
-    rw [hfun, dsum_add, dsum_add, dsum_mul_left, dsum_add, dsum_add]
-  rw [hR, dsum_pair12 hn2, dsum_pair13 hn2, dsum_pair23 hn2, dsum_const hn2, hQ, hall, e1, e2, e3,
-    e4]
+  have : (n:ℝ) - 1 ≠ 0 := by linarith [show (3:ℝ) ≤ n by exact_mod_cast hn]
+  unfold Rs
+  rw [dsum_add, dsum_add, dsum_mul_left, dsum_add, dsum_add, dsum_pair12 (by omega),
+    dsum_pair13 (by omega), dsum_pair23 (by omega), dsum_const (by omega), sum_all_eq]
+  simp only [sum_ne_eq_sub]
+  simp [hdiag, hs12, hs23, hsymm]
   field_simp
   ring
 
@@ -933,21 +805,11 @@ theorem normsq_coords (x : R3) (hx : ‖x‖ = 1) : x 0 ^ 2 + x 1 ^ 2 + x 2 ^ 2 
 /-- The Gram determinant of three unit vectors in `ℝ³` is a square, hence nonnegative. -/
 theorem gram_det_nonneg (x y z : R3) (hx : ‖x‖ = 1) (hy : ‖y‖ = 1) (hz : ‖z‖ = 1) :
     0 ≤ 1 + 2 * ⟪x, y⟫ * ⟪x, z⟫ * ⟪y, z⟫ - ⟪x, y⟫ ^ 2 - ⟪x, z⟫ ^ 2 - ⟪y, z⟫ ^ 2 := by
-  have hx' := normsq_coords x hx; have hy' := normsq_coords y hy; have hz' := normsq_coords z hz
   rw [inner_coords, inner_coords, inner_coords]
-  have key : 1 + 2 * (x 0 * y 0 + x 1 * y 1 + x 2 * y 2) * (x 0 * z 0 + x 1 * z 1 + x 2 * z 2)
-        * (y 0 * z 0 + y 1 * z 1 + y 2 * z 2) - (x 0 * y 0 + x 1 * y 1 + x 2 * y 2) ^ 2
-        - (x 0 * z 0 + x 1 * z 1 + x 2 * z 2) ^ 2 - (y 0 * z 0 + y 1 * z 1 + y 2 * z 2) ^ 2
-      = (x 0 * (y 1 * z 2 - y 2 * z 1) - x 1 * (y 0 * z 2 - y 2 * z 0)
-          + x 2 * (y 0 * z 1 - y 1 * z 0)) ^ 2 := by
-    linear_combination
-      (2*y 0^2*z 0^2 - y 0^2 + 2*y 0*y 1*z 0*z 1 + 2*y 0*y 2*z 0*z 2 - y 1^2*z 2^2
-        + 2*y 1*y 2*z 1*z 2 - y 2^2*z 1^2 - z 0^2) * hx'
-      + (2*x 0*x 1*z 0*z 1 + 2*x 0*x 2*z 0*z 2 - 2*x 1^2*z 0^2 - x 1^2*z 2^2 + x 1^2
-        + 2*x 1*x 2*z 1*z 2 - 2*x 2^2*z 0^2 - x 2^2*z 1^2 + x 2^2 + z 0^2 - 1) * hy'
-      + (2*x 0*x 1*y 0*y 1 + 2*x 0*x 2*y 0*y 2 + 2*x 1^2*y 1^2 + x 1^2*y 2^2 - x 1^2
-        + 2*x 1*x 2*y 1*y 2 + x 2^2*y 1^2 + 2*x 2^2*y 2^2 - x 2^2 - y 1^2 - y 2^2) * hz'
-  rw [key]; positivity
+  linear_combination sq_nonneg (x 0*(y 1*z 2-y 2*z 1)-x 1*(y 0*z 2-y 2*z 0)+x 2*(y 0*z 1-y 1*z 0))
+    - ((y 0*z 0+y 1*z 1+y 2*z 2)^2-1)*normsq_coords x hx
+    - ((x 0*z 0+x 1*z 1+x 2*z 2)^2-x 0^2-x 1^2-x 2^2)*normsq_coords y hy
+    - ((x 0*y 0+x 1*y 1+x 2*y 2)^2-(x 0^2+x 1^2+x 2^2)*(y 0^2+y 1^2+y 2^2))*normsq_coords z hz
 
 /-- The region of triples `(u, v, t)` of inner products of three unit vectors of `ℝ³`
 (Gram matrix positive semidefinite). -/
@@ -1400,43 +1262,22 @@ lemma decode_code {D a b d : ℕ} (ha : a < D) (hb : b < D) (hd : d < D) :
 theorem Ex.ev_eq_zero_of_kev (e : Ex) (w D : ℕ) (hx : e.dx < D) (hy : e.dy < D)
     (hz : e.dz < D) (hl : e.l1 < 2 ^ w) (hk : e.kev w D = 0) (u v t : ℝ) :
     e.ev u v t = 0 := by
-  have hdeg : ∀ x ∈ e.toList, x.2.1 < D ∧ x.2.2.1 < D ∧ x.2.2.2 < D := by
-    intro x hxm
-    obtain ⟨h1, h2, h3⟩ := Ex.deg_le e x hxm
-    exact ⟨by omega, by omega, by omega⟩
-  have hcode : ∀ x ∈ e.toList, code D x < D * D * D := fun x hxm =>
-    (decode_code (hdeg x hxm).1 (hdeg x hxm).2.1 (hdeg x hxm).2.2).2.2.2
-  have h1 : e.kev w D = ∑ k ∈ Finset.range (D * D * D),
-      (coefk D e.toList k) * (((2 ^ w : ℕ) : ℤ) ^ k) := by
-    rw [Ex.kev_eq, Ex.evalW_eq_sumT _ (Ex.Wk_add w D) (Ex.Wk_zero w D)]
-    have := regroup D (D * D * D) (fun k => (((2 ^ (w * k) : ℕ)) : ℤ)) e.toList hcode
-    refine Eq.trans this ?_
-    refine Finset.sum_congr rfl fun k _ => ?_
-    rw [pow_mul]; push_cast; rfl
-  have hbound : ∀ k < D * D * D, |coefk D e.toList k| < ((2 ^ w : ℕ) : ℤ) := by
-    intro k _
-    have h := natAbs_coefk_le D e.toList k
-    rw [Ex.sumAbs_toList] at h
-    have : (coefk D e.toList k).natAbs < 2 ^ w := lt_of_le_of_lt h hl
-    rw [← Int.natCast_natAbs]
-    exact_mod_cast this
-  have hzero := digit_unique (2 ^ w) (coefk D e.toList) (D * D * D) hbound (h1 ▸ hk)
-  have h2 : e.ev u v t = ∑ k ∈ Finset.range (D * D * D), (coefk D e.toList k : ℝ) *
-      (u ^ (k % D) * v ^ (k / D % D) * t ^ (k / D / D)) := by
-    rw [Ex.ev_eq, Ex.evalW_eq_sumT _ (Ex.Wr_add u v t) (Ex.Wr_zero u v t)]
-    have := regroup D (D * D * D) (fun k => u ^ (k % D) * v ^ (k / D % D) * t ^ (k / D / D))
-      e.toList hcode
-    simp only [sumT]
-    rw [← this]
-    congr 1
-    refine List.map_congr_left fun x hxm => ?_
-    obtain ⟨p1, p2, p3⟩ := hdeg x hxm
-    obtain ⟨q1, q2, q3, -⟩ := decode_code p1 p2 p3
-    simp only [code, q1, q2, q3, Ex.Wr]
-  rw [h2]
-  refine Finset.sum_eq_zero fun k hk => ?_
-  rw [hzero k (Finset.mem_range.1 hk)]
-  simp
+  have hdeg : ∀ x ∈ e.toList, x.2.1 < D ∧ x.2.2.1 < D ∧ x.2.2.2 < D := fun x hxm => by
+    have := Ex.deg_le e x hxm; omega
+  have hcode x hxm := (decode_code (hdeg x hxm).1 (hdeg x hxm).2.1 (hdeg x hxm).2.2).2.2.2
+  have hzero := digit_unique (2 ^ w) (coefk D e.toList) (D * D * D) (fun k _ => by
+      have := natAbs_coefk_le D e.toList k; rw [Ex.sumAbs_toList] at this
+      rw [← Int.natCast_natAbs]; omega) (by
+    rw [← hk, Ex.kev_eq, Ex.evalW_eq_sumT _ (Ex.Wk_add w D) (Ex.Wk_zero w D)]
+    refine ((regroup D _ (fun k => ((2 ^ (w * k) : ℕ) : ℤ)) e.toList hcode).trans ?_).symm
+    simp [pow_mul])
+  have := regroup D _ (fun k => u ^ (k % D) * v ^ (k / D % D) * t ^ (k / D / D)) _ hcode
+  rw [Finset.sum_eq_zero fun k hk => by simp [hzero k (Finset.mem_range.1 hk)]] at this
+  rw [Ex.ev_eq, Ex.evalW_eq_sumT _ (Ex.Wr_add u v t) (Ex.Wr_zero u v t), sumT, ← this]
+  congr 1
+  refine List.map_congr_left fun x hxm => ?_
+  obtain ⟨q1, q2, q3, -⟩ := decode_code (hdeg x hxm).1 (hdeg x hxm).2.1 (hdeg x hxm).2.2
+  simp only [code, q1, q2, q3, Ex.Wr]
 
 end Kron
 
@@ -1565,60 +1406,17 @@ lemma qform_dd_nonneg (r : ℕ) (Δ : ℕ → ℕ → ℝ) (x : ℕ → ℝ)
     (hdd : ∀ i ∈ Finset.range r,
       ∑ j ∈ Finset.range r, (if i = j then 0 else |Δ i j|) ≤ Δ i i) :
     0 ≤ ∑ i ∈ Finset.range r, ∑ j ∈ Finset.range r, x i * Δ i j * x j := by
-  set s := Finset.range r with hs_def
-  have key : ∀ i j, (if i = j then Δ i i * x i ^ 2 else 0)
-      - (if i = j then 0 else |Δ i j|) * (x i ^ 2 + x j ^ 2) / 2 ≤ x i * Δ i j * x j := by
-    intro i j
-    by_cases h : i = j
-    · subst h; rw [if_pos rfl, if_pos rfl]; nlinarith
-    · rw [if_neg h, if_neg h]
-      have h1 : 2 * (|x i| * |x j|) ≤ |x i| ^ 2 + |x j| ^ 2 := by
-        nlinarith [sq_nonneg (|x i| - |x j|)]
-      rw [sq_abs, sq_abs] at h1
-      have h2 : |x i * Δ i j * x j| = |Δ i j| * (|x i| * |x j|) := by
-        rw [abs_mul, abs_mul]; ring
-      have h3 : -(x i * Δ i j * x j) ≤ |x i * Δ i j * x j| := neg_le_abs _
-      have h4 : 0 ≤ |Δ i j| := abs_nonneg _
-      nlinarith
-  have hsum := Finset.sum_le_sum (s := s) fun i _ =>
-    Finset.sum_le_sum (s := s) fun j _ => key i j
-  refine le_trans ?_ hsum
-  simp only [Finset.sum_sub_distrib]
-  have e1 : ∑ i ∈ s, ∑ j ∈ s, (if i = j then Δ i i * x i ^ 2 else 0)
-      = ∑ i ∈ s, Δ i i * x i ^ 2 := by
-    refine Finset.sum_congr rfl fun i hi => ?_
-    rw [Finset.sum_ite_eq]; simp [hi]
-  set o : ℕ → ℕ → ℝ := fun i j => if i = j then 0 else |Δ i j| with ho
-  have osymm : ∀ i ∈ s, ∀ j ∈ s, o j i = o i j := by
-    intro i hi j hj
-    simp only [ho]
-    by_cases h : i = j
-    · subst h; simp
-    · have h' : ¬ j = i := fun e => h e.symm
-      rw [if_neg h, if_neg h', hs i hi j hj]
-  have e2 : ∑ i ∈ s, ∑ j ∈ s, o i j * (x i ^ 2 + x j ^ 2) / 2
-      = ∑ i ∈ s, (∑ j ∈ s, o i j) * x i ^ 2 := by
-    have ha : ∑ i ∈ s, ∑ j ∈ s, o i j * (x i ^ 2 + x j ^ 2) / 2
-        = ∑ i ∈ s, ∑ j ∈ s, o i j * x i ^ 2 / 2 + ∑ i ∈ s, ∑ j ∈ s, o i j * x j ^ 2 / 2 := by
-      rw [← Finset.sum_add_distrib]
-      refine Finset.sum_congr rfl fun i _ => ?_
-      rw [← Finset.sum_add_distrib]
-      refine Finset.sum_congr rfl fun j _ => ?_
-      ring
-    have hb : ∑ i ∈ s, ∑ j ∈ s, o i j * x j ^ 2 / 2 = ∑ i ∈ s, ∑ j ∈ s, o i j * x i ^ 2 / 2 := by
-      rw [Finset.sum_comm]
-      refine Finset.sum_congr rfl fun i hi => Finset.sum_congr rfl fun j hj => ?_
-      rw [osymm j hj i hi]
-    have hc : ∑ i ∈ s, ∑ j ∈ s, o i j * x i ^ 2 / 2
-        = (∑ i ∈ s, (∑ j ∈ s, o i j) * x i ^ 2) / 2 := by
-      rw [Finset.sum_div]
-      refine Finset.sum_congr rfl fun i _ => ?_
-      rw [Finset.sum_mul, Finset.sum_div]
-    rw [ha, hb, hc]; ring
-  rw [e1, e2, ← Finset.sum_sub_distrib]
-  refine Finset.sum_nonneg fun i hi => ?_
-  have := hdd i hi
-  nlinarith [sq_nonneg (x i)]
+  set s := Finset.range r
+  have h := Finset.sum_le_sum fun i (hi : i ∈ s) => Finset.sum_le_sum fun j (hj : j ∈ s) =>
+    show (if i = j then Δ i i * x i ^ 2 else 0) - (if i = j then 0 else |Δ i j|) * x i ^ 2 / 2
+      - (if j = i then 0 else |Δ j i|) * x j ^ 2 / 2 ≤ x i * Δ i j * x j by
+    rw [hs j hj i hi]
+    by_cases h : i = j <;> simp [h, eq_comm] <;> cases abs_cases (Δ i j) <;>
+      nlinarith [sq_nonneg (x i + x j), sq_nonneg (x i - x j)]
+  have h3 := Finset.sum_comm (s := s) (t := s) (f := fun j i => (if i = j then 0 else |Δ i j|) * x i ^ 2 / 2)
+  have h5 := Finset.sum_le_sum fun i hi => mul_le_mul_of_nonneg_right (hdd i hi) (sq_nonneg (x i))
+  simp [← Finset.sum_div, Finset.sum_mul] at h h3 h5
+  linarith
 
 /-! ## Integer data of a positive semidefinite block -/
 
@@ -3073,25 +2871,14 @@ lemma core_bound {c1 s1 g01 g05 g15 L22 L32 L33 a b c a0 b0 c0 w : ℝ}
     (e1 : |(g01 * a + L22 * b) - (c1 * a0 + s1 * b0)| ≤ w)
     (e5 : |(g05 * a + L32 * b + L33 * c) - c0| ≤ w) :
     (a - a0) ^ 2 + (b - b0) ^ 2 + (c - c0) ^ 2 ≤ (11 / 2 * w) ^ 2 := by
-  obtain ⟨hs1a, -⟩ := s1_bounds hc1 hc1' hs1 hs1p
-  obtain ⟨hg01l', hg01u'⟩ := abs_le.1 hg01
-  have hg01l : 209 / 1000 ≤ g01 := by linarith
-  have hg01u : g01 ≤ 41 / 100 := by linarith
-  obtain ⟨hL22a, -⟩ := L22_bounds hw0 hw hc1 hc1' hg01 hL22p hL22
-  have hL32b := L32_bound hw0 hg01l hg01u hg05 hg15 hL22a hL32
-  obtain ⟨hL33a, hL33b, hL33c⟩ := L33_bounds hw0 hw hg05 hL32b hL33p hL33
-  have hLs := L22_s1_close hw0 hc1 hc1' hs1a hg01 hg01l hg01u hL22a hs1 hL22
-  have ha : |a| ≤ 1 := abs_le_one_of_sq_add hab
-  have hb : |b| ≤ 1 := abs_le_one_of_sq_add (by linarith : b ^ 2 + a ^ 2 + c ^ 2 = 1)
-  have ha0 : |a0| ≤ 1 := abs_le_one_of_sq_add hab0
-  have hb0 : |b0| ≤ 1 := abs_le_one_of_sq_add (by linarith : b0 ^ 2 + a0 ^ 2 + c0 ^ 2 = 1)
-  have hc0 : |c0| ≤ 1 := abs_le_one_of_sq_add (by linarith : c0 ^ 2 + a0 ^ 2 + b0 ^ 2 = 1)
-  have db := db_bound hw0 hg01 hg01l hg01u hL22a hLs ha0 hb0 e0 e1
-  have dc := dc_bound hw0 hg05 hL32b hL33a hL33b hL33c ha hb hc0 e5
-  have h1 : (a - a0) ^ 2 ≤ w ^ 2 := sq_le_sq' (abs_le.1 e0).1 (abs_le.1 e0).2
-  have h2 : (b - b0) ^ 2 ≤ (32 / 10 * w) ^ 2 := sq_le_sq' (abs_le.1 db).1 (abs_le.1 db).2
-  have h3 : (c - c0) ^ 2 ≤ (39 / 10 * w) ^ 2 := sq_le_sq' (abs_le.1 dc).1 (abs_le.1 dc).2
-  nlinarith
+  have := abs_le.1 hg01
+  obtain ⟨h, -⟩ := L22_bounds hw0 hw hc1 hc1' hg01 hL22p hL22
+  have l := L32_bound hw0 (by linarith) (by linarith) hg05 hg15 h hL32
+  obtain ⟨h1, h2, h3⟩ := L33_bounds hw0 hw hg05 l hL33p hL33
+  have db := abs_le.1 (db_bound hw0 hg01 (by linarith) (by linarith) h (L22_s1_close hw0 hc1 hc1' (s1_bounds hc1 hc1' hs1 hs1p).1 hg01 (by linarith) (by linarith) h hs1 hL22) (abs_le_one_of_sq_add hab0) (abs_le_one_of_sq_add (by linarith : b0 ^ 2 + a0 ^ 2 + c0 ^ 2 = 1)) e0 e1)
+  have dc := abs_le.1 (dc_bound hw0 hg05 l h1 h2 h3 (abs_le_one_of_sq_add hab) (abs_le_one_of_sq_add (by linarith : b ^ 2 + a ^ 2 + c ^ 2 = 1)) (abs_le_one_of_sq_add (by linarith : c0 ^ 2 + a0 ^ 2 + b0 ^ 2 = 1)) e5)
+  have := abs_le.1 e0
+  nlinarith [sq_le_sq' db.1 db.2, sq_le_sq' dc.1 dc.2, sq_le_sq' this.1 this.2]
 
 open scoped InnerProductSpace
 
@@ -3224,100 +3011,48 @@ theorem exists_iso_close {y : Fin 7 → R3} (hy : ∀ i, ‖y i‖ = 1) {w : ℝ
     ∃ g : R3 ≃ₗᵢ[ℝ] R3, ∀ i, ‖g (y i) - pentBipyramid i‖ ≤ 11 / 2 * w := by
   have hw0 : 0 ≤ w := (abs_nonneg _).trans (hG 0 0)
   obtain ⟨hc1a, hc1b⟩ := c1_bounds
-  obtain ⟨g01, hg01d⟩ : ∃ g, g = ⟪y 0, y 1⟫_ℝ := ⟨_, rfl⟩
-  obtain ⟨g05, hg05d⟩ : ∃ g, g = ⟪y 0, y 5⟫_ℝ := ⟨_, rfl⟩
-  obtain ⟨g15, hg15d⟩ : ∃ g, g = ⟪y 1, y 5⟫_ℝ := ⟨_, rfl⟩
-  have hg01 : |g01 - c1| ≤ w := by
-    have := hG 0 1; rw [P_inner_01, ← hg01d] at this; exact this
-  have hg05 : |g05| ≤ w := by
-    have := hG 0 5; rw [P_inner_05, sub_zero, ← hg05d] at this; exact this
-  have hg15 : |g15| ≤ w := by
-    have := hG 1 5; rw [P_inner_15, sub_zero, ← hg15d] at this; exact this
+  set g01 := ⟪y 0, y 1⟫_ℝ
+  set g05 := ⟪y 0, y 5⟫_ℝ
+  set g15 := ⟪y 1, y 5⟫_ℝ
+  have hg01 : |g01 - c1| ≤ w := P_inner_01 ▸ hG 0 1
+  have hg05 : |g05| ≤ w := by simpa [P_inner_05] using hG 0 5
+  have hg15 : |g15| ≤ w := by simpa [P_inner_15] using hG 1 5
   obtain ⟨g01l, g01u⟩ := abs_le.1 hg01
-  have hg01l : 209 / 1000 ≤ g01 := by linarith
-  have hg01u : g01 ≤ 41 / 100 := by linarith
   have hd : 0 < 1 - g01 ^ 2 := by nlinarith
   have h22 : 0 < L22 g01 := Real.sqrt_pos.2 hd
   have s22 : L22 g01 ^ 2 = 1 - g01 ^ 2 := Real.sq_sqrt hd.le
   have m32 : L32 g01 g05 g15 * L22 g01 = g15 - g01 * g05 := div_mul_cancel₀ _ h22.ne'
   obtain ⟨hL22a, -⟩ := L22_bounds hw0 hw hc1a hc1b hg01 h22 s22
-  have hL32b := L32_bound hw0 hg01l hg01u hg05 hg15 hL22a m32
-  have h33 : 0 < 1 - g05 ^ 2 - L32 g01 g05 g15 ^ 2 := by
-    obtain ⟨a1, a2⟩ := abs_le.1 hg05
-    obtain ⟨b1, b2⟩ := abs_le.1 hL32b
-    nlinarith
+  obtain ⟨a1, a2⟩ := abs_le.1 hg05
+  obtain ⟨b1, b2⟩ := abs_le.1 (L32_bound hw0 (by linarith) (by linarith) hg05 hg15 hL22a m32)
+  have h33 : 0 < 1 - g05 ^ 2 - L32 g01 g05 g15 ^ 2 := by nlinarith
   have hL33p : 0 < L33 g01 g05 g15 := Real.sqrt_pos.2 h33
   have s33 : L33 g01 g05 g15 ^ 2 = 1 - g05 ^ 2 - L32 g01 g05 g15 ^ 2 := Real.sq_sqrt h33.le
-  have e00 : ⟪y 0, y 0⟫_ℝ = 1 := by rw [real_inner_self_eq_norm_sq, hy 0]; norm_num
-  have e11 : ⟪y 1, y 1⟫_ℝ = 1 := by rw [real_inner_self_eq_norm_sq, hy 1]; norm_num
-  have e55 : ⟪y 5, y 5⟫_ℝ = 1 := by rw [real_inner_self_eq_norm_sq, hy 5]; norm_num
   let u : Fin 3 → R3 := ![y 0, y 1, y 5]
-  have hu_gram : ∀ i j, ⟪u i, u j⟫_ℝ = ![![1, g01, g05], ![g01, 1, g15], ![g05, g15, 1]] i j := by
+  have hu : ∀ i j, ⟪u i, u j⟫_ℝ = ![![1, g01, g05], ![g01, 1, g15], ![g05, g15, 1]] i j := by
     intro i j
-    fin_cases i <;> fin_cases j
-    · exact e00
-    · exact hg01d.symm
-    · exact hg05d.symm
-    · exact (real_inner_comm _ _).trans hg01d.symm
-    · exact e11
-    · exact hg15d.symm
-    · exact (real_inner_comm _ _).trans hg05d.symm
-    · exact (real_inner_comm _ _).trans hg15d.symm
-    · exact e55
-  have hgram : ∀ i j, ⟪u i, u j⟫_ℝ = ⟪frame g01 g05 g15 i, frame g01 g05 g15 j⟫_ℝ := by
-    intro i j
-    rw [hu_gram, frame_gram h22 h33.le]
-  have hli : LinearIndependent ℝ u := by
-    apply Matrix.linearIndependent_of_det_gram_ne_zero
-    have hG3 : Matrix.gram ℝ u = !![1, g01, g05; g01, 1, g15; g05, g15, 1] := by
-      ext i j
-      rw [Matrix.gram_apply, hu_gram]
-      fin_cases i <;> fin_cases j <;> rfl
-    have hdet : Matrix.det (!![1, g01, g05; g01, 1, g15; g05, g15, 1] : Matrix (Fin 3) (Fin 3) ℝ)
-        = L22 g01 ^ 2 * L33 g01 g05 g15 ^ 2 := by
-      rw [Matrix.det_fin_three]
-      simp
-      linear_combination (-(L22 g01) ^ 2) * s33 + (-(1 - g05 ^ 2)) * s22
-        + (L32 g01 g05 g15 * L22 g01 + g15 - g01 * g05) * m32
-    rw [hG3, hdet]
-    positivity
-  obtain ⟨-, g, hg⟩ := isometry_of_gram_fin3 u (frame g01 g05 g15) hli hgram
-  refine ⟨g, fun j => ?_⟩
-  obtain ⟨v, hv⟩ : ∃ v : R3, v = g (y j) := ⟨_, rfl⟩
-  have hvn : ‖v‖ = 1 := by rw [hv, g.norm_map, hy]
-  have hin : ∀ k : Fin 3, ⟪v, frame g01 g05 g15 k⟫_ℝ = ⟪y j, u k⟫_ℝ := by
-    intro k
-    rw [← hg k, hv, g.inner_map_map]
-  have d0 : v 0 = ⟪y j, y 0⟫_ℝ := by
-    have := hin 0; rw [inner_frame0] at this; exact this
-  have d1 : v 0 * g01 + v 1 * L22 g01 = ⟪y j, y 1⟫_ℝ := by
-    have := hin 1; rw [inner_frame1] at this; exact this
-  have d5 : v 0 * g05 + v 1 * L32 g01 g05 g15 + v 2 * L33 g01 g05 g15 = ⟪y j, y 5⟫_ℝ := by
-    have := hin 2; rw [inner_frame2] at this; exact this
-  have e0 : |v 0 - pentBipyramid j 0| ≤ w := by
-    have := hG j 0; rwa [← d0, P_inner_0] at this
-  have e1 : |(g01 * v 0 + L22 g01 * v 1)
-      - (c1 * pentBipyramid j 0 + sin (2 * π / 5) * pentBipyramid j 1)| ≤ w := by
-    have := hG j 1; rw [← d1, P_inner_1] at this
-    have h : g01 * v 0 + L22 g01 * v 1 = v 0 * g01 + v 1 * L22 g01 := by ring
-    rwa [h]
-  have e5 : |(g05 * v 0 + L32 g01 g05 g15 * v 1 + L33 g01 g05 g15 * v 2)
-      - pentBipyramid j 2| ≤ w := by
-    have := hG j 5; rw [← d5, P_inner_5] at this
-    have h : g05 * v 0 + L32 g01 g05 g15 * v 1 + L33 g01 g05 g15 * v 2
-        = v 0 * g05 + v 1 * L32 g01 g05 g15 + v 2 * L33 g01 g05 g15 := by ring
-    rwa [h]
-  have hab : v 0 ^ 2 + v 1 ^ 2 + v 2 ^ 2 = 1 := by rw [← norm_sq_coord, hvn]; norm_num
-  have hab0 : pentBipyramid j 0 ^ 2 + pentBipyramid j 1 ^ 2 + pentBipyramid j 2 ^ 2 = 1 := by
-    rw [← norm_sq_coord, pent_norm]; norm_num
-  have key := core_bound hw0 hw hc1a hc1b sin_2pi5_sq sin_2pi5_pos hg01 hg05 hg15 h22 s22 m32
-    hL33p s33 hab hab0 e0 e1 e5
-  have hsq : ‖v - pentBipyramid j‖ ^ 2 = (v 0 - pentBipyramid j 0) ^ 2
-      + (v 1 - pentBipyramid j 1) ^ 2 + (v 2 - pentBipyramid j 2) ^ 2 := by
-    rw [norm_sq_coord]; simp
-  rw [← hv]
-  refine (sq_le_sq₀ (norm_nonneg _) (by positivity)).1 ?_
-  rw [hsq]; exact key
+    fin_cases i <;> fin_cases j <;> simp [u, g01, g05, g15, hy, real_inner_comm]
+  have hdet : (Matrix.gram ℝ u).det = L22 g01 ^ 2 * L33 g01 g05 g15 ^ 2 := by
+    rw [Matrix.det_fin_three]
+    simp only [Matrix.gram_apply, hu]
+    simp
+    linear_combination (-(L22 g01) ^ 2) * s33 + (-(1 - g05 ^ 2)) * s22
+      + (L32 g01 g05 g15 * L22 g01 + g15 - g01 * g05) * m32
+  obtain ⟨-, g, hg⟩ := isometry_of_gram_fin3 u (frame g01 g05 g15)
+    (Matrix.linearIndependent_of_det_gram_ne_zero (by rw [hdet]; positivity))
+    fun i j => by rw [hu, frame_gram h22 h33.le]
+  refine ⟨g, fun j => (sq_le_sq₀ (norm_nonneg _) (by positivity)).1 ?_⟩
+  have h0 := hG j 0
+  have h1 := hG j 1
+  have h5 := hG j 5
+  rw [← g.inner_map_map, show g (y 0) = _ from hg 0, inner_frame0, P_inner_0] at h0
+  rw [← g.inner_map_map, show g (y 1) = _ from hg 1, inner_frame1, P_inner_1] at h1
+  rw [← g.inner_map_map, show g (y 5) = _ from hg 2, inner_frame2, P_inner_5] at h5
+  rw [norm_sq_coord]
+  simp only [PiLp.sub_apply]
+  exact core_bound hw0 hw hc1a hc1b sin_2pi5_sq sin_2pi5_pos hg01 hg05 hg15 h22 s22 m32 hL33p s33
+    (by rw [← norm_sq_coord, g.norm_map, hy]; norm_num) (by rw [← norm_sq_coord, pent_norm]; norm_num)
+    h0 (by convert h1 using 3; ring) (by convert h5 using 3; ring)
 
 end GV
 
@@ -3426,32 +3161,17 @@ theorem three_point_bound_cut (hn : 3 ≤ n) (a : ℝ) (K : ℕ) (m : ℕ → �
         ≤ (H u + H v + H t) / 3 - e / (n.choose 2 : ℝ))
     (x : Fin n → R3) (hx : ∀ i, ‖x i‖ = 1) (hxa : ∀ i j, i ≠ j → a ≤ ⟪x i, x j⟫) :
     e ≤ ∑ i, ∑ j ∈ Finset.Ioi i, H ⟪x i, x j⟫ := by
-  set s : ℝ → ℝ → ℝ → ℝ := fun u v t => ∑ k ∈ Finset.range K, matDot (F k) (S3 (m k) k u v t)
-    with hs
-  have hs12 : ∀ u v t, s u v t = s v u t := fun u v t => by
-    simp only [hs, S3_swap12 _ _ u v t]
-  have hs23 : ∀ u v t, s u v t = s u t v := fun u v t => by
-    simp only [hs, S3_swap23 _ _ u v t]
-  have hid := three_point_identity hn s hs12 hs23 H e x hx
-  have hBV : 0 ≤ ∑ i, ∑ j, ∑ l, s ⟪x i, x j⟫ ⟪x i, x l⟫ ⟪x j, x l⟫ := by
-    rw [sum4_swap]
+  have h3 : (3 : ℝ) ≤ n := by exact_mod_cast hn
+  refine le_of_sub_nonneg (nonneg_of_mul_nonneg_right ?_ (by linarith : (0 : ℝ) < 2 * (n - 2)))
+  rw [← three_point_identity hn (fun u v t => ∑ k ∈ Finset.range K, matDot (F k) (S3 (m k) k u v t))
+    (fun u v t => by simp only [S3_swap12 _ _ u v t]) (fun u v t => by simp only [S3_swap23 _ _ u v t])
+    H e x hx]
+  refine add_nonneg (dsum_nonneg fun i j l hij hil hjl => ?_) (mul_nonneg (by linarith) ?_)
+  · linarith [sum_matDot_Rk K n m F ⟪x i, x j⟫ ⟪x i, x l⟫ ⟪x j, x l⟫, hpt _ _ _
+      (gramOK_inner (x i) (x j) (x l) (hx i) (hx j) (hx l)) (hxa i j hij) (hxa i l hil) (hxa j l hjl)]
+  · rw [sum4_swap]
     exact Finset.sum_nonneg fun k hk =>
       matDot_moment_nonneg (m k) k x hx (F k) (hF k (Finset.mem_range.mp hk))
-  have hslack : 0 ≤ dsum (fun i j l => ((H ⟪x i, x j⟫ + H ⟪x i, x l⟫ + H ⟪x j, x l⟫) / 3
-        - e / (n.choose 2 : ℝ)) - Rs s n ⟪x i, x j⟫ ⟪x i, x l⟫ ⟪x j, x l⟫) := by
-    refine dsum_nonneg fun i j l hij hil hjl => ?_
-    have := hpt _ _ _ (gramOK_inner (x i) (x j) (x l) (hx i) (hx j) (hx l))
-      (hxa i j hij) (hxa i l hil) (hxa j l hjl)
-    rw [sum_matDot_Rk] at this
-    linarith
-  have h3 : (3 : ℝ) ≤ n := by exact_mod_cast hn
-  have hpos : (0 : ℝ) < 2 * ((n : ℝ) - 2) := by linarith
-  have hprod : 0 ≤ 2 * ((n : ℝ) - 2) * (∑ i, ∑ j ∈ Finset.Ioi i, H ⟪x i, x j⟫ - e) := by
-    have : 0 ≤ ((n : ℝ) - 2) * ∑ i, ∑ j, ∑ l, s ⟪x i, x j⟫ ⟪x i, x l⟫ ⟪x j, x l⟫ :=
-      mul_nonneg (by linarith) hBV
-    linarith
-  have := nonneg_of_mul_nonneg_right hprod hpos
-  linarith
 
 end FinalCut
 
@@ -3735,36 +3455,12 @@ lemma sum_W_tau {y : Fin 7 → R3} (hy : ∀ i, ‖y i‖ = 1) :
     ∑ i, ∑ j ∈ Finset.Ioi i, W i j * tau y i j
       = 1 / 2 * ∑ i, ∑ j, W i j * inner ℝ (y i - pentBipyramid i) (y j - pentBipyramid j)
         - 1 / 2 * ∑ i, muP i * ‖y i - pentBipyramid i‖ ^ 2 := by
-  have hF : ∑ i, ∑ j ∈ Finset.Ioi i, (W i j * tau y i j + W j i * tau y j i)
-      = ∑ i, ∑ j, W i j * tau y i j :=
-    sum_Ioi_add_swap (fun i j => W i j * tau y i j) (fun i => by simp [W_diag])
-  have hF2 : ∀ i j, W j i * tau y j i = W i j * tau y i j := by
-    intro i j; rw [W_symm j i, tau_symm y j i]
-  have hF3 : ∑ i, ∑ j ∈ Finset.Ioi i, (W i j * tau y i j + W j i * tau y j i)
-      = 2 * ∑ i, ∑ j ∈ Finset.Ioi i, W i j * tau y i j := by
-    rw [Finset.mul_sum]
-    refine Finset.sum_congr rfl fun i _ => ?_
-    rw [Finset.mul_sum]
-    refine Finset.sum_congr rfl fun j _ => ?_
-    rw [hF2]; ring
-  have hT : ∑ i, ∑ j, W i j * tau y i j
-      = ∑ i, ∑ j, W i j * inner ℝ (pentBipyramid i) (y j - pentBipyramid j)
-        + ∑ i, ∑ j, W i j * inner ℝ (y i - pentBipyramid i) (pentBipyramid j)
-        + ∑ i, ∑ j, W i j * inner ℝ (y i - pentBipyramid i) (y j - pentBipyramid j) := by
-    simp only [← Finset.sum_add_distrib]
-    refine Finset.sum_congr rfl fun i _ => Finset.sum_congr rfl fun j _ => ?_
-    rw [tau_expand]; ring
-  rw [sum_W_inner_left (fun j => y j - pentBipyramid j),
-    sum_W_inner_right (fun j => y j - pentBipyramid j)] at hT
-  have hN : ∀ i, inner ℝ (pentBipyramid i) (y i - pentBipyramid i)
-      = -(1 / 2) * ‖y i - pentBipyramid i‖ ^ 2 := inner_P_h hy
-  have hN' : ∀ i, inner ℝ (y i - pentBipyramid i) (pentBipyramid i)
-      = -(1 / 2) * ‖y i - pentBipyramid i‖ ^ 2 := fun i => by rw [real_inner_comm]; exact hN i
-  simp only [hN, hN'] at hT
-  have hM : ∑ j, muP j * (-(1 / 2) * ‖y j - pentBipyramid j‖ ^ 2)
-      = -(1 / 2) * ∑ j, muP j * ‖y j - pentBipyramid j‖ ^ 2 := by
-    rw [Finset.mul_sum]
-    exact Finset.sum_congr rfl fun j _ => by ring
+  have h1 : ∑ i, ∑ j ∈ Finset.Ioi i, W i j * tau y i j * 2 = ∑ i, ∑ j, W i j * tau y i j := by
+    rw [← sum_Ioi_add_swap _ fun i => by simp [W_diag]]; simp only [W_symm, tau_symm, mul_two]
+  simp only [← Finset.sum_mul, tau_expand, mul_add, Finset.sum_add_distrib,
+    sum_W_inner_left fun j => y j - pentBipyramid j, sum_W_inner_right fun j => y j - pentBipyramid j,
+    inner_P_h hy, fun i => (real_inner_comm _ _).trans (inner_P_h hy i), mul_left_comm (muP _),
+    ← Finset.mul_sum] at h1 ⊢
   linarith
 
 /-- **(B3)**: the cubic Bregman lower bound for the energy difference of a unit configuration
@@ -4054,54 +3750,35 @@ lemma check_parts : ∀ i ∈ range 21, 0 ≤ Dq i ∧ (∀ j ∈ range 21, ix i
 theorem qform {c s p q r : ℝ} (hb : InBox c s p q r) (x : ℕ → ℝ) :
     (lam : ℝ) * ∑ i ∈ range 21, x i ^ 2 ≤ ∑ i ∈ range 21, ∑ j ∈ range 21, x i * Hm c s p q r i j * x j := by
   set Δ : ℕ → ℕ → ℝ := fun i j => res i j + (Hm c s p q r i j - M0 i j) with hΔ
-  have hsym : ∀ i ∈ range 21, ∀ j ∈ range 21, Δ i j = Δ j i := by
-    intro i hi j hj
-    obtain ⟨_, h2, _⟩ := check_parts i hi
-    obtain ⟨e1, e2⟩ := h2 j hj
-    have hw : wt i j = wt j i := by
-      unfold wt; rcases eq_or_ne i j with h | h
-      · subst h; rfl
-      · rw [if_neg h, if_neg h.symm]
-    simp only [hΔ, Hm, M0]; rw [e1, e2, hw]
-  have hdd : ∀ i ∈ range 21, ∑ j ∈ range 21, (if i = j then 0 else |Δ i j|) ≤ Δ i i := by
-    intro i hi
-    obtain ⟨_, _, h3⟩ := check_parts i hi
-    have h3' := (Rat.cast_le (K := ℝ)).2 h3
-    push_cast [apply_ite (Rat.cast (K := ℝ))] at h3'
-    have hii := abs_le.1 (Hm_err hb i i)
-    have key : ∀ j ∈ range 21, (if i = j then 0 else |Δ i j|) + (if i = j then (dl i i : ℝ) else 0)
-        ≤ (if i = j then (dl i i : ℝ) else |(res i j : ℝ)| + dl i j) := by
-      intro j _
-      split_ifs with h
+  have hdd := Cert.qform_dd_nonneg 21 Δ x (fun i hi j hj => by
+    obtain ⟨e1, e2⟩ := (check_parts i hi).2.1 j hj
+    simp only [hΔ, Hm, M0, wt, e1, e2, eq_comm]) fun i hi => by
+    have h3 := (Rat.cast_le (K := ℝ)).2 (check_parts i hi).2.2
+    push_cast [apply_ite (Rat.cast (K := ℝ))] at h3
+    have := sum_le_sum fun j (_ : j ∈ range 21) => (by
+      split_ifs
       · simp
-      · simp only [hΔ, add_zero]
-        exact (abs_add_le _ _).trans (by linarith [Hm_err hb i j])
-    have := sum_le_sum key
+      · simp only [hΔ, add_zero]; exact (abs_add_le _ _).trans (by linarith [Hm_err hb i j]) :
+      (if i = j then 0 else |Δ i j|) + (if i = j then (dl i i : ℝ) else 0)
+        ≤ if i = j then (dl i i : ℝ) else |(res i j : ℝ)| + dl i j)
     rw [sum_add_distrib, sum_ite_eq, if_pos hi] at this
-    simp only [hΔ]; linarith
-  have hdd' := Cert.qform_dd_nonneg 21 Δ x hsym hdd
-  have hl : 0 ≤ ∑ k ∈ range 21, (Dq k : ℝ) * (∑ i ∈ range 21, (Lq i k : ℝ) * x i) ^ 2 :=
-    sum_nonneg fun k hk => mul_nonneg (by exact_mod_cast (check_parts k hk).1) (sq_nonneg _)
-  have split : ∑ i ∈ range 21, ∑ j ∈ range 21, x i * Hm c s p q r i j * x j - (lam : ℝ) * ∑ i ∈ range 21, x i ^ 2
-      = ∑ k ∈ range 21, (Dq k : ℝ) * (∑ i ∈ range 21, (Lq i k : ℝ) * x i) ^ 2
-        + ∑ i ∈ range 21, ∑ j ∈ range 21, x i * Δ i j * x j := by
-    have hH : ∀ i j, Hm c s p q r i j = (if i = j then (lam : ℝ) else 0)
-        + ∑ k ∈ range 21, (Lq i k : ℝ) * Dq k * Lq j k + Δ i j := by
-      intro i j
-      simp only [hΔ, res, ldl, Cert.Blk.list_sum_range_map]; push_cast; split_ifs <;> ring
-    have ha : ∑ i ∈ range 21, ∑ j ∈ range 21, x i * (if i = j then (lam : ℝ) else 0) * x j
-        = (lam : ℝ) * ∑ i ∈ range 21, x i ^ 2 := by
-      rw [mul_sum]
-      refine sum_congr rfl fun i hi => ?_
-      simp only [mul_ite, ite_mul, mul_zero, zero_mul, sum_ite_eq, if_pos hi]; ring
-    have hb2 : ∑ i ∈ range 21, ∑ j ∈ range 21, x i * (∑ k ∈ range 21, (Lq i k : ℝ) * Dq k * Lq j k) * x j
-        = ∑ k ∈ range 21, (Dq k : ℝ) * (∑ i ∈ range 21, (Lq i k : ℝ) * x i) ^ 2 := by
-      simp only [sq, mul_sum, sum_mul]
-      conv_lhs => arg 2; ext i; rw [sum_comm]
-      rw [sum_comm]
-      exact sum_congr rfl fun k _ => sum_congr rfl fun i _ => sum_congr rfl fun j _ => by ring
-    simp only [hH, mul_add, add_mul, sum_add_distrib, ha, hb2]; ring
-  linarith
+    simp only [hΔ]; linarith [abs_le.1 (Hm_err hb i i)]
+  have hH : ∀ i j, x i * Hm c s p q r i j * x j = (if i = j then (lam : ℝ) * x i ^ 2 else 0)
+      + x i * (∑ k ∈ range 21, (Lq i k : ℝ) * Dq k * Lq j k) * x j + x i * Δ i j * x j := fun i j => by
+    simp only [hΔ, res, ldl, Cert.Blk.list_sum_range_map]; push_cast
+    split_ifs with h
+    · subst h; ring
+    · ring
+  have hb2 : ∑ i ∈ range 21, ∑ j ∈ range 21, x i * (∑ k ∈ range 21, (Lq i k : ℝ) * Dq k * Lq j k) * x j
+      = ∑ k ∈ range 21, (Dq k : ℝ) * (∑ i ∈ range 21, (Lq i k : ℝ) * x i) ^ 2 := by
+    simp only [sq, mul_sum, sum_mul]
+    conv_lhs => arg 2; ext i; rw [sum_comm]
+    rw [sum_comm]
+    exact sum_congr rfl fun k _ => sum_congr rfl fun i _ => sum_congr rfl fun j _ => by ring
+  rw [mul_sum]
+  simp only [hH, sum_add_distrib, sum_ite_eq, sum_ite_mem, inter_self, hb2]
+  linarith [(sum_nonneg fun k hk => mul_nonneg (by exact_mod_cast (check_parts k hk).1) (sq_nonneg _) :
+    0 ≤ ∑ k ∈ range 21, (Dq k : ℝ) * (∑ i ∈ range 21, (Lq i k : ℝ) * x i) ^ 2)]
 
 end Hess
 
@@ -4232,49 +3909,17 @@ lemma pair_rem {A B t1 q ri rj r : ℝ} (hA : 0 ≤ A) (hB : 0 ≤ B) (hri : 0 �
     (ht1 : |t1| ≤ ri + rj) (hq : |q| ≤ ri * rj) :
     -((3 * A + 101 / 10 * B) * r * (ri ^ 2 + rj ^ 2))
       ≤ 3 / 2 * A * (t1 + q) ^ 2 + 5 / 2 * B * (t1 + q) ^ 3 - 3 / 2 * A * t1 ^ 2 := by
-  have hr0 : 0 ≤ r := hri.trans hri'
-  have hs0 : 0 ≤ ri + rj := add_nonneg hri hrj
-  have e0 : -(2 * r * (ri ^ 2 + rj ^ 2)) ≤ 2 * t1 * q := by
-    have h1 : |t1 * q| ≤ (ri + rj) * (ri * rj) := by
-      rw [abs_mul]; exact mul_le_mul ht1 hq (abs_nonneg _) hs0
-    have h2 : (ri + rj) * (ri * rj) ≤ r * (ri ^ 2 + rj ^ 2) := by
-      nlinarith [mul_nonneg (sub_nonneg.2 hrj') (sq_nonneg ri),
-        mul_nonneg (sub_nonneg.2 hri') (sq_nonneg rj)]
-    have h3 := neg_abs_le (t1 * q)
-    nlinarith
-  have e1 : -(2 * r * (ri ^ 2 + rj ^ 2)) ≤ (t1 + q) ^ 2 - t1 ^ 2 := by
-    nlinarith [sq_nonneg q]
-  have hτ : |t1 + q| ≤ (1 + r) * (ri + rj) := by
-    have h1 : |t1 + q| ≤ |t1| + |q| := abs_add_le _ _
-    have h2 : ri * rj ≤ r * (ri + rj) := by
-      nlinarith [mul_nonneg hri (sub_nonneg.2 hrj'), mul_nonneg hrj hri]
-    nlinarith
-  have hσ : ri + rj ≤ 2 * r := by linarith
-  have h3a : |t1 + q| ^ 3 ≤ ((1 + r) * (ri + rj)) ^ 3 :=
-    pow_le_pow_left₀ (abs_nonneg _) hτ 3
-  have h3b : ((1 + r) * (ri + rj)) ^ 3 ≤ 4 * r * (1 + r) ^ 3 * (ri ^ 2 + rj ^ 2) := by
-    have h1 : (ri + rj) ^ 2 ≤ 2 * (ri ^ 2 + rj ^ 2) := by nlinarith [sq_nonneg (ri - rj)]
-    have h2 : (ri + rj) ^ 3 ≤ 2 * (ri ^ 2 + rj ^ 2) * (2 * r) := by
-      calc (ri + rj) ^ 3 = (ri + rj) ^ 2 * (ri + rj) := by ring
-        _ ≤ (2 * (ri ^ 2 + rj ^ 2)) * (2 * r) :=
-          mul_le_mul h1 hσ hs0 (by positivity)
-    have h4 : 0 ≤ (1 + r) ^ 3 := by positivity
-    calc ((1 + r) * (ri + rj)) ^ 3 = (1 + r) ^ 3 * (ri + rj) ^ 3 := by ring
-      _ ≤ (1 + r) ^ 3 * (2 * (ri ^ 2 + rj ^ 2) * (2 * r)) := mul_le_mul_of_nonneg_left h2 h4
-      _ = 4 * r * (1 + r) ^ 3 * (ri ^ 2 + rj ^ 2) := by ring
-  have h3c : 4 * r * (1 + r) ^ 3 * (ri ^ 2 + rj ^ 2) ≤ 402 / 100 * r * (ri ^ 2 + rj ^ 2) := by
-    have : (1 + r) ^ 3 ≤ 1005 / 1000 := by nlinarith [sq_nonneg r]
-    have h5 : 0 ≤ r * (ri ^ 2 + rj ^ 2) := by positivity
-    nlinarith
-  have e2 : -(402 / 100 * r * (ri ^ 2 + rj ^ 2)) ≤ (t1 + q) ^ 3 := by
-    have := neg_abs_le ((t1 + q) ^ 3)
-    have h6 : |(t1 + q) ^ 3| = |t1 + q| ^ 3 := abs_pow _ _
-    linarith
-  have f1 := mul_le_mul_of_nonneg_left e1 (by positivity : 0 ≤ 3 / 2 * A)
-  have f2 := mul_le_mul_of_nonneg_left e2 (by positivity : 0 ≤ 5 / 2 * B)
-  have h7 : 0 ≤ A * (r * (ri ^ 2 + rj ^ 2)) := by positivity
-  have h8 : 0 ≤ B * (r * (ri ^ 2 + rj ^ 2)) := by positivity
-  nlinarith [f1, f2, h7, h8]
+  have e0 : -(r * (ri ^ 2 + rj ^ 2)) ≤ t1 * q := by
+    nlinarith [neg_abs_le (t1 * q), abs_mul t1 q, mul_le_mul ht1 hq (abs_nonneg _) (by positivity),
+      mul_nonneg (sub_nonneg.2 hrj') (sq_nonneg ri), mul_nonneg (sub_nonneg.2 hri') (sq_nonneg rj)]
+  have hu : |t1 + q| ≤ 1001 / 1000 * (ri + rj) := by
+    linarith [abs_add_le t1 q, mul_le_mul_of_nonneg_right (hri'.trans hr) hrj]
+  have hc : -(4013 / 1000 * r * (ri ^ 2 + rj ^ 2)) ≤ (t1 + q) ^ 3 := by
+    nlinarith [pow_le_pow_left₀ (abs_nonneg _) hu 3, neg_abs_le ((t1 + q) ^ 3), abs_pow (t1 + q) 3,
+      mul_nonneg (add_nonneg hri hrj) (sq_nonneg (ri - rj)),
+      mul_nonneg (by linarith : 0 ≤ 2 * r - ri - rj) (add_nonneg (sq_nonneg ri) (sq_nonneg rj))]
+  nlinarith [mul_le_mul_of_nonneg_left e0 hA, mul_nonneg hA (sq_nonneg q), mul_le_mul_of_nonneg_left hc hB,
+    mul_nonneg hB (mul_nonneg (hri.trans hri') (add_nonneg (sq_nonneg ri) (sq_nonneg rj)))]
 
 /-- The `(i, j)` remainder: the cubic Bregman lower bound term minus its quadratic part. -/
 noncomputable def Dpair (y : Fin 7 → R3) (i j : Fin 7) : ℝ :=
@@ -4322,33 +3967,12 @@ lemma sum_Dpair_lower {y : Fin 7 → R3} {r : ℝ} (hr : r ≤ 1 / 1000)
     (hρ : ∀ i, ‖y i - pentBipyramid i‖ ≤ r) :
     -(28 * r * ∑ i, ‖y i - pentBipyramid i‖ ^ 2)
       ≤ ∑ i, ∑ j ∈ Finset.Ioi i, Dpair y i j := by
-  have hr0 : 0 ≤ r := (norm_nonneg _).trans (hρ 0)
-  rw [sum_Ioi_seven (fun i j => Dpair y i j)]
-  have p01 := Dpair_lower hr hρ (i := 0) (j := 1) (by decide) (pb (by decide))
-  have p02 := Dpair_lower hr hρ (i := 0) (j := 2) (by decide) (pb (by decide))
-  have p03 := Dpair_lower hr hρ (i := 0) (j := 3) (by decide) (pb (by decide))
-  have p04 := Dpair_lower hr hρ (i := 0) (j := 4) (by decide) (pb (by decide))
-  have p05 := Dpair_lower hr hρ (i := 0) (j := 5) (by decide) (pb (by decide))
-  have p06 := Dpair_lower hr hρ (i := 0) (j := 6) (by decide) (pb (by decide))
-  have p12 := Dpair_lower hr hρ (i := 1) (j := 2) (by decide) (pb (by decide))
-  have p13 := Dpair_lower hr hρ (i := 1) (j := 3) (by decide) (pb (by decide))
-  have p14 := Dpair_lower hr hρ (i := 1) (j := 4) (by decide) (pb (by decide))
-  have p15 := Dpair_lower hr hρ (i := 1) (j := 5) (by decide) (pb (by decide))
-  have p16 := Dpair_lower hr hρ (i := 1) (j := 6) (by decide) (pb (by decide))
-  have p23 := Dpair_lower hr hρ (i := 2) (j := 3) (by decide) (pb (by decide))
-  have p24 := Dpair_lower hr hρ (i := 2) (j := 4) (by decide) (pb (by decide))
-  have p25 := Dpair_lower hr hρ (i := 2) (j := 5) (by decide) (pb (by decide))
-  have p26 := Dpair_lower hr hρ (i := 2) (j := 6) (by decide) (pb (by decide))
-  have p34 := Dpair_lower hr hρ (i := 3) (j := 4) (by decide) (pb (by decide))
-  have p35 := Dpair_lower hr hρ (i := 3) (j := 5) (by decide) (pb (by decide))
-  have p36 := Dpair_lower hr hρ (i := 3) (j := 6) (by decide) (pb (by decide))
-  have p45 := Dpair_lower hr hρ (i := 4) (j := 5) (by decide) (pb (by decide))
-  have p46 := Dpair_lower hr hρ (i := 4) (j := 6) (by decide) (pb (by decide))
-  have p56 := Dpair_lower hr hρ (i := 5) (j := 6) (by decide) (pb (by decide))
-  simp only [Fin.sum_univ_seven]
-  have hS : 0 ≤ r * (‖y 0 - pentBipyramid 0‖ ^ 2 + ‖y 1 - pentBipyramid 1‖ ^ 2
-      + ‖y 2 - pentBipyramid 2‖ ^ 2 + ‖y 3 - pentBipyramid 3‖ ^ 2 + ‖y 4 - pentBipyramid 4‖ ^ 2
-      + ‖y 5 - pentBipyramid 5‖ ^ 2 + ‖y 6 - pentBipyramid 6‖ ^ 2) := by positivity
+  have h0 := mul_nonneg ((norm_nonneg _).trans (hρ 0))
+    (Finset.sum_nonneg fun i (_ : i ∈ Finset.univ) => sq_nonneg ‖y i - pentBipyramid i‖)
+  refine le_trans ?_ (Finset.sum_le_sum fun i _ => Finset.sum_le_sum fun j hj =>
+    Dpair_lower hr hρ (Finset.mem_Ioi.1 hj).ne (pb (Finset.mem_Ioi.1 hj).ne))
+  simp only [sum_Ioi_seven]
+  simp only [Fin.sum_univ_seven] at *
   linarith
 
 lemma gaugeG_zero {y : Fin 7 → R3}
@@ -4404,33 +4028,14 @@ theorem local_ineq {y : Fin 7 → R3} (hy : ∀ i, ‖y i‖ = 1) (hinj : Functi
     1 / 1000 * ∑ i, ‖y i - pentBipyramid i‖ ^ 2
       ≤ coulombEnergy y - coulombEnergy pentBipyramid := by
   have hB3 := energy_ge_cubic hy hinj
-  have hX : ∑ i, ∑ j ∈ Finset.Ioi i, (3 / 2 * phi (gP i j) ^ 5 * tau y i j ^ 2
-        + 5 / 2 * phi (gP i j) ^ 7 * tau y i j ^ 3)
-      = ∑ i, ∑ j ∈ Finset.Ioi i, 3 / 2 * phi (gP i j) ^ 5
-          * (inner ℝ (pentBipyramid i) (y j - pentBipyramid j)
-              + inner ℝ (y i - pentBipyramid i) (pentBipyramid j)) ^ 2
-        + ∑ i, ∑ j ∈ Finset.Ioi i, Dpair y i j := by
-    rw [← Finset.sum_add_distrib]
-    refine Finset.sum_congr rfl fun i _ => ?_
-    rw [← Finset.sum_add_distrib]
-    unfold Dpair
-    ring
-  have hmain : Qhess (fun i => y i - pentBipyramid i) + ∑ i, ∑ j ∈ Finset.Ioi i, Dpair y i j
-      ≤ coulombEnergy y - coulombEnergy pentBipyramid := by
-    unfold Qhess
-    linarith [hB3, hX]
-  have hD := sum_Dpair_lower (y := y) (r := 1 / 10000) (by norm_num) hρ
+  have hD := sum_Dpair_lower (r := 1 / 10000) (by norm_num) hρ
   have hH := hessian_lower (fun i => y i - pentBipyramid i)
-  have hP := pen_eq hy hg
-  have hquart : ∑ i, ‖y i - pentBipyramid i‖ ^ 4
-      ≤ (1 / 10000) ^ 2 * ∑ i, ‖y i - pentBipyramid i‖ ^ 2 := by
-    rw [Finset.mul_sum]
-    refine Finset.sum_le_sum fun i _ => ?_
-    have h1 : ‖y i - pentBipyramid i‖ ^ 2 ≤ (1 / 10000) ^ 2 :=
-      pow_le_pow_left₀ (norm_nonneg _) (hρ i) 2
-    nlinarith
-  have hS : 0 ≤ ∑ i, ‖y i - pentBipyramid i‖ ^ 2 := Finset.sum_nonneg fun i _ => sq_nonneg _
-  linarith [hmain, hD, hH, hP, hquart, hS]
+  have hq := Finset.sum_le_sum fun i (_ : i ∈ Finset.univ) => (by
+    nlinarith [pow_le_pow_left₀ (norm_nonneg _) (hρ i) 2] :
+      ‖y i - pentBipyramid i‖ ^ 4 ≤ (1 / 10000) ^ 2 * ‖y i - pentBipyramid i‖ ^ 2)
+  unfold Dpair at hD; unfold Qhess at hH
+  simp only [Finset.sum_sub_distrib, Finset.sum_add_distrib, ← Finset.mul_sum] at hB3 hD hH hq
+  linarith [pen_eq hy hg, Finset.sum_nonneg fun i (_ : i ∈ Finset.univ) => sq_nonneg ‖y i - pentBipyramid i‖]
 
 /-- **Strict local minimality of the pentagonal bipyramid** (perturbative, radius `10⁻⁴` in
 `ℓ²` distance of the labelled configuration): every configuration within that distance has energy
@@ -5949,35 +5554,15 @@ theorem matDot_root_nonneg (m k : ℕ) {n : ℕ} (x : Fin n → R3) (hx : ∀ i,
     (F : Matrix (Fin m) (Fin m) ℝ) (hF : F.PosSemidef) :
     0 ≤ ∑ j, ∑ l, matDot F (Y3 m k ⟪x i, x j⟫ ⟪x i, x l⟫ ⟪x j, x l⟫) := by
   obtain ⟨r, v, hFv⟩ := Matrix.posSemidef_iff_eq_sum_vecMulVec.mp hF
-  have key3 : ∀ X : Fin m → Fin m → Fin r → ℝ,
-      ∑ a, ∑ b, ∑ s, X a b s = ∑ s, ∑ a, ∑ b, X a b s := by
-    intro X
-    calc ∑ a, ∑ b, ∑ s, X a b s = ∑ a, ∑ s, ∑ b, X a b s :=
-          Finset.sum_congr rfl fun a _ => Finset.sum_comm
-      _ = ∑ s, ∑ a, ∑ b, X a b s := Finset.sum_comm
-  have hdot : ∀ M : Matrix (Fin m) (Fin m) ℝ, matDot F M = ∑ s, v s ⬝ᵥ M.mulVec (v s) := by
-    intro M
-    rw [hFv]
-    simp only [matDot, Matrix.sum_apply, Matrix.vecMulVec_apply, star_trivial,
-      dotProduct, Matrix.mulVec, Finset.sum_mul, Finset.mul_sum]
-    rw [key3 (fun a b s => v s a * v s b * M a b)]
-    refine Finset.sum_congr rfl fun s _ => Finset.sum_congr rfl fun a _ =>
-      Finset.sum_congr rfl fun b _ => ?_
-    ring
-  have hswap : ∀ f : Fin n → Fin n → Fin r → ℝ,
-      ∑ j, ∑ l, ∑ s, f j l s = ∑ s, ∑ j, ∑ l, f j l s := by
-    intro f
-    calc ∑ j, ∑ l, ∑ s, f j l s = ∑ j, ∑ s, ∑ l, f j l s :=
-          Finset.sum_congr rfl fun j _ => Finset.sum_comm
-      _ = ∑ s, ∑ j, ∑ l, f j l s := Finset.sum_comm
-  simp only [hdot]
-  rw [hswap]
-  refine Finset.sum_nonneg fun s _ => ?_
   obtain ⟨e₁, e₂, hfr⟩ := exists_tangent_frame (x i) (hx i)
-  exact quad_Y3_nonneg m k (fun j => ⟪x i, x j⟫)
+  convert sum_nonneg (s := univ) fun s _ => quad_Y3_nonneg m k (fun j => ⟪x i, x j⟫)
     (fun j l => ⟪x j, x l⟫) (fun j => ⟪e₁, x j⟫) (fun j => ⟪e₂, x j⟫)
     (fun j => (hfr (x j) (x j) (hx j) (hx j)).1)
-    (fun j l => (hfr (x j) (x l) (hx j) (hx l)).2) (v s)
+    (fun j l => (hfr (x j) (x l) (hx j) (hx l)).2) (v s) using 1
+  simp only [matDot, hFv, Matrix.sum_apply, vecMulVec_apply, star_trivial, dotProduct, mulVec, sum_mul,
+    mul_sum, Finset.sum_comm (α := Fin r)]
+  congr! 5
+  ring
 
 end TypedRoot
 
@@ -6032,34 +5617,8 @@ theorem sum_root_decomp (s : Fin n → ℝ → ℝ → ℝ → ℝ) (τ : Fin n 
     ∑ i, ∑ j, ∑ l, s i (τ i j) (τ i l) (τ j l)
       = dsum (fun i j l => s i (τ i j) (τ i l) (τ j l))
         + ∑ i, ∑ j, (if i ≠ j then mrg s i (τ i j) else 0) + ∑ i, s i 1 1 1 := by
-  set f : Fin n → Fin n → Fin n → ℝ := fun i j l => s i (τ i j) (τ i l) (τ j l) with hf
-  set g : Fin n → Fin n → ℝ := fun i j => mrg s i (τ i j) with hg
-  have hgd : ∀ i, g i i = 3 * s i 1 1 1 := by
-    intro i
-    simp only [hg, mrg, hdiag]
-    ring
-  have hQ : ∑ i, ∑ j, (if i ≠ j then g i j else 0)
-      = ∑ i, ∑ j, g i j - 3 * ∑ i, s i 1 1 1 := by
-    simp only [sum_ne_eq_sub, hgd, Finset.sum_sub_distrib, ← Finset.mul_sum]
-  have hall := sum_all_eq (n := n) f
-  have e1 : ∑ i, ∑ l, f i i l = ∑ i, ∑ j, s i 1 (τ i j) (τ i j) := by
-    simp only [hf, hdiag]
-  have e2 : ∑ i, ∑ j, f i j i = ∑ i, ∑ j, s i (τ i j) 1 (τ i j) := by
-    refine Finset.sum_congr rfl fun i _ => Finset.sum_congr rfl fun j _ => ?_
-    simp only [hf, hdiag, ← hsymm i j]
-  have e3 : ∑ i, ∑ j, f i j j = ∑ i, ∑ j, s i (τ i j) (τ i j) 1 := by
-    simp only [hf, hdiag]
-  have e4 : ∑ i, f i i i = ∑ i, s i 1 1 1 := by
-    simp only [hf, hdiag]
-  have eg : ∑ i, ∑ j, g i j
-      = ∑ i, ∑ j, s i 1 (τ i j) (τ i j) + ∑ i, ∑ j, s i (τ i j) 1 (τ i j)
-        + ∑ i, ∑ j, s i (τ i j) (τ i j) 1 := by
-    simp only [hg, mrg, Finset.sum_add_distrib]
-  have hall' : ∑ i, ∑ j, ∑ l, f i j l
-      = dsum f + ∑ i, ∑ j, g i j - 2 * ∑ i, s i 1 1 1 := by
-    rw [hall, e1, e2, e3, e4, eg]
-    ring
-  rw [hall', hQ]
+  rw [sum_all_eq]
+  simp only [sum_ne_eq_sub, mrg, hdiag, Finset.sum_sub_distrib, Finset.sum_add_distrib, hsymm]
   ring
 
 /-- The sum over ordered distinct triples of a pair share. -/
@@ -6092,37 +5651,23 @@ theorem typed_bound_comb2 (hn : 3 ≤ n) (s : Fin n → ℝ → ℝ → ℝ → 
           + s j (τ j i) (τ j l) (τ i l) + s j (τ j l) (τ j i) (τ l i)
           + s l (τ l i) (τ l j) (τ i j) + s l (τ l j) (τ l i) (τ j i))) :
     e ≤ ∑ i, ∑ j ∈ Finset.Ioi i, H i j (τ i j) := by
-  set f : Fin n → Fin n → Fin n → ℝ := fun i j l => s i (τ i j) (τ i l) (τ j l) with hf
-  set g : Fin n → Fin n → Fin n → ℝ := fun i j l => W i j l (τ i j) with hg
+  set f : Fin n → Fin n → Fin n → ℝ := fun i j l => s i (τ i j) (τ i l) (τ j l)
+  set g : Fin n → Fin n → Fin n → ℝ := fun i j l => W i j l (τ i j)
   have h0 : 0 ≤ dsum (fun i j l => (g i j l + g i l j + g j l i) - c i j l
-      - (f i j l + f i l j + f j i l + f j l i + f l i j + f l j i)) := by
-    refine dsum_nonneg fun i j l hij hil hjl => ?_
-    have := hpt i j l hij hil hjl
-    linarith
+      - (f i j l + f i l j + f j i l + f j l i + f l i j + f l j i)) :=
+    dsum_nonneg fun i j l hij hil hjl => by linarith [hpt i j l hij hil hjl]
   rw [dsum_sub, dsum_sub, dsum_add, dsum_add, dsum_swap23 g, dsum_cyc g, dsum_os6 f, hc] at h0
-  have hg' : dsum g = ∑ i, ∑ j, (if i ≠ j then (H i j (τ i j) - mrg s i (τ i j)
-      - mrg s j (τ i j)) else 0) :=
-    dsum_share W τ (fun i j t => H i j t - mrg s i t - mrg s j t) hW
-  have hdec := sum_root_decomp s τ hsymm hdiag
-  have hHH : ∑ i, ∑ j, (if i ≠ j then H i j (τ i j) else 0)
-      = 2 * ∑ i, ∑ j ∈ Finset.Ioi i, H i j (τ i j) :=
-    sum_ne_eq_two_sum_Ioi (fun i j => H i j (τ i j)) (fun i j => by rw [hH, hsymm])
+  have hg' : dsum g = ∑ i, ∑ j, (if i ≠ j then H i j (τ i j) else 0)
+      - ∑ i, ∑ j, (if i ≠ j then mrg s i (τ i j) else 0)
+      - ∑ i, ∑ j, (if i ≠ j then mrg s j (τ i j) else 0) := by
+    refine (dsum_share W τ _ hW).trans ?_
+    simp only [← Finset.sum_sub_distrib, ite_sub_ite, sub_zero]
   have hM : ∑ i, ∑ j, (if i ≠ j then mrg s j (τ i j) else 0)
       = ∑ i, ∑ j, (if i ≠ j then mrg s i (τ i j) else 0) := by
     rw [Finset.sum_comm]
-    refine Finset.sum_congr rfl fun i _ => Finset.sum_congr rfl fun j _ => ?_
-    by_cases h : i = j
-    · simp [h]
-    · have h' : j ≠ i := fun e => h e.symm
-      rw [if_pos h, if_pos h', hsymm]
-  have hsplit : ∑ i, ∑ j, (if i ≠ j then (H i j (τ i j) - mrg s i (τ i j) - mrg s j (τ i j)) else 0)
-      = ∑ i, ∑ j, (if i ≠ j then H i j (τ i j) else 0)
-        - ∑ i, ∑ j, (if i ≠ j then mrg s i (τ i j) else 0)
-        - ∑ i, ∑ j, (if i ≠ j then mrg s j (τ i j) else 0) := by
-    simp only [← Finset.sum_sub_distrib]
-    refine Finset.sum_congr rfl fun i _ => Finset.sum_congr rfl fun j _ => ?_
-    split_ifs <;> ring
-  linarith
+    exact Finset.sum_congr rfl fun i _ => Finset.sum_congr rfl fun j _ => by simp only [ne_comm, hsymm j i]
+  linarith [sum_root_decomp s τ hsymm hdiag,
+    sum_ne_eq_two_sum_Ioi (fun i j => H i j (τ i j)) (fun i j => by rw [hH, hsymm])]
 
 end TypedComb2
 
@@ -6285,70 +5830,21 @@ theorem hpt7 (SP SR : ℝ → ℝ → ℝ → ℝ)
           + s7 SP SR j (τ j i) (τ j l) (τ i l) + s7 SP SR j (τ j l) (τ j i) (τ l i)
           + s7 SP SR l (τ l i) (τ l j) (τ i j) + s7 SP SR l (τ l j) (τ l i) (τ j i)) := by
   intro i j l hij hil hjl
-  have ha := hsymm j i
-  have hb := hsymm l i
-  have hc := hsymm l j
-  have e1 := hSP (τ i j) (τ i l) (τ j l)
-  have e2 := hSP (τ i j) (τ j l) (τ i l)
-  have e3 := hSP (τ i l) (τ j l) (τ i j)
-  have f1 := hSR (τ i j) (τ i l) (τ j l)
-  have f2 := hSR (τ i j) (τ j l) (τ i l)
-  have f3 := hSR (τ i l) (τ j l) (τ i j)
+  have g1 := hG i j l hij hil hjl
+  have m1 := hmin i j hij
+  have m2 := hmin i l hil
+  have m3 := hmin j l hjl
+  have p := pole_pair alo ahi τ hsymm hcut
+  have := fun hi hj => (p i j hi hj hij).elim (hα _ _ _ g1) m2 m3
+  have := fun hi hl => (p i l hi hl hil).elim (hα _ _ _ (hG i l j hil hij hjl.symm)) m1 (hmin l j hjl.symm)
+  have := fun hj hl => (p j l hj hl hjl).elim (hα _ _ _ (hG j l i hjl hij.symm hil.symm)) (hmin j i hij.symm) (hmin l i hil.symm)
+  have := hβ _ _ _ g1 m1 m2 m3
+  have := hβ _ _ _ (hG j i l hij.symm hjl hil) (hmin j i hij.symm) m3 m2
+  have := hβ _ _ _ (hG l i j hil.symm hjl.symm hij) (hmin l i hil.symm) (hmin l j hjl.symm) m1
+  have := hγ _ _ _ g1 m1 m2 m3
   by_cases hi : isP i <;> by_cases hj : isP j <;> by_cases hl : isP l
   · exact (not_three_poles i j l hij hil hjl hi hj hl).elim
-  · -- poles `i, j`, ring `l`
-    have h := hα (τ i j) (τ i l) (τ j l) (hG i j l hij hil hjl)
-      (pole_pair alo ahi τ hsymm hcut i j hi hj hij).1 (pole_pair alo ahi τ hsymm hcut i j hi hj hij).2
-      (hmin i l hil) (hmin j l hjl)
-    simp only [lamA] at h
-    simp only [W7, c7, s7, hi, hj, hl, ↓reduceIte, ha, hb, hc]
-    linarith
-  · -- poles `i, l`, ring `j`
-    have h := hα (τ i l) (τ i j) (τ j l) (by
-        have := hG i l j hil hij hjl.symm
-        rwa [hsymm l j] at this)
-      (pole_pair alo ahi τ hsymm hcut i l hi hl hil).1 (pole_pair alo ahi τ hsymm hcut i l hi hl hil).2
-      (hmin i j hij) (hmin j l hjl)
-    simp only [lamA] at h
-    simp only [W7, c7, s7, hi, hj, hl, ↓reduceIte, ha, hb, hc]
-    linarith
-  · -- pole `i`, rings `j, l`
-    have h := hβ (τ i j) (τ i l) (τ j l) (hG i j l hij hil hjl)
-      (hmin i j hij) (hmin i l hil) (hmin j l hjl)
-    simp only [lamB] at h
-    simp only [W7, c7, s7, hi, hj, hl, ↓reduceIte, ha, hb, hc]
-    linarith
-  · -- poles `j, l`, ring `i`
-    have h := hα (τ j l) (τ i j) (τ i l) (by
-        have := hG j l i hjl hij.symm hil.symm
-        rwa [hsymm j i, hsymm l i] at this)
-      (pole_pair alo ahi τ hsymm hcut j l hj hl hjl).1 (pole_pair alo ahi τ hsymm hcut j l hj hl hjl).2
-      (hmin i j hij) (hmin i l hil)
-    simp only [lamA] at h
-    simp only [W7, c7, s7, hi, hj, hl, ↓reduceIte, ha, hb, hc]
-    linarith
-  · -- pole `j`, rings `i, l`
-    have h := hβ (τ i j) (τ j l) (τ i l) (by
-        have := hG j i l hij.symm hjl hil
-        rwa [hsymm j i] at this)
-      (hmin i j hij) (hmin j l hjl) (hmin i l hil)
-    simp only [lamB] at h
-    simp only [W7, c7, s7, hi, hj, hl, ↓reduceIte, ha, hb, hc]
-    linarith
-  · -- pole `l`, rings `i, j`
-    have h := hβ (τ i l) (τ j l) (τ i j) (by
-        have := hG l i j hil.symm hjl.symm hij
-        rwa [hsymm l i, hsymm l j] at this)
-      (hmin i l hil) (hmin j l hjl) (hmin i j hij)
-    simp only [lamB] at h
-    simp only [W7, c7, s7, hi, hj, hl, ↓reduceIte, ha, hb, hc]
-    linarith
-  · -- three rings
-    have h := hγ (τ i j) (τ i l) (τ j l) (hG i j l hij hil hjl)
-      (hmin i j hij) (hmin i l hil) (hmin j l hjl)
-    simp only [lamG] at h
-    simp only [W7, c7, s7, hi, hj, hl, ↓reduceIte, ha, hb, hc]
-    linarith
+  all_goals simp only [lamA, lamB, lamG, W7, c7, s7, hi, hj, hl, ↓reduceIte, hsymm, hSP, hSR, true_implies] at *; linarith
 
 /-- A finite family of matrix kernel pairings. -/
 noncomputable def Sk (K : ℕ) (m : ℕ → ℕ) (F : (k : ℕ) → Matrix (Fin (m k)) (Fin (m k)) ℝ)
@@ -6397,24 +5893,13 @@ theorem typed7_bound_lo (K : ℕ) (m : ℕ → ℕ)
       0 ≤ lamG (Sk K m FR) HC ψCb
         ((e + 2 * Sk K m FP 1 1 1 + 5 * Sk K m FR 1 1 1 - 5 * cal - 20 * cbe) / 10) u v t) :
     e ≤ ∑ i, ∑ j ∈ Finset.Ioi i, H7 HA HB HC i j ⟪x i, x j⟫ := by
-  refine typed_bound_comb2 (n := 7) (by norm_num) (s7 (Sk K m FP) (Sk K m FR))
-    (H7 HA HB HC) ?_ e (fun i j => ⟪x i, x j⟫) (fun i j => real_inner_comm _ _)
-    (fun i => by rw [real_inner_self_eq_norm_sq, hx i]; norm_num)
-    (W7 (Sk K m FP) (Sk K m FR) HA HB HC ψBa ψCb)
-    (c7 e (Sk K m FP 1 1 1) (Sk K m FR 1 1 1) cal cbe)
-    (hW7 (Sk K m FP) (Sk K m FR) HA HB HC ψBa ψCb) (hc7 (Sk K m FP) (Sk K m FR) e cal cbe) ?_ ?_
-  · intro i j t
-    by_cases hi : isP i <;> by_cases hj : isP j <;> simp [H7, hi, hj]
-  · refine Finset.sum_nonneg fun i _ => ?_
-    by_cases hi : isP i
-    · simp only [s7, hi, ↓reduceIte]
-      exact Sk_root_nonneg K m FP hFP x hx i
-    · simp only [s7, hi, ↓reduceIte]
-      exact Sk_root_nonneg K m FR hFR x hx i
-  · exact hpt7 (Sk K m FP) (Sk K m FR) (Sk_swap K m FP hFP) (Sk_swap K m FR hFR)
-      HA HB HC ψBa ψCb e cal cbe alo ahi amin (fun i j => ⟪x i, x j⟫)
+  refine typed_bound_comb2 (by norm_num) _ _
+    (fun i j t => by unfold H7; split_ifs <;> rfl) _ _ (fun i j => real_inner_comm _ _)
+    (fun i => by simp [hx]) _ _ (hW7 _ _ _ _ _ _ _) (hc7 ..)
+    (Finset.sum_nonneg fun i _ => by unfold s7; split_ifs <;> exact Sk_root_nonneg _ _ _ ‹_› x hx i)
+    (hpt7 _ _ (Sk_swap K m FP hFP) (Sk_swap K m FR hFR) _ _ _ _ _ _ _ _ _ _ _ _
       (fun i j => real_inner_comm _ _)
-      (fun i j l _ _ _ => gramOK_inner (x i) (x j) (x l) (hx i) (hx j) (hx l)) hmin hcut hα hβ hγ
+      (fun i j l _ _ _ => gramOK_inner _ _ _ (hx i) (hx j) (hx l)) hmin hcut hα hβ hγ)
 
 end Typed7
 
@@ -6683,41 +6168,18 @@ theorem chk4_sound (δ : ℤ) : ∀ (n : ℕ) (b : Box6) (a₁ a₂ a₃ a₄ a�
       det3h (δ : ℝ) a₁ a₃ a₅ < 0 ∨ det3h (δ : ℝ) a₂ a₃ a₆ < 0 ∨ det3h (δ : ℝ) a₄ a₅ a₆ < 0 := by
   intro n
   induction n with
-  | zero => intro b a₁ a₂ a₃ a₄ a₅ a₆ h; simp [chk4] at h
+  | zero => simp [chk4]
   | succ n ih =>
-    intro b a₁ a₂ a₃ a₄ a₅ a₆ h hm
-    obtain ⟨hA, hB, hC, hD, hE, hF⟩ := hm
-    have m4 := idet4_mem δ hA hB hC hD hE hF
-    have t1 := idet3_mem δ hA hB hD
-    have t2 := idet3_mem δ hA hC hE
-    have t3 := idet3_mem δ hB hC hF
-    have t4 := idet3_mem δ hD hE hF
+    intro _ _ _ _ _ _ _ h hm
     simp only [chk4, Bool.or_eq_true, Bool.and_eq_true, decide_eq_true_eq] at h
-    rcases h with ((((((h | h) | h) | h) | h) | h) | h)
-    · left
-      have := m4.1
-      have h' : (0 : ℝ) < ((idet4 δ b.A b.B b.C b.D b.E b.F).1 : ℝ) := by exact_mod_cast h
-      exact ne_of_gt (lt_of_lt_of_le h' this)
-    · left
-      have := m4.2
-      have h' : ((idet4 δ b.A b.B b.C b.D b.E b.F).2 : ℝ) < 0 := by exact_mod_cast h
-      exact ne_of_lt (lt_of_le_of_lt this h')
-    · right; left
-      have h' : ((idet3 δ b.A b.B b.D).2 : ℝ) < 0 := by exact_mod_cast h
-      exact lt_of_le_of_lt t1.2 h'
-    · right; right; left
-      have h' : ((idet3 δ b.A b.C b.E).2 : ℝ) < 0 := by exact_mod_cast h
-      exact lt_of_le_of_lt t2.2 h'
-    · right; right; right; left
-      have h' : ((idet3 δ b.B b.C b.F).2 : ℝ) < 0 := by exact_mod_cast h
-      exact lt_of_le_of_lt t3.2 h'
-    · right; right; right; right
-      have h' : ((idet3 δ b.D b.E b.F).2 : ℝ) < 0 := by exact_mod_cast h
-      exact lt_of_le_of_lt t4.2 h'
-    · obtain ⟨h1, h2⟩ := h
-      rcases Box6.mem_split (widest b) ⟨hA, hB, hC, hD, hE, hF⟩ with hs | hs
-      · exact ih _ _ _ _ _ _ _ h1 hs
-      · exact ih _ _ _ _ _ _ _ h2 hs
+    rcases h with h | ⟨h1, h2⟩
+    · obtain ⟨hA, hB, hC, hD, hE, hF⟩ := hm
+      by_contra! ⟨c, c1, c2, c3, c4⟩
+      rcases h with ((((h | h) | h) | h) | h) | h <;> rify at h <;>
+        linarith [(idet4_mem δ hA hB hC hD hE hF).1, (idet4_mem δ hA hB hC hD hE hF).2,
+          (idet3_mem δ hA hB hD).2, (idet3_mem δ hA hC hE).2, (idet3_mem δ hB hC hF).2,
+          (idet3_mem δ hD hE hF).2]
+    · exact (Box6.mem_split _ hm).elim (ih _ _ _ _ _ _ _ h1) (ih _ _ _ _ _ _ _ h2)
 
 end M6
 end ThomsonN7
@@ -6971,57 +6433,27 @@ theorem ring_pentagon {τ : ℝ} (hτ : τ ≤ 1 / 10) (y : Fin 7 → R3) (hy : 
     ∃ s : Equiv.Perm (Fin 5), ∀ a b : Fin 5, a ≠ b →
       |⟪y a.succ.succ, y b.succ.succ⟫_ℝ -
         ⟪pentBipyramid (pentIdx (s a)), pentBipyramid (pentIdx (s b))⟫_ℝ| ≤ τ := by
-  have hL : triFree (mk10 [col τ y 0 1, col τ y 0 2, col τ y 0 3, col τ y 0 4, col τ y 1 2,
-      col τ y 1 3, col τ y 1 4, col τ y 2 3, col τ y 2 4, col τ y 3 4]) = true := by
-    unfold triFree
-    simp only [Bool.and_eq_true, decide_eq_true_eq]
-    constructor
-    · rintro a b c hab hbc ⟨h1, h2, h3⟩
-      rw [mk10_col τ y a b hab] at h1
-      rw [mk10_col τ y a c (hab.trans hbc)] at h2
-      rw [mk10_col τ y b c hbc] at h3
-      simp only [col, decide_eq_true_eq] at h1 h2 h3
-      exact no_mono_cosB hτ (y 0) _ _ _ (hy _) (hy _) (hy _) (hy _) (h0r _ (ring_ge2 a))
-        (h0r _ (ring_ge2 b)) (h0r _ (ring_ge2 c)) h1 h2 h3
-    · rintro a b c hab hbc ⟨h1, h2, h3⟩
-      rw [mk10_col τ y a b hab] at h1
-      rw [mk10_col τ y a c (hab.trans hbc)] at h2
-      rw [mk10_col τ y b c hbc] at h3
-      simp only [col, decide_eq_false_iff_not] at h1 h2 h3
-      have k1 := (hrr _ _ (ring_ge2 a) (ring_lt a b hab)).resolve_left h1
-      have k2 := (hrr _ _ (ring_ge2 a) (ring_lt a c (hab.trans hbc))).resolve_left h2
-      have k3 := (hrr _ _ (ring_ge2 b) (ring_lt b c hbc)).resolve_left h3
-      exact no_mono_cosA hτ (y 0) _ _ _ (hy _) (hy _) (hy _) (hy _) (h0r _ (ring_ge2 a))
-        (h0r _ (ring_ge2 b)) (h0r _ (ring_ge2 c)) k1 k2 k3
-  have hP := comb5_dec _ _ _ _ _ _ _ _ _ _ hL
-  unfold isPent at hP
-  simp only [decide_eq_true_eq] at hP
-  obtain ⟨s, hs⟩ := hP
-  have hcol : ∀ a b : Fin 5, a < b → col τ y a b = pentc (s a) (s b) :=
-    fun a b hab => (mk10_col τ y a b hab).symm.trans (hs a b hab)
-  refine ⟨s, ?_⟩
-  have key : ∀ a b : Fin 5, a < b →
-      |⟪y a.succ.succ, y b.succ.succ⟫_ℝ -
-        ⟪pentBipyramid (pentIdx (s a)), pentBipyramid (pentIdx (s b))⟫_ℝ| ≤ τ := by
-    intro a b hab
-    have hne : s a ≠ s b := fun h => (ne_of_lt hab) (s.injective h)
-    rw [inner_P_ring _ _ hne]
-    have hc := hcol a b hab
-    by_cases hp : pentc (s a) (s b) = true
-    · simp only [hp, ↓reduceIte]
-      rw [hp] at hc
-      simpa [col] using hc
-    · simp only [hp]
-      have hp' : pentc (s a) (s b) = false := by simpa using hp
-      rw [hp'] at hc
-      simp only [col, decide_eq_false_iff_not] at hc
-      exact (hrr _ _ (ring_ge2 a) (ring_lt a b hab)).resolve_left hc
-  intro a b hab
-  rcases lt_or_gt_of_ne hab with h | h
-  · exact key a b h
-  · have := key b a h
-    rwa [real_inner_comm (y a.succ.succ) (y b.succ.succ),
-      real_inner_comm (pentBipyramid (pentIdx (s a))) (pentBipyramid (pentIdx (s b)))] at this
+  obtain ⟨s, hs⟩ := of_decide_eq_true (comb5_dec (col τ y 0 1) (col τ y 0 2) (col τ y 0 3)
+      (col τ y 0 4) (col τ y 1 2) (col τ y 1 3) (col τ y 1 4) (col τ y 2 3) (col τ y 2 4)
+      (col τ y 3 4) (by
+    simp only [triFree, Bool.and_eq_true, decide_eq_true_eq]
+    constructor <;> rintro a b c hab hbc ⟨h1, h2, h3⟩ <;>
+      simp only [mk10_col τ y _ _ hab, mk10_col τ y _ _ hbc, mk10_col τ y _ _ (hab.trans hbc)] at h1 h2 h3
+    · exact no_mono_cosB hτ (y 0) _ _ _ (hy _) (hy _) (hy _) (hy _) (h0r _ (ring_ge2 a))
+        (h0r _ (ring_ge2 b)) (h0r _ (ring_ge2 c)) (of_decide_eq_true h1) (of_decide_eq_true h2) (of_decide_eq_true h3)
+    · exact no_mono_cosA hτ (y 0) _ _ _ (hy _) (hy _) (hy _) (hy _) (h0r _ (ring_ge2 a))
+        (h0r _ (ring_ge2 b)) (h0r _ (ring_ge2 c))
+        ((hrr _ _ (ring_ge2 a) (ring_lt a b hab)).resolve_left (of_decide_eq_false h1))
+        ((hrr _ _ (ring_ge2 a) (ring_lt a c (hab.trans hbc))).resolve_left (of_decide_eq_false h2))
+        ((hrr _ _ (ring_ge2 b) (ring_lt b c hbc)).resolve_left (of_decide_eq_false h3))))
+  refine ⟨s, fun a b hab => ?_⟩
+  wlog h : a < b generalizing a b
+  · rw [real_inner_comm, real_inner_comm (pentBipyramid _)]
+    exact this b a hab.symm (hab.lt_or_gt.resolve_left h)
+  have hc := (mk10_col τ y a b h).symm.trans (hs a b h)
+  rw [inner_P_ring _ _ (s.injective.ne hab)]
+  cases hp : pentc (s a) (s b) <;> simp [hp, col] at hc ⊢
+  exacts [(hrr _ _ (ring_ge2 a) (ring_lt a b h)).resolve_left (not_le.2 hc), hc]
 
 /-- **Tube rigidity.**  A unit configuration whose pole pair `(0,1)` is within `τ` of antipodal,
 whose pole--ring inner products are within `τ` of `0` and whose ring--ring inner products are
@@ -7036,38 +6468,21 @@ theorem ring_rigid {τ : ℝ} (hτ : τ ≤ 1 / 10) (y : Fin 7 → R3) (hy : ∀
     ∃ σ : Equiv.Perm (Fin 7), ∀ i j, i ≠ j →
       |⟪y i, y j⟫_ℝ - ⟪pentBipyramid (σ i), pentBipyramid (σ j)⟫_ℝ| ≤ τ := by
   obtain ⟨s, hs⟩ := ring_pentagon hτ y hy h0r hrr
-  refine ⟨sigEquiv s, ?_⟩
-  have key : ∀ i j : Fin 7, i < j →
-      |⟪y i, y j⟫_ℝ - ⟪pentBipyramid (sigEquiv s i), pentBipyramid (sigEquiv s j)⟫_ℝ| ≤ τ := by
-    intro i j hij
-    by_cases hi : i.val < 2
-    · by_cases hj : j.val < 2
-      · have hi0 : i = 0 := Fin.ext (by simp; omega)
-        have hj1 : j = 1 := Fin.ext (by simp; omega)
-        subst hi0
-        subst hj1
-        rw [sigEquiv_apply, sigEquiv_apply, sig7_zero, sig7_one, inner_P_pole_pole]
-        simpa using h01
-      · obtain ⟨b, rfl⟩ := exists_ring j (by omega)
-        rw [sigEquiv_apply, sigEquiv_apply, sig7_ring]
-        rcases (by omega : i.val = 0 ∨ i.val = 1) with h | h
-        · have hi0 : i = 0 := Fin.ext (by simpa using h)
-          subst hi0
-          rw [sig7_zero, inner_P_five_ring]
-          simpa using h0r _ (ring_ge2 b)
-        · have hi1 : i = 1 := Fin.ext (by simpa using h)
-          subst hi1
-          rw [sig7_one, inner_P_six_ring]
-          simpa using h1r _ (ring_ge2 b)
-    · obtain ⟨a, rfl⟩ := exists_ring i (by omega)
-      obtain ⟨b, rfl⟩ := exists_ring j (by omega)
-      exact hs a b (fun h => by subst h; exact lt_irrefl _ hij)
-  intro i j hij
-  rcases lt_or_gt_of_ne hij with h | h
-  · exact key i j h
-  · have := key j i h
-    rwa [real_inner_comm (y i) (y j),
-      real_inner_comm (pentBipyramid (sigEquiv s i)) (pentBipyramid (sigEquiv s j))] at this
+  refine ⟨sigEquiv s, fun i j hij => ?_⟩
+  wlog h : i < j generalizing i j
+  · rw [real_inner_comm, real_inner_comm (pentBipyramid _)]
+    exact this j i hij.symm (hij.lt_or_gt.resolve_left h)
+  rw [sigEquiv_apply, sigEquiv_apply]
+  by_cases hj : j.val < 2
+  · obtain ⟨rfl, rfl⟩ : i = 0 ∧ j = 1 := by omega
+    simpa [sig7_zero, sig7_one, inner_P_pole_pole] using h01
+  obtain ⟨b, rfl⟩ := exists_ring j (by omega)
+  by_cases hi : i.val < 2
+  · rcases (by omega : i = 0 ∨ i = 1) with rfl | rfl
+    · simpa [sig7_zero, sig7_ring, inner_P_five_ring] using h0r _ (ring_ge2 b)
+    · simpa [sig7_one, sig7_ring, inner_P_six_ring] using h1r _ (ring_ge2 b)
+  obtain ⟨a, rfl⟩ := exists_ring i (by omega)
+  simpa [sig7_ring] using hs a b (by simpa using h.ne)
 
 end T4
 end ThomsonN7
@@ -7391,64 +6806,18 @@ theorem cap_of_typed_tube {a0 e δ τ : ℝ} (HA HB HC : ℝ → ℝ)
       (∀ i j, i ≠ j → ⟪y 0, y 1⟫_ℝ ≤ ⟪y i, y j⟫_ℝ) → Concl y := by
   intro y hy hle hmin
   by_cases hbig : coulombEnergy pentBipyramid < coulombEnergy y
-  · exact ⟨hbig.le, fun hE => absurd hE hbig.ne'⟩
-  have hlo : -1 ≤ ⟪y 0, y 1⟫_ℝ := neg_one_le_inner_of_unit (hy.1 0) (hy.1 1)
-  have hP := hTB y hy hle hmin
-  have hpf := fun i j hij => pair_facts_tube hy HA HB HC (fun t => |t + 1| ≤ τ)
-    (fun t => |t| ≤ τ) (fun t => |t - c1| ≤ τ ∨ |t - c2| ≤ τ) hmin hlo hle hA hB hC i j hij
-  have hnn : ∀ i j, j ∈ Finset.Ioi i →
-      0 ≤ phi ⟪y i, y j⟫_ℝ - cls3 HA HB HC i j ⟪y i, y j⟫_ℝ := fun i j hj =>
-    sub_nonneg.2 (hpf i j (Finset.mem_Ioi.1 hj)).1
-  have hsplit : ∑ i : Fin 7, ∑ j ∈ Finset.Ioi i,
-      (phi ⟪y i, y j⟫_ℝ - cls3 HA HB HC i j ⟪y i, y j⟫_ℝ)
-      = coulombEnergy y
-        - ∑ i : Fin 7, ∑ j ∈ Finset.Ioi i, cls3 HA HB HC i j ⟪y i, y j⟫_ℝ := by
-    rw [energy_eq_sum hy, ← Finset.sum_sub_distrib]
-    exact Finset.sum_congr rfl fun i _ => Finset.sum_sub_distrib ..
-  have htot : ∑ i : Fin 7, ∑ j ∈ Finset.Ioi i,
-      (phi ⟪y i, y j⟫_ℝ - cls3 HA HB HC i j ⟪y i, y j⟫_ℝ) ≤ δ := by
-    rw [hsplit]; linarith
-  have hsl : ∀ i j, i < j →
-      phi ⟪y i, y j⟫_ℝ - cls3 HA HB HC i j ⟪y i, y j⟫_ℝ ≤ δ := by
-    intro i j hij
-    have h1 : phi ⟪y i, y j⟫_ℝ - cls3 HA HB HC i j ⟪y i, y j⟫_ℝ
-        ≤ ∑ j ∈ Finset.Ioi i, (phi ⟪y i, y j⟫_ℝ - cls3 HA HB HC i j ⟪y i, y j⟫_ℝ) :=
-      Finset.single_le_sum (f := fun j => phi ⟪y i, y j⟫_ℝ - cls3 HA HB HC i j ⟪y i, y j⟫_ℝ)
-        (fun j hj => hnn i j hj) (Finset.mem_Ioi.2 hij)
-    have h2 : ∑ j ∈ Finset.Ioi i, (phi ⟪y i, y j⟫_ℝ - cls3 HA HB HC i j ⟪y i, y j⟫_ℝ)
-        ≤ ∑ i : Fin 7, ∑ j ∈ Finset.Ioi i,
-          (phi ⟪y i, y j⟫_ℝ - cls3 HA HB HC i j ⟪y i, y j⟫_ℝ) :=
-      Finset.single_le_sum
-        (f := fun i => ∑ j ∈ Finset.Ioi i,
-          (phi ⟪y i, y j⟫_ℝ - cls3 HA HB HC i j ⟪y i, y j⟫_ℝ))
-        (fun i _ => Finset.sum_nonneg fun j hj => hnn i j hj) (Finset.mem_univ i)
-    linarith
-  have hcl : ∀ i j, i < j →
-      cls3 (fun t => |t + 1| ≤ τ) (fun t => |t| ≤ τ)
-        (fun t => |t - c1| ≤ τ ∨ |t - c2| ≤ τ) i j ⟪y i, y j⟫_ℝ :=
-    fun i j hij => (hpf i j hij).2 (hsl i j hij)
-  have hAp : |⟪y 0, y 1⟫_ℝ + 1| ≤ τ := by
-    have h := hcl 0 1 (by decide)
-    simpa [cls3] using h
-  have hBp : ∀ k : Fin 7, k.val ≤ 1 → ∀ r : Fin 7, 2 ≤ r.val → k < r → |⟪y k, y r⟫_ℝ| ≤ τ := by
-    intro k hk r hr hkr
-    have h := hcl k r hkr
-    have h1 : ¬ (k.val ≤ 1 ∧ r.val ≤ 1) := by omega
-    have h2 : k.val ≤ 1 ∨ r.val ≤ 1 := Or.inl hk
-    simpa only [cls3, h1, h2, ite_false, ite_true] using h
-  have hCp : ∀ r r' : Fin 7, 2 ≤ r.val → r < r' →
-      |⟪y r, y r'⟫_ℝ - c1| ≤ τ ∨ |⟪y r, y r'⟫_ℝ - c2| ≤ τ := by
-    intro r r' hr hrr'
-    have h := hcl r r' hrr'
-    have hr' : 2 ≤ r'.val := by
-      omega
-    have h1 : ¬ (r.val ≤ 1 ∧ r'.val ≤ 1) := by omega
-    have h2 : ¬ (r.val ≤ 1 ∨ r'.val ≤ 1) := by omega
-    simpa only [cls3, h1, h2, ite_false] using h
-  obtain ⟨σ, hσ⟩ := hrig y hy.1 hAp
-    (fun r hr => hBp 0 (by simp) r hr (by rw [Fin.lt_def]; simp; omega))
-    (fun r hr => hBp 1 (by simp) r hr (by rw [Fin.lt_def]; simp; omega)) hCp
-  exact TwoRegime.local_of_windowA hL hy σ (inWindow_of_close hσ)
+  · exact ⟨hbig.le, (absurd · hbig.ne')⟩
+  have hpf := pair_facts_tube hy _ _ _ _ _ _ hmin
+    (neg_one_le_inner_of_unit (hy.1 0) (hy.1 1)) hle hA hB hC
+  have hnn := fun i j (hj : j ∈ Finset.Ioi i) => sub_nonneg.2 (hpf i j (Finset.mem_Ioi.1 hj)).1
+  have hcl := fun i j (hij : i < j) => (hpf i j hij).2 <|
+    ((Finset.single_le_sum (hnn i) (Finset.mem_Ioi.2 hij)).trans
+      (Finset.single_le_sum (fun i _ => Finset.sum_nonneg (hnn i)) (Finset.mem_univ i))).trans (by
+      simp only [Finset.sum_sub_distrib]; linarith [energy_eq_sum hy, hTB y hy hle hmin])
+  exact TwoRegime.local_of_windowA hL hy _ <| inWindow_of_close (hrig y hy.1 (by simpa [cls3] using hcl 0 1 (by decide))
+    (fun r hr => by simpa [cls3, Nat.not_le.2 hr] using hcl 0 r (by omega))
+    (fun r hr => by simpa [cls3, Nat.not_le.2 hr] using hcl 1 r (by omega))
+    fun r r' hr h => by simpa [cls3, Nat.not_le.2 hr, Nat.not_le.2 (by omega : 1 < r'.val)] using hcl r r' h).choose_spec
 
 end Tube
 
@@ -8100,43 +7469,26 @@ theorem Contact1R.tube (c : Contact1R) (hc : c.check = true) {δ η ν τ : ℝ}
     (hτ : |1 - 2 * ((c.p : ℝ) / c.q) ^ 2 - ν| + 2 * η * (2 * ((c.p : ℝ) / c.q) + η) ≤ τ)
     {t : ℝ} (h1 : -1 ≤ t) (h2 : t < 1) :
     peval c.Q t / c.Dq ≤ phi t ∧ (phi t - peval c.Q t / c.Dq ≤ δ → |t - ν| ≤ τ) := by
-  have hc' := hc
-  simp only [Contact1R.check, Bool.and_eq_true, decide_eq_true_eq] at hc'
-  obtain ⟨⟨⟨⟨⟨⟨⟨hD, hq⟩, hs⟩, hg0n⟩, hg0d⟩, -⟩, -⟩, -⟩ := hc'
   have hy := yOf_pos h2
   have hy1 := yOf_le_one h1 h2
   have hG := c.G_ge hc hy.le hy1
   have hR := c.R_nonneg hc hy.le hy1
   have hfac := c.factor hc (yOf t)
+  simp only [Contact1R.check, Bool.and_eq_true, decide_eq_true_eq] at hc
+  obtain ⟨⟨⟨⟨⟨⟨⟨hD, hq⟩, hs⟩, hg0n⟩, hg0d⟩, -⟩, -⟩, -⟩ := hc
   have hg0 : (0 : ℝ) < (c.g0n : ℝ) / c.g0d := by positivity
-  have hqR : (0 : ℝ) < c.q := by exact_mod_cast hq
   have hsR : (0 : ℝ) < c.s := by exact_mod_cast hs
-  have hLG : ((c.g0n : ℝ) / c.g0d) * (c.q * yOf t - c.p) ^ 2 ≤
-      (c.q * yOf t - c.p) ^ 2 * peval c.G (yOf t) := by
+  have hsF : (c.g0n : ℝ) / c.g0d * (c.q * yOf t - c.p) ^ 2 ≤ c.s * peval (Fpoly c.Q c.Dq) (yOf t) := by
     nlinarith [sq_nonneg (c.q * yOf t - c.p)]
-  have hsF : ((c.g0n : ℝ) / c.g0d) * (c.q * yOf t - c.p) ^ 2 ≤
-      c.s * peval (Fpoly c.Q c.Dq) (yOf t) := by linarith
-  have hF : 0 ≤ peval (Fpoly c.Q c.Dq) (yOf t) := by
-    have h0 : 0 ≤ (c.s : ℝ) * peval (Fpoly c.Q c.Dq) (yOf t) :=
-      le_trans (mul_nonneg hg0.le (sq_nonneg _)) hsF
-    exact nonneg_of_mul_nonneg_right h0 hsR
+  have hF : 0 ≤ peval (Fpoly c.Q c.Dq) (yOf t) :=
+    nonneg_of_mul_nonneg_right ((mul_nonneg hg0.le (sq_nonneg _)).trans hsF) hsR
   refine ⟨H_le_phi_of_F hD h2 hF, fun hs' => ?_⟩
-  have hFle := F_le_of_slack hD h2 hy1 hF hs'
-  have h3 : ((c.g0n : ℝ) / c.g0d) * (c.q * yOf t - c.p) ^ 2 ≤
-      ((c.g0n : ℝ) / c.g0d) * (c.q * η) ^ 2 := by
-    calc ((c.g0n : ℝ) / c.g0d) * (c.q * yOf t - c.p) ^ 2
-        ≤ c.s * peval (Fpoly c.Q c.Dq) (yOf t) := hsF
-      _ ≤ c.s * (2 * c.Dq * δ) := mul_le_mul_of_nonneg_left hFle hsR.le
-      _ = 2 * c.s * c.Dq * δ := by ring
-      _ ≤ _ := hδ
-  have h4 : (c.q * yOf t - c.p) ^ 2 ≤ (c.q * η) ^ 2 := le_of_mul_le_mul_left h3 hg0
-  have h5 : |c.q * yOf t - c.p| ≤ c.q * η := abs_le_of_sq_le_sq h4 (by positivity)
-  have h6 : |yOf t - (c.p : ℝ) / c.q| ≤ η := by
-    have e : (c.q : ℝ) * yOf t - c.p = c.q * (yOf t - (c.p : ℝ) / c.q) := by field_simp
-    rw [e, abs_mul, abs_of_pos hqR] at h5
-    exact le_of_mul_le_mul_left h5 hqR
-  have := abs_t_sub_le hy (by positivity) h6 hτ
-  rwa [one_sub_two_yOf_sq h2.le] at this
+  have h4 : (c.q * yOf t - c.p) ^ 2 ≤ (c.q * η) ^ 2 :=
+    le_of_mul_le_mul_left (by nlinarith [F_le_of_slack hD h2 hy1 hF hs']) hg0
+  have e : (c.p : ℝ) = c.q * (c.p / c.q) := by field_simp
+  rw [← one_sub_two_yOf_sq h2.le]
+  exact abs_t_sub_le hy (by positivity) (abs_le_of_sq_le_sq (le_of_mul_le_mul_left (by rwa [e, ← mul_sub, mul_pow, mul_pow] at h4)
+    (by positivity)) hη) hτ
 
 /-- `hB` (pole--ring class, node `0`) from a relaxed one-node certificate. -/
 theorem Contact1R.hB (c : Contact1R) (hc : c.check = true) {δ η τ : ℝ} (hη : 0 ≤ η)
@@ -8212,52 +7564,31 @@ theorem Contact2R.tube (c : Contact2R) (hc : c.check = true) {δ η ν1 ν2 τ :
     {t : ℝ} (h1 : -1 ≤ t) (h2 : t < 1) :
     peval c.Q t / c.Dq ≤ phi t ∧
       (phi t - peval c.Q t / c.Dq ≤ δ → |t - ν1| ≤ τ ∨ |t - ν2| ≤ τ) := by
-  have hc' := hc
-  simp only [Contact2R.check, Bool.and_eq_true, decide_eq_true_eq] at hc'
-  obtain ⟨⟨⟨⟨⟨⟨⟨⟨hD, hq1⟩, hq2⟩, hs⟩, hg0n⟩, hg0d⟩, -⟩, -⟩, -⟩ := hc'
   have hy := yOf_pos h2
   have hy1 := yOf_le_one h1 h2
   have hG := c.G_ge hc hy.le hy1
   have hR := c.R_nonneg hc hy.le hy1
   have hfac := c.factor hc (yOf t)
+  simp only [Contact2R.check, Bool.and_eq_true, decide_eq_true_eq] at hc
+  obtain ⟨⟨⟨⟨⟨⟨⟨⟨hD, hq1⟩, hq2⟩, hs⟩, hg0n⟩, hg0d⟩, -⟩, -⟩, -⟩ := hc
   have hg0 : (0 : ℝ) < (c.g0n : ℝ) / c.g0d := by positivity
   have hsR : (0 : ℝ) < c.s := by exact_mod_cast hs
-  set A := (c.q1 * yOf t - c.p1) * (c.q2 * yOf t - c.p2) with hA
-  have hLG : ((c.g0n : ℝ) / c.g0d) * A ^ 2 ≤ A ^ 2 * peval c.G (yOf t) := by
-    nlinarith [sq_nonneg A]
-  have hsF : ((c.g0n : ℝ) / c.g0d) * A ^ 2 ≤ c.s * peval (Fpoly c.Q c.Dq) (yOf t) := by
-    linarith
-  have hF : 0 ≤ peval (Fpoly c.Q c.Dq) (yOf t) := by
-    have h0 : 0 ≤ (c.s : ℝ) * peval (Fpoly c.Q c.Dq) (yOf t) :=
-      le_trans (mul_nonneg hg0.le (sq_nonneg _)) hsF
-    exact nonneg_of_mul_nonneg_right h0 hsR
+  have e : ((c.q1 : ℝ) * yOf t - c.p1) * (c.q2 * yOf t - c.p2) =
+      c.q1 * c.q2 * ((yOf t - (c.p1 : ℝ) / c.q1) * (yOf t - (c.p2 : ℝ) / c.q2)) := by field_simp
+  rw [e] at hfac
+  set X := (yOf t - (c.p1 : ℝ) / c.q1) * (yOf t - (c.p2 : ℝ) / c.q2)
+  have hsF : (c.g0n : ℝ) / c.g0d * (c.q1 * c.q2 * X) ^ 2 ≤ c.s * peval (Fpoly c.Q c.Dq) (yOf t) := by
+    nlinarith [sq_nonneg (c.q1 * c.q2 * X)]
+  have hF : 0 ≤ peval (Fpoly c.Q c.Dq) (yOf t) :=
+    nonneg_of_mul_nonneg_right ((mul_nonneg hg0.le (sq_nonneg _)).trans hsF) hsR
   refine ⟨H_le_phi_of_F hD h2 hF, fun hs' => ?_⟩
-  have hFle := F_le_of_slack hD h2 hy1 hF hs'
-  set B := c.q1 * c.q2 * η * ((c.p1 : ℝ) / c.q1 - (c.p2 : ℝ) / c.q2) / 2 with hB
-  have h3 : ((c.g0n : ℝ) / c.g0d) * A ^ 2 ≤ ((c.g0n : ℝ) / c.g0d) * B ^ 2 := by
-    calc ((c.g0n : ℝ) / c.g0d) * A ^ 2 ≤ c.s * peval (Fpoly c.Q c.Dq) (yOf t) := hsF
-      _ ≤ c.s * (2 * c.Dq * δ) := mul_le_mul_of_nonneg_left hFle hsR.le
-      _ = 2 * c.s * c.Dq * δ := by ring
-      _ ≤ _ := hδ
-  have h4 : A ^ 2 ≤ B ^ 2 := le_of_mul_le_mul_left h3 hg0
-  have h5 : |A| ≤ |B| := sq_le_sq.1 h4
-  have hA' : A = c.q1 * c.q2 * ((yOf t - (c.p1 : ℝ) / c.q1) * (yOf t - (c.p2 : ℝ) / c.q2)) := by
-    rw [hA]; field_simp
-  have hB' : |B| = c.q1 * c.q2 * (η * |(c.p1 : ℝ) / c.q1 - (c.p2 : ℝ) / c.q2| / 2) := by
-    rw [hB]
-    have : c.q1 * c.q2 * η * ((c.p1 : ℝ) / c.q1 - (c.p2 : ℝ) / c.q2) / 2 =
-        (c.q1 * c.q2 * η / 2) * ((c.p1 : ℝ) / c.q1 - (c.p2 : ℝ) / c.q2) := by ring
-    rw [this, abs_mul, abs_of_nonneg (by positivity : (0 : ℝ) ≤ c.q1 * c.q2 * η / 2)]
-    ring
-  rw [hA', hB', abs_mul, abs_of_pos (by positivity : (0 : ℝ) < c.q1 * c.q2)] at h5
-  have h6 := le_of_mul_le_mul_left h5 (by positivity : (0 : ℝ) < c.q1 * c.q2)
-  rcases two_node_alt hη h6 with h7 | h7
-  · left
-    have := abs_t_sub_le hy (by positivity) h7 hτ1
-    rwa [one_sub_two_yOf_sq h2.le] at this
-  · right
-    have := abs_t_sub_le hy (by positivity) h7 hτ2
-    rwa [one_sub_two_yOf_sq h2.le] at this
+  have h4 : (c.q1 * c.q2 * X) ^ 2 ≤ (c.q1 * c.q2 * (η * ((c.p1 : ℝ) / c.q1 - (c.p2 : ℝ) / c.q2) / 2)) ^ 2 :=
+    le_of_mul_le_mul_left (by nlinarith [F_le_of_slack hD h2 hy1 hF hs']) hg0
+  simp only [mul_pow] at h4
+  have h6 := sq_le_sq.1 (le_of_mul_le_mul_left h4 (by positivity))
+  rw [abs_div, abs_mul η, abs_of_nonneg hη, abs_two] at h6
+  rw [← one_sub_two_yOf_sq h2.le]
+  exact (two_node_alt hη h6).imp (abs_t_sub_le hy (by positivity) · hτ1) (abs_t_sub_le hy (by positivity) · hτ2)
 
 /-- `hC` (ring--ring class, nodes `c1, c2`) from a relaxed two-node certificate. -/
 theorem Contact2R.hC (c : Contact2R) (hc : c.check = true) {δ η τ ε1 ε2 : ℝ} (hη : 0 ≤ η)
@@ -8990,45 +8321,20 @@ theorem hybChk_sound (fq : ℕ → ℕ → TBlk → ℤ)
     (Fx : Ex) (an : ℤ) (ad : ℕ) (bn : ℤ) (bd : ℕ) (S : List TBlk)
     (h : hybChk fq Fx an ad bn bd S = true) (u v t : ℝ) :
     (idT Fx an ad bn bd S).ev u v t = 0 := by
-  simp only [hybChk, Bool.and_eq_true, decide_eq_true_eq] at h
-  obtain ⟨hwf, hval⟩ := h
-  have hwf' : ∀ s ∈ S, s.wf = true := fun s hs => List.all_eq_true.mp hwf s hs
-  have hdeg : ∀ k, degK k (idT Fx an ad bn bd S) ≤ idDeg k Fx an ad bn bd S := by
-    intro k
-    have h1 : degK k (sumE (S.map (tblkE an ad bn bd)))
-        ≤ (S.map fun s => degK k (gT an ad bn bd s.g) + 2 * mxs k s.z).foldr max 0 :=
-      degK_sumE_map k _ _ S fun s _ => degK_tblkE_le k an ad bn bd s
+  simp only [hybChk, Bool.and_eq_true, decide_eq_true_eq, List.all_eq_true] at h
+  have hdeg (k) : degK k (idT Fx an ad bn bd S) ≤ idDeg k Fx an ad bn bd S := by
     rw [idT, degK_sub, idDeg]
-    exact max_le_max le_rfl h1
-  have hl1 : (idT Fx an ad bn bd S).l1 ≤ idL Fx an ad bn bd S := by
-    have h1 : (sumE (S.map (tblkE an ad bn bd))).l1
-        ≤ (S.map fun s => (gT an ad bn bd s.g).l1 * s.l1B).sum :=
-      l1_sumE_map _ _ S fun s hs => l1_tblkE_le an ad bn bd s (hwf' s hs)
-    rw [idT, l1_sub, idL]
-    omega
-  have hk : (idT Fx an ad bn bd S).kev (hybW Fx an ad bn bd S) (hybD Fx an ad bn bd S) = 0 := by
-    have hmap : (S.map fun s => (tblkE an ad bn bd s).kev (hybW Fx an ad bn bd S)
-          (hybD Fx an ad bn bd S))
-        = S.map fun s => (gT an ad bn bd s.g).kev (hybW Fx an ad bn bd S)
-            (hybD Fx an ad bn bd S) * fq (hybW Fx an ad bn bd S) (hybD Fx an ad bn bd S) s := by
-      refine List.map_congr_left fun s hs => ?_
-      rw [tblkE, Ex.kev, hfq _ _ s (hwf' s hs)]
-    rw [idT, kev_sub, kev_sumE_map, hmap]
-    exact hval
-  refine Ex.ev_eq_zero_of_kev _ (hybW Fx an ad bn bd S) (hybD Fx an ad bn bd S) ?_ ?_ ?_ ?_ hk u v t
-  · rw [← degK_zero]
-    have := hdeg 0
-    simp only [hybD]
-    omega
-  · rw [← degK_one]
-    have := hdeg 1
-    simp only [hybD]
-    omega
-  · rw [← degK_two]
-    have := hdeg 2
-    simp only [hybD]
-    omega
-  · exact lt_of_le_of_lt hl1 Nat.lt_log2_self
+    exact max_le_max le_rfl (degK_sumE_map k _ _ S fun s _ => degK_tblkE_le k an ad bn bd s)
+  have := hdeg 0
+  have := hdeg 1
+  have := hdeg 2
+  have := l1_sumE_map _ _ S fun s hs => l1_tblkE_le an ad bn bd s (h.1 s hs)
+  refine Ex.ev_eq_zero_of_kev _ (hybW Fx an ad bn bd S) (hybD Fx an ad bn bd S) ?_ ?_ ?_
+    (lt_of_le_of_lt (by rw [idT, l1_sub, idL]; omega) Nat.lt_log2_self) (by
+      rw [idT, kev_sub, kev_sumE_map, ← h.2, hybVal]
+      congr 2
+      exact List.map_congr_left fun s hs => by rw [tblkE, Ex.kev, hfq _ _ s (h.1 s hs)]) u v t <;>
+    simp only [hybD, ← degK_zero, ← degK_one, ← degK_two] <;> omega
 
 end Cert
 end ThomsonN7
@@ -10295,19 +9601,11 @@ theorem capSpec_of_contactsR (cf : Cert.TCert) (hm : cf.checkMeta = true)
     (hτ1 : ε1 + 2 * η * (2 * ((cC.p1 : ℝ) / cC.q1) + η) ≤ τ)
     (hτ2 : ε2 + 2 * η * (2 * ((cC.p2 : ℝ) / cC.q2) + η) ≤ τ) :
     CapSpec cf.ahi := by
-  refine capSpec_of_tcert cf hm hA hB hG halo hτ hE ?_ ?_ ?_
-  · intro t h1 h2
-    have := Coerce.ContactA.hA cA hcA hya ha0 ha1 hδA t h1 h2
-    rw [hQA, hDA] at this
-    rwa [Cert.TCert.HAf, polyR_eq_cut]
-  · intro t h1 h2
-    have := Coerce.Contact1R.hB cB hcB hη hδB hτB t h1 h2
-    rw [hQB, hDB] at this
-    rwa [Cert.TCert.HBf, polyR_eq_cut]
-  · intro t h1 h2
-    have := Coerce.Contact2R.hC cC hcC hη hδC hn1 hn2 hτ1 hτ2 t h1 h2
-    rw [hQC, hDC] at this
-    rwa [Cert.TCert.HCf, polyR_eq_cut]
+  refine capSpec_of_tcert cf hm hA hB hG halo hτ hE ?_ ?_ ?_ <;>
+    simp only [Cert.TCert.HAf, Cert.TCert.HBf, Cert.TCert.HCf, polyR_eq_cut]
+  · rw [← hQA, ← hDA]; exact cA.hA hcA hya ha0 ha1 hδA
+  · rw [← hQB, ← hDB]; exact cB.hB hcB hη hδB hτB
+  · rw [← hQC, ← hDC]; exact cC.hC hcC hη hδC hn1 hn2 hτ1 hτ2
 
 end Bridge3
 
