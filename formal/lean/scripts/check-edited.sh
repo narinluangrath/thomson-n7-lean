@@ -16,7 +16,8 @@ sha() { python3 -c 'import hashlib,sys;print(hashlib.sha256(open(sys.argv[1],"rb
 # (steps 1 and 3b skipped: they pin the published file hash and paper line numbers, which edits change by design)
 
 step "2. statement preamble: $SOL lines 1-310 are byte-identical to $CHAL lines 1-310"
-diff <(sed -n 1,310p $SOL) <(sed -n 1,310p $CHAL) && echo "identical"
+diff <(sed -n 1,310p $SOL) <(sed -n 1,310p $CHAL) || { echo "PREAMBLE MISMATCH"; exit 1; }
+echo "identical"
 
 step "3. token scan of $SOL (expect no output between the markers)"
 echo "-- begin"

@@ -63,10 +63,12 @@ lemma norm_sq_cyl (ρ θ h : ℝ) : ‖cyl ρ θ h‖ ^ 2 = ρ ^ 2 + h ^ 2 := by
 lemma int_eq_zero_of_cos_eq_one (m : ℕ) (hm : 0 < m) (d : ℤ) (hd : |d| < m)
     (h : cos (2 * π * d / m) = 1) : d = 0 := by
   obtain ⟨n, hn⟩ := (Real.cos_eq_one_iff _).1 h
+  have hm' : (0 : ℝ) < m := by exact_mod_cast hm
   have h1 : (n : ℝ) * m = d := by
     field_simp at hn
     nlinarith [Real.pi_pos]
   have h2 : n * (m : ℤ) = d := by exact_mod_cast h1
+  have hm2 : (0 : ℤ) < m := by exact_mod_cast hm
   rw [abs_lt] at hd
   rcases lt_trichotomy n 0 with hn0 | hn0 | hn0
   · nlinarith
@@ -226,6 +228,7 @@ lemma pent_dist_pent {i j : Fin 7} (hi : (i : ℕ) < 5) (hj : (j : ℕ) < 5) (hi
       · have : (((j : ℕ) : ℝ) - (i : ℕ)) < 5 := by
           have : (j : ℕ) < 5 := hj
           have : (((j : ℕ) : ℝ)) < 5 := by exact_mod_cast this
+          have : (0 : ℝ) ≤ (i : ℕ) := Nat.cast_nonneg _
           linarith
         nlinarith [Real.pi_pos]
     linarith
@@ -256,13 +259,56 @@ lemma pent_dist_poles : ‖pentBipyramid 5 - pentBipyramid 6‖ = 2 := by
 theorem pentBipyramid_energy :
     coulombEnergy pentBipyramid =
       1 / 2 + 5 * √2 + 5 / (2 * sin (π / 5)) + 5 / (2 * sin (2 * π / 5)) := by
-  rw [coulombEnergy_seven]
-  have h3 : sin (π * 3 / 5) = sin (π * 2 / 5) := by rw [← sin_pi_sub]; ring_nf
-  have h4 : sin (π * 4 / 5) = sin (π / 5) := by rw [← sin_pi_sub]; ring_nf
-  norm_num [pent_dist_pent, pent_dist_north, pent_dist_south, pent_dist_poles, h3, h4,
-    show 2 * π / 5 = π * 2 / 5 by ring]
-  linear_combination (-5 * (√2)⁻¹) * Real.mul_self_sqrt (show (0:ℝ) ≤ 2 by norm_num)
-    + 5 * √2 * inv_mul_cancel₀ (show √2 ≠ 0 by positivity)
+  have hs3 : sin (3 * π / 5) = sin (2 * π / 5) := by
+    rw [← sin_pi_sub]; congr 1; ring
+  have hs4 : sin (4 * π / 5) = sin (π / 5) := by
+    rw [← sin_pi_sub]; congr 1; ring
+  have d01 : ‖pentBipyramid 0 - pentBipyramid 1‖ = 2 * sin (π / 5) := by
+    rw [pent_dist_pent (by decide) (by decide) (by decide)]; norm_num
+  have d12 : ‖pentBipyramid 1 - pentBipyramid 2‖ = 2 * sin (π / 5) := by
+    rw [pent_dist_pent (by decide) (by decide) (by decide)]; norm_num
+  have d23 : ‖pentBipyramid 2 - pentBipyramid 3‖ = 2 * sin (π / 5) := by
+    rw [pent_dist_pent (by decide) (by decide) (by decide)]; norm_num
+  have d34 : ‖pentBipyramid 3 - pentBipyramid 4‖ = 2 * sin (π / 5) := by
+    rw [pent_dist_pent (by decide) (by decide) (by decide)]; norm_num
+  have d04 : ‖pentBipyramid 0 - pentBipyramid 4‖ = 2 * sin (π / 5) := by
+    rw [pent_dist_pent (by decide) (by decide) (by decide)]; norm_num
+    rw [← hs4]; congr 2; ring
+  have d02 : ‖pentBipyramid 0 - pentBipyramid 2‖ = 2 * sin (2 * π / 5) := by
+    rw [pent_dist_pent (by decide) (by decide) (by decide)]; norm_num
+    congr 2; ring
+  have d13 : ‖pentBipyramid 1 - pentBipyramid 3‖ = 2 * sin (2 * π / 5) := by
+    rw [pent_dist_pent (by decide) (by decide) (by decide)]; norm_num
+    congr 2; ring
+  have d24 : ‖pentBipyramid 2 - pentBipyramid 4‖ = 2 * sin (2 * π / 5) := by
+    rw [pent_dist_pent (by decide) (by decide) (by decide)]; norm_num
+    congr 2; ring
+  have d03 : ‖pentBipyramid 0 - pentBipyramid 3‖ = 2 * sin (2 * π / 5) := by
+    rw [pent_dist_pent (by decide) (by decide) (by decide)]; norm_num
+    rw [← hs3]; congr 2; ring
+  have d14 : ‖pentBipyramid 1 - pentBipyramid 4‖ = 2 * sin (2 * π / 5) := by
+    rw [pent_dist_pent (by decide) (by decide) (by decide)]; norm_num
+    rw [← hs3]; congr 2; ring
+  have hp1 : 0 < sin (π / 5) := sin_pos_of_pos_of_lt_pi (by positivity) (by linarith [Real.pi_pos])
+  have hp2 : 0 < sin (2 * π / 5) :=
+    sin_pos_of_pos_of_lt_pi (by positivity) (by linarith [Real.pi_pos])
+  rw [coulombEnergy_seven, d01, d12, d23, d34, d04, d02, d13, d24, d03, d14,
+    pent_dist_north (i := 0) (by decide), pent_dist_north (i := 1) (by decide),
+    pent_dist_north (i := 2) (by decide), pent_dist_north (i := 3) (by decide),
+    pent_dist_north (i := 4) (by decide), pent_dist_south (i := 0) (by decide),
+    pent_dist_south (i := 1) (by decide), pent_dist_south (i := 2) (by decide),
+    pent_dist_south (i := 3) (by decide), pent_dist_south (i := 4) (by decide),
+    pent_dist_poles]
+  have h2 : (0 : ℝ) < √2 := by positivity
+  have h3 : (√2)⁻¹ = √2 / 2 := by
+    field_simp
+    rw [Real.sq_sqrt (by norm_num)]
+  rw [h3]
+  field_simp
+  ring
+
+
+/- BEGIN M0 -/
 namespace Base
 
 open Finset
@@ -353,10 +399,7 @@ lemma sphereConfig_comp {n : ℕ} (g : R3 ≃ₗᵢ[ℝ] R3) (σ : Equiv.Perm (F
 /-! ### Gram values of the pentagonal bipyramid -/
 
 lemma inner_cyl (ρ θ h ρ' θ' h' : ℝ) :
-    inner ℝ (cyl ρ θ h) (cyl ρ' θ' h') = ρ * ρ' * cos (θ - θ') + h * h' := by
-  simp only [cyl, PiLp.inner_apply, Fin.sum_univ_three, cos_sub]
-  simp
-  ring
+    inner ℝ (cyl ρ θ h) (cyl ρ' θ' h') = ρ * ρ' * cos (θ - θ') + h * h' := by (simp [cyl, PiLp.inner_apply, Fin.sum_univ_three, cos_sub]; ring)
 
 /-- `cos (2π/5)`. -/
 noncomputable def c1 : ℝ := (√5 - 1) / 4
@@ -438,10 +481,7 @@ theorem S3_swap12 (m k : ℕ) (u v t : ℝ) : S3 m k u v t = S3 m k v u t := by
   simp only [S3, Y3, Matrix.smul_apply, Matrix.add_apply, Matrix.of_apply, smul_eq_mul]
   ring
 
-theorem S3_swap23 (m k : ℕ) (u v t : ℝ) : S3 m k u v t = S3 m k u t v := by
-  ext i j
-  simp only [S3, Y3, Matrix.smul_apply, Matrix.add_apply, Matrix.of_apply, smul_eq_mul]
-  ring
+theorem S3_swap23 (m k : ℕ) (u v t : ℝ) : S3 m k u v t = S3 m k u t v := by grind [S3, Y3, Matrix.smul_apply, Matrix.add_apply, Matrix.of_apply, smul_eq_mul]
 
 /-! ### Addition theorem (de Moivre) -/
 
@@ -843,9 +883,7 @@ noncomputable def Rk (n m k : ℕ) (u v t : ℝ) : Matrix (Fin m) (Fin m) ℝ :=
     + (1 / ((n : ℝ) - 1)) • S3 m k 1 1 1
 
 theorem matDot_Rk {m : ℕ} (F : Matrix (Fin m) (Fin m) ℝ) (n k : ℕ) (u v t : ℝ) :
-    matDot F (Rk n m k u v t) = Rs (fun u v t => matDot F (S3 m k u v t)) n u v t := by
-  simp only [Rk, Rs, matDot_add, matDot_smul]
-  ring
+    matDot F (Rk n m k u v t) = Rs (fun u v t => matDot F (S3 m k u v t)) n u v t := by grind [Rk, Rs, matDot_add, matDot_smul]
 
 theorem sum_matDot_Rk (K n : ℕ) (m : ℕ → ℕ)
     (F : (k : ℕ) → Matrix (Fin (m k)) (Fin (m k)) ℝ) (u v t : ℝ) :
@@ -1089,10 +1127,7 @@ lemma Wr_zero (u v t : ℝ) : Wr u v t 0 0 0 = 1 := by simp [Wr]
 def Wk (w D a b d : ℕ) : ℤ := ((2 ^ (w * (a + D * b + D * D * d)) : ℕ) : ℤ)
 
 lemma Wk_add (w D a b c a' b' c' : ℕ) :
-    Wk w D (a + a') (b + b') (c + c') = Wk w D a b c * Wk w D a' b' c' := by
-  simp only [Wk]
-  congr 2
-  ring
+    Wk w D (a + a') (b + b') (c + c') = Wk w D a b c * Wk w D a' b' c' := by (simp [Wk]; ring)
 
 lemma Wk_zero (w D : ℕ) : Wk w D 0 0 0 = 1 := by simp [Wk]
 
@@ -1449,23 +1484,13 @@ def ok (r : ℕ) (b : Blk) : Bool :=
     decide (((List.range r).map fun j => if i = j then (0 : ℤ) else |b.del i j|).sum ≤ b.del i i)
 
 lemma list_sum_range_map {M : Type*} [AddCommMonoid M] (f : ℕ → M) (r : ℕ) :
-    ((List.range r).map f).sum = ∑ i ∈ Finset.range r, f i := by
-  induction r with
-  | zero => simp
-  | succ r ih =>
-    rw [List.range_succ, List.map_append, List.sum_append, ih, Finset.sum_range_succ]
-    simp
+    ((List.range r).map f).sum = ∑ i ∈ Finset.range r, f i := by bound
 
 lemma ok_parts {r : ℕ} {b : Blk} (h : b.ok r = true) :
     (∀ i ∈ Finset.range r, 0 ≤ b.dq i) ∧
     (∀ i ∈ Finset.range r, ∀ j ∈ Finset.range r, b.del i j = b.del j i) ∧
     (∀ i ∈ Finset.range r,
-      ∑ j ∈ Finset.range r, (if i = j then (0 : ℤ) else |b.del i j|) ≤ b.del i i) := by
-  simp only [ok, List.all_eq_true, List.mem_range, Bool.and_eq_true, decide_eq_true_eq] at h
-  refine ⟨fun i hi => (h i (Finset.mem_range.1 hi)).1.1, fun i hi j hj => ?_, fun i hi => ?_⟩
-  · exact (h i (Finset.mem_range.1 hi)).1.2 j (Finset.mem_range.1 hj)
-  · have := (h i (Finset.mem_range.1 hi)).2
-    rwa [list_sum_range_map] at this
+      ∑ j ∈ Finset.range r, (if i = j then (0 : ℤ) else |b.del i j|) ≤ b.del i i) := by simp_all [ok, List.all_eq_true, List.mem_range, Bool.and_eq_true, decide_eq_true_eq, list_sum_range_map]
 
 /-- Nonnegativity of the quadratic form of a checked block. -/
 lemma qf_nonneg {r : ℕ} {b : Blk} (h : b.ok r = true) (x : ℕ → ℝ) :
@@ -1711,10 +1736,7 @@ noncomputable def ftotTerm (n : ℕ) (g : ℝ → ℝ → ℝ → ℝ) (u v t : 
 
 lemma ev_ftotE (n K : ℕ) (fs : ℕ → Ex) (u v t : ℝ) :
     (ftotE n K fs).ev u v t
-      = ∑ k ∈ Finset.range K, ftotTerm n (fun a b c => (fs k).ev a b c) u v t := by
-  simp only [ftotE, ev_sumRange, ev_add, ev_smul, ev_sixE, ftotTerm, varVal]
-  push_cast
-  ring
+      = ∑ k ∈ Finset.range K, ftotTerm n (fun a b c => (fs k).ev a b c) u v t := by simp [ftotE, ev_sumRange, ev_add, ev_smul, ev_sixE, ftotTerm, varVal]
 
 lemma key_F {r Lam : ℕ} (b : Blk) (k n : ℕ) (hL : (Lam : ℝ) ≠ 0) (hn : (n : ℝ) - 1 ≠ 0)
     (u v t : ℝ) :
@@ -1956,11 +1978,7 @@ def check (cf : Cert3) : Bool :=
 
 lemma check_parts {cf : Cert3} (h : cf.check = true) :
     3 ≤ cf.n ∧ 0 < cf.Lam ∧ 0 < cf.ad ∧ (∀ k < cf.K, (cf.blk k).ok (cf.m k) = true) ∧
-    (cf.S.all (fun s => s.B.ok s.z.length) = true) ∧ chk cf.idE = true := by
-  simp only [check, Bool.and_eq_true, decide_eq_true_eq] at h
-  obtain ⟨⟨⟨⟨⟨h1, h2⟩, h2'⟩, h3⟩, h4⟩, h5⟩ := h
-  refine ⟨h1, h2, h2', fun k hk => ?_, h4, h5⟩
-  exact (List.all_eq_true.mp h3) k (List.mem_range.mpr hk)
+    (cf.S.all (fun s => s.B.ok s.z.length) = true) ∧ chk cf.idE = true := by simp_all [check, Bool.and_eq_true, decide_eq_true_eq]
 
 end Cert3
 
@@ -3885,13 +3903,9 @@ lemma atoms_inBox : InBox c1 s1 (phi c1) (phi c2) (phi 0) :=
   ⟨c1_box.1, c1_box.2, s1_box.1, s1_box.2, phi_c1_box.1, phi_c1_box.2, phi_c2_box.1,
     phi_c2_box.2, phi_zero_box.1, phi_zero_box.2⟩
 
-lemma phi_c1_le : phi c1 ≤ 8507 / 10000 := by
-  have := phi_c1_box.2
-  linarith
+lemma phi_c1_le : phi c1 ≤ 8507 / 10000 := by nlinarith [phi_c1_box.2]
 
-lemma phi_c2_le : phi c2 ≤ 8507 / 10000 := by
-  have := phi_c2_box.2
-  linarith
+lemma phi_c2_le : phi c2 ≤ 8507 / 10000 := by nlinarith [phi_c2_box.2]
 
 lemma phi_zero_le : phi 0 ≤ 8507 / 10000 := by
   have := phi_zero_box.2
@@ -6383,11 +6397,7 @@ lemma pentIdx_ne_five (a : Fin 5) : pentIdx a ≠ 5 := by
   simp [pentIdx] at this
   omega
 
-lemma pentIdx_ne_six (a : Fin 5) : pentIdx a ≠ 6 := by
-  intro h
-  have := congrArg Fin.val h
-  simp [pentIdx] at this
-  omega
+lemma pentIdx_ne_six (a : Fin 5) : pentIdx a ≠ 6 := by grind [pentIdx]
 
 lemma pentIdx_lt (a : Fin 5) : (pentIdx a).val < 5 := a.isLt
 
@@ -6871,9 +6881,7 @@ lemma H7_eq_cls3 (HA HB HC : ℝ → ℝ) (i j : Fin 7) (t : ℝ) :
 /-- The double sums of `H7` and `cls3` agree. -/
 lemma sum_H7_eq_sum_cls3 (HA HB HC : ℝ → ℝ) (g : Fin 7 → Fin 7 → ℝ) :
     ∑ i : Fin 7, ∑ j ∈ Finset.Ioi i, ThreePoint.H7 HA HB HC i j (g i j) =
-      ∑ i : Fin 7, ∑ j ∈ Finset.Ioi i, cls3 HA HB HC i j (g i j) := by
-  refine Finset.sum_congr rfl fun i _ => Finset.sum_congr rfl fun j _ => ?_
-  exact H7_eq_cls3 HA HB HC i j _
+      ∑ i : Fin 7, ∑ j ∈ Finset.Ioi i, cls3 HA HB HC i j (g i j) := by bound
 
 end Bridge
 
@@ -7199,10 +7207,7 @@ theorem yOf_le_one {t : ℝ} (h1 : -1 ≤ t) (h2 : t < 1) : yOf t ≤ 1 := by
 
 /-- `y ≥ yh` as soon as `t ≤ 1 - 2 yh²`. -/
 theorem le_yOf_of_hi {t yh : ℝ} (h2 : t < 1) (hyh : 0 ≤ yh) (h : t ≤ 1 - 2 * yh ^ 2) :
-    yh ≤ yOf t := by
-  have hy := yOf_pos h2
-  have := yOf_sq h2.le
-  nlinarith
+    yh ≤ yOf t := by nlinarith [yOf_pos h2, yOf_sq h2.le]
 
 theorem phi_eq_yOf (t : ℝ) : phi t = 1 / (2 * yOf t) := by
   unfold phi yOf
@@ -7977,10 +7982,7 @@ def kw (w D : ℕ) (zs : List (ℕ × ℕ × ℕ)) (a : ℕ) : ℤ :=
 
 lemma zval_two (zs : List (ℕ × ℕ × ℕ)) (w D a : ℕ) :
     zval zs ((2 : ℝ) ^ w) ((2 : ℝ) ^ (w * D)) ((2 : ℝ) ^ (w * D * D)) a
-      = ((kw w D zs a : ℤ) : ℝ) := by
-  simp only [zval, kw]
-  push_cast
-  ring
+      = ((kw w D zs a : ℤ) : ℝ) := by (simp [zval, kw]; ring)
 
 /-- The value of the quadratic form `∑_q d_q (l_q · P)² + Pᵀ Δ P` of a block at the weights `P`. -/
 def sqfVal (b : Blk) (n : ℕ) (P : ℕ → ℤ) : ℤ :=
@@ -8110,11 +8112,7 @@ lemma l1_sqF_le (zs : List (ℕ × ℕ × ℕ)) (Md Ml : ℕ) : ∀ (fs : List (
 lemma l1_sqfF_le (b : Blk) (zs : List (ℕ × ℕ × ℕ)) (Md Ml MD : ℕ)
     (hd : ∀ x ∈ b.d, x.natAbs ≤ Md) (hl : ∀ row ∈ b.l, ∀ x ∈ row, x.natAbs ≤ Ml)
     (hD : ∀ row ∈ b.Δ, ∀ x ∈ row, x.natAbs ≤ MD) :
-    (sqfF b zs).l1 ≤ zs.length * (Md * (zs.length * Ml) ^ 2) + zs.length * (zs.length * MD) := by
-  have h1 := l1_sqF_le zs Md Ml zs b.d b.l hd hl
-  have h2 := l1_quadF_le zs MD zs b.Δ hD
-  simp only [sqfF, Ex.l1]
-  omega
+    (sqfF b zs).l1 ≤ zs.length * (Md * (zs.length * Ml) ^ 2) + zs.length * (zs.length * MD) := by (simp [sqfF, Ex.l1]; nlinarith [l1_sqF_le zs Md Ml zs b.d b.l hd hl, l1_quadF_le zs MD zs b.Δ hD])
 
 /-! ### Degrees -/
 
@@ -8235,10 +8233,7 @@ lemma l1_tblkE_le (an : ℤ) (ad : ℕ) (bn : ℤ) (bd : ℕ) (s : TBlk) (h : s.
   exact Nat.mul_le_mul_left _ (s.l1_le h)
 
 lemma degK_tblkE_le (k : ℕ) (an : ℤ) (ad : ℕ) (bn : ℤ) (bd : ℕ) (s : TBlk) :
-    degK k (tblkE an ad bn bd s) ≤ degK k (gT an ad bn bd s.g) + 2 * mxs k s.z := by
-  rw [tblkE, degK]
-  have := degK_sqfF_le k s.B s.z
-  omega
+    degK k (tblkE an ad bn bd s) ≤ degK k (gT an ad bn bd s.g) + 2 * mxs k s.z := by (simp [tblkE, degK]; nlinarith [degK_sqfF_le k s.B s.z])
 
 /-! ## Sums of expressions -/
 
@@ -8452,10 +8447,7 @@ lemma weights_length (w D : ℕ) (z : List (ℕ × ℕ × ℕ)) : (weights w D z
   simp [weights]
 
 lemma getD_weights (w D : ℕ) (zs : List (ℕ × ℕ × ℕ)) (a : ℕ) (ha : a < zs.length) :
-    (((weights w D zs).getD a 0 : ℕ) : ℤ) = kw w D zs a := by
-  simp only [weights, kw, zt]
-  rw [List.getD_eq_getElem _ _ ha, List.getD_eq_getElem _ _ (by simpa using ha)]
-  simp
+    (((weights w D zs).getD a 0 : ℕ) : ℤ) = kw w D zs a := by grind [weights, kw, zt]
 
 /-- The flat evaluator computes the Kronecker value of the quadratic form of a packed block. -/
 lemma fqFlat_spec (w D : ℕ) (s : TBlk) (h : s.wf = true) :
