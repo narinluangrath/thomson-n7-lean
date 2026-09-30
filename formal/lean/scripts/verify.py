@@ -10,7 +10,7 @@ D = os.environ.get('VERIFY_DIR', '/tmp/claude-1000/-home-narin/9df4a59e-5e80-4ae
 name, path = sys.argv[1], sys.argv[2]
 text = open(path).read()
 if not re.search(r'^(?:@\[[^\]]*\]\s*)?(?:private |protected |noncomputable )*(?:theorem|lemma|def)\s+'
-                 + re.escape(name) + r'\b', text, re.M):
+                 + re.escape(name) + r"(?![\w'])", text, re.M):
     sys.exit(f'FAILED: {path} does not contain a declaration named {name} (an empty file would pass the server)')
 rid = uuid.uuid4().hex[:12]
 tmp = os.path.join(D, f'.req-{rid}.json')
