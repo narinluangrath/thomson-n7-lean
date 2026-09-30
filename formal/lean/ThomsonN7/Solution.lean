@@ -4223,130 +4223,6 @@ def Ps : List Poly := [
 
 noncomputable def CP (k : ℕ) (c s p q r : ℝ) : ℝ := (Ps.getD k []).ev c s p q r
 
-noncomputable def Fq (c s p q r : ℝ) (x0 x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 x13 x14 x15 x16 x17 x18 x19 x20 : ℝ) : ℝ :=
-  CP 0 c s p q r * (x0 ^ 2)
-  + CP 1 c s p q r * (x0 * x3)
-  + CP 2 c s p q r * (x0 * x6)
-  + CP 2 c s p q r * (x0 * x9)
-  + CP 1 c s p q r * (x0 * x12)
-  + CP 3 c s p q r * (x0 * x15)
-  + CP 3 c s p q r * (x0 * x18)
-  + CP 4 c s p q r * (x1 ^ 2)
-  + CP 5 c s p q r * (x1 * x3)
-  + CP 6 c s p q r * (x1 * x4)
-  + CP 7 c s p q r * (x1 * x6)
-  + CP 8 c s p q r * (x1 * x7)
-  + CP 9 c s p q r * (x1 * x9)
-  + CP 8 c s p q r * (x1 * x10)
-  + CP 10 c s p q r * (x1 * x12)
-  + CP 6 c s p q r * (x1 * x13)
-  + CP 3 c s p q r * (x1 * x16)
-  + CP 3 c s p q r * (x1 * x19)
-  + CP 11 c s p q r * (x2 ^ 2)
-  + CP 6 c s p q r * (x2 * x5)
-  + CP 8 c s p q r * (x2 * x8)
-  + CP 8 c s p q r * (x2 * x11)
-  + CP 6 c s p q r * (x2 * x14)
-  + CP 12 c s p q r * (x2 * x15)
-  + CP 3 c s p q r * (x2 * x17)
-  + CP 13 c s p q r * (x2 * x18)
-  + CP 3 c s p q r * (x2 * x20)
-  + CP 14 c s p q r * (x3 ^ 2)
-  + CP 15 c s p q r * (x3 * x4)
-  + CP 16 c s p q r * (x3 * x6)
-  + CP 17 c s p q r * (x3 * x7)
-  + CP 18 c s p q r * (x3 * x9)
-  + CP 19 c s p q r * (x3 * x10)
-  + CP 20 c s p q r * (x3 * x12)
-  + CP 21 c s p q r * (x3 * x13)
-  + CP 3 c s p q r * (x3 * x15)
-  + CP 3 c s p q r * (x3 * x18)
-  + CP 22 c s p q r * (x4 ^ 2)
-  + CP 23 c s p q r * (x4 * x6)
-  + CP 24 c s p q r * (x4 * x7)
-  + CP 25 c s p q r * (x4 * x9)
-  + CP 26 c s p q r * (x4 * x10)
-  + CP 27 c s p q r * (x4 * x12)
-  + CP 28 c s p q r * (x4 * x13)
-  + CP 3 c s p q r * (x4 * x16)
-  + CP 3 c s p q r * (x4 * x19)
-  + CP 29 c s p q r * (x5 ^ 2)
-  + CP 30 c s p q r * (x5 * x8)
-  + CP 31 c s p q r * (x5 * x11)
-  + CP 32 c s p q r * (x5 * x14)
-  + CP 33 c s p q r * (x5 * x15)
-  + CP 34 c s p q r * (x5 * x16)
-  + CP 3 c s p q r * (x5 * x17)
-  + CP 35 c s p q r * (x5 * x18)
-  + CP 36 c s p q r * (x5 * x19)
-  + CP 3 c s p q r * (x5 * x20)
-  + CP 37 c s p q r * (x6 ^ 2)
-  + CP 38 c s p q r * (x6 * x7)
-  + CP 39 c s p q r * (x6 * x9)
-  + CP 40 c s p q r * (x6 * x10)
-  + CP 18 c s p q r * (x6 * x12)
-  + CP 41 c s p q r * (x6 * x13)
-  + CP 3 c s p q r * (x6 * x15)
-  + CP 3 c s p q r * (x6 * x18)
-  + CP 42 c s p q r * (x7 ^ 2)
-  + CP 43 c s p q r * (x7 * x9)
-  + CP 44 c s p q r * (x7 * x10)
-  + CP 45 c s p q r * (x7 * x12)
-  + CP 26 c s p q r * (x7 * x13)
-  + CP 3 c s p q r * (x7 * x16)
-  + CP 3 c s p q r * (x7 * x19)
-  + CP 46 c s p q r * (x8 ^ 2)
-  + CP 47 c s p q r * (x8 * x11)
-  + CP 31 c s p q r * (x8 * x14)
-  + CP 48 c s p q r * (x8 * x15)
-  + CP 49 c s p q r * (x8 * x16)
-  + CP 3 c s p q r * (x8 * x17)
-  + CP 50 c s p q r * (x8 * x18)
-  + CP 51 c s p q r * (x8 * x19)
-  + CP 3 c s p q r * (x8 * x20)
-  + CP 37 c s p q r * (x9 ^ 2)
-  + CP 52 c s p q r * (x9 * x10)
-  + CP 16 c s p q r * (x9 * x12)
-  + CP 53 c s p q r * (x9 * x13)
-  + CP 3 c s p q r * (x9 * x15)
-  + CP 3 c s p q r * (x9 * x18)
-  + CP 42 c s p q r * (x10 ^ 2)
-  + CP 54 c s p q r * (x10 * x12)
-  + CP 24 c s p q r * (x10 * x13)
-  + CP 3 c s p q r * (x10 * x16)
-  + CP 3 c s p q r * (x10 * x19)
-  + CP 46 c s p q r * (x11 ^ 2)
-  + CP 30 c s p q r * (x11 * x14)
-  + CP 48 c s p q r * (x11 * x15)
-  + CP 51 c s p q r * (x11 * x16)
-  + CP 3 c s p q r * (x11 * x17)
-  + CP 50 c s p q r * (x11 * x18)
-  + CP 49 c s p q r * (x11 * x19)
-  + CP 3 c s p q r * (x11 * x20)
-  + CP 14 c s p q r * (x12 ^ 2)
-  + CP 55 c s p q r * (x12 * x13)
-  + CP 3 c s p q r * (x12 * x15)
-  + CP 3 c s p q r * (x12 * x18)
-  + CP 22 c s p q r * (x13 ^ 2)
-  + CP 3 c s p q r * (x13 * x16)
-  + CP 3 c s p q r * (x13 * x19)
-  + CP 29 c s p q r * (x14 ^ 2)
-  + CP 33 c s p q r * (x14 * x15)
-  + CP 36 c s p q r * (x14 * x16)
-  + CP 3 c s p q r * (x14 * x17)
-  + CP 35 c s p q r * (x14 * x18)
-  + CP 34 c s p q r * (x14 * x19)
-  + CP 3 c s p q r * (x14 * x20)
-  + CP 56 c s p q r * (x15 ^ 2)
-  + CP 57 c s p q r * (x15 * x18)
-  + CP 58 c s p q r * (x16 ^ 2)
-  + CP 57 c s p q r * (x16 * x19)
-  + CP 59 c s p q r * (x17 ^ 2)
-  + CP 60 c s p q r * (x17 * x20)
-  + CP 56 c s p q r * (x18 ^ 2)
-  + CP 58 c s p q r * (x19 ^ 2)
-  + CP 59 c s p q r * (x20 ^ 2)
-
 /-- The box in which the five atoms live. -/
 def InBox (c s p q r : ℝ) : Prop :=
   (30901699 / 100000000 : ℝ) ≤ c ∧ c ≤ (309017 / 1000000 : ℝ) ∧ (95105651 / 100000000 : ℝ) ≤ s ∧ s ≤ (23776413 / 25000000 : ℝ) ∧ (2126627 / 2500000 : ℝ) ≤ p ∧ p ≤ (85065081 / 100000000 : ℝ) ∧
@@ -4502,29 +4378,6 @@ noncomputable def Pen (h : Fin 7 → R3) : ℝ :=
   ∑ i, inner ℝ (pentBipyramid i) (h i) ^ 2
     + gaugeG h 0 1 ^ 2 + gaugeG h 0 2 ^ 2 + gaugeG h 1 2 ^ 2
 
-lemma expansion (h : Fin 7 → R3) :
-    Qhess h + 2 * Pen h = Fq c1 s1 (phi c1) (phi c2) (phi 0) (h 0 0) (h 0 1) (h 0 2) (h 1 0) (h 1 1) (h 1 2) (h 2 0) (h 2 1) (h 2 2) (h 3 0) (h 3 1) (h 3 2) (h 4 0) (h 4 1) (h 4 2) (h 5 0) (h 5 1) (h 5 2) (h 6 0) (h 6 1) (h 6 2) := by
-  have hc2 : c2 = -1 / 2 - c1 := by unfold c1 c2; ring
-  unfold Qhess Pen gaugeG Fq
-  simp only [sum_Ioi_seven]
-  simp only [Fin.sum_univ_seven, gP_0_1, gP_0_2, gP_0_3, gP_0_4, gP_0_5, gP_0_6,
-    gP_1_2, gP_1_3, gP_1_4, gP_1_5, gP_1_6, gP_2_3, gP_2_4, gP_2_5, gP_2_6, gP_3_4, gP_3_5,
-    gP_3_6, gP_4_5, gP_4_6, gP_5_6, inner_coord, norm_sq_coord,
-    W_0_0, W_0_1, W_0_2, W_0_3, W_0_4, W_0_5, W_0_6, W_1_0, W_1_1, W_1_2, W_1_3, W_1_4, W_1_5, W_1_6,
-    W_2_0, W_2_1, W_2_2, W_2_3, W_2_4, W_2_5, W_2_6, W_3_0, W_3_1, W_3_2, W_3_3, W_3_4, W_3_5, W_3_6,
-    W_4_0, W_4_1, W_4_2, W_4_3, W_4_4, W_4_5, W_4_6, W_5_0, W_5_1, W_5_2, W_5_3, W_5_4, W_5_5, W_5_6,
-    W_6_0, W_6_1, W_6_2, W_6_3, W_6_4, W_6_5, W_6_6,
-    muP_0, muP_1, muP_2, muP_3, muP_4, muP_5, muP_6,
-    pc_0_0, pc_0_1, pc_0_2, pc_1_0, pc_1_1, pc_1_2, pc_2_0, pc_2_1, pc_2_2, pc_3_0, pc_3_1, pc_3_2, pc_4_0, pc_4_1, pc_4_2, pc_5_0, pc_5_1, pc_5_2, pc_6_0, pc_6_1, pc_6_2]
-  simp only [CP, Ps, Poly.ev, mono, List.getD_cons_succ, List.getD_cons_zero, List.map_cons, List.map_nil, List.sum_cons, List.sum_nil]
-  push_cast
-  simp only [phi_neg_one, s2_eq]
-  generalize phi c1 = p
-  generalize phi c2 = q
-  generalize phi 0 = r
-  rw [hc2]
-  ring
-
 end Reg
 end ThomsonN7
 
@@ -4658,15 +4511,6 @@ theorem qform {c s p q r : ℝ} (hb : InBox c s p q r) (x : ℕ → ℝ) :
 end Hess
 
 
-lemma core (c s p q r x0 x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 x13 x14 x15 x16 x17 x18 x19 x20 : ℝ) (hb : InBox c s p q r) :
-    (449 / 100000 : ℝ) * (x0 ^ 2 + x1 ^ 2 + x2 ^ 2 + x3 ^ 2 + x4 ^ 2 + x5 ^ 2 + x6 ^ 2 + x7 ^ 2 + x8 ^ 2 + x9 ^ 2 + x10 ^ 2 + x11 ^ 2 + x12 ^ 2 + x13 ^ 2 + x14 ^ 2 + x15 ^ 2 + x16 ^ 2 + x17 ^ 2 + x18 ^ 2 + x19 ^ 2 + x20 ^ 2) ≤ Fq c s p q r x0 x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 x13 x14 x15 x16 x17 x18 x19 x20 := by
-  have h0 : CP 61 c s p q r = 0 := by simp [CP, Ps, Poly.ev]
-  have h := Hess.qform hb fun i => [x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17, x18, x19, x20].getD i 0
-  simp only [Finset.sum_range_succ, Finset.sum_range_zero, Hess.Hm, Hess.ix, Hess.idx, Hess.wt, Hess.cp,
-    Hess.lam, List.getD_cons_succ, List.getD_cons_zero, h0] at h
-  norm_num at h
-  unfold Fq
-  linear_combination h
 end Reg
 end ThomsonN7
 /- END QCORE2 -/
@@ -5008,12 +4852,27 @@ lemma pen_eq {y : Fin 7 → R3} (hy : ∀ i, ‖y i‖ = 1)
 /-- The penalised Hessian bound `449/100000 ∑ ‖hᵢ‖² ≤ Qhess h + 2 Pen h`, from the certificate. -/
 lemma hessian_lower (h : Fin 7 → R3) :
     449 / 100000 * ∑ i, ‖h i‖ ^ 2 ≤ Qhess h + 2 * Pen h := by
-  rw [expansion h]
-  have hc := core c1 s1 (phi c1) (phi c2) (phi 0) (h 0 0) (h 0 1) (h 0 2) (h 1 0) (h 1 1) (h 1 2)
-    (h 2 0) (h 2 1) (h 2 2) (h 3 0) (h 3 1) (h 3 2) (h 4 0) (h 4 1) (h 4 2) (h 5 0) (h 5 1) (h 5 2)
-    (h 6 0) (h 6 1) (h 6 2) atoms_inBox
-  simp only [Fin.sum_univ_seven, norm_sq_coord]
-  linarith [hc]
+  have hc2 : c2 = -1 / 2 - c1 := by unfold c1 c2; ring
+  have h0 : CP 61 c1 s1 (phi c1) (phi c2) (phi 0) = 0 := by simp [CP, Ps, Poly.ev]
+  have hq := Hess.qform atoms_inBox fun i => [h 0 0, h 0 1, h 0 2, h 1 0, h 1 1, h 1 2, h 2 0, h 2 1, h 2 2, h 3 0, h 3 1, h 3 2, h 4 0, h 4 1, h 4 2, h 5 0, h 5 1, h 5 2, h 6 0, h 6 1, h 6 2].getD i 0
+  simp only [Finset.sum_range_succ, Finset.sum_range_zero, Hess.Hm, Hess.ix, Hess.idx, Hess.wt, Hess.cp,
+    Hess.lam, List.getD_cons_succ, List.getD_cons_zero, h0] at hq
+  norm_num at hq
+  unfold Qhess Pen gaugeG
+  simp only [sum_Ioi_seven]
+  simp only [Fin.sum_univ_seven, gP_0_1, gP_0_2, gP_0_3, gP_0_4, gP_0_5, gP_0_6,
+    gP_1_2, gP_1_3, gP_1_4, gP_1_5, gP_1_6, gP_2_3, gP_2_4, gP_2_5, gP_2_6, gP_3_4, gP_3_5,
+    gP_3_6, gP_4_5, gP_4_6, gP_5_6, inner_coord, norm_sq_coord,
+    W_0_0, W_0_1, W_0_2, W_0_3, W_0_4, W_0_5, W_0_6, W_1_0, W_1_1, W_1_2, W_1_3, W_1_4, W_1_5, W_1_6,
+    W_2_0, W_2_1, W_2_2, W_2_3, W_2_4, W_2_5, W_2_6, W_3_0, W_3_1, W_3_2, W_3_3, W_3_4, W_3_5, W_3_6,
+    W_4_0, W_4_1, W_4_2, W_4_3, W_4_4, W_4_5, W_4_6, W_5_0, W_5_1, W_5_2, W_5_3, W_5_4, W_5_5, W_5_6,
+    W_6_0, W_6_1, W_6_2, W_6_3, W_6_4, W_6_5, W_6_6,
+    muP_0, muP_1, muP_2, muP_3, muP_4, muP_5, muP_6,
+    pc_0_0, pc_0_1, pc_0_2, pc_1_0, pc_1_1, pc_1_2, pc_2_0, pc_2_1, pc_2_2, pc_3_0, pc_3_1, pc_3_2, pc_4_0, pc_4_1, pc_4_2, pc_5_0, pc_5_1, pc_5_2, pc_6_0, pc_6_1, pc_6_2]
+  simp only [CP, Ps, Poly.ev, mono, List.getD_cons_succ, List.getD_cons_zero, List.map_cons, List.map_nil, List.sum_cons, List.sum_nil] at hq ⊢
+  push_cast at hq ⊢
+  simp only [phi_neg_one, s2_eq, hc2] at hq ⊢
+  linear_combination hq
 
 /-- **Local inequality.** For a gauge-fixed unit injective configuration within `10⁻⁴` of the
 bipyramid (coordinatewise in `ℝ³`-norm), the energy excess is at least `10⁻³ ∑ ‖yᵢ - Pᵢ‖²`. -/
