@@ -6,14 +6,14 @@ This branch (`compress`) shrinks `formal/lean/ThomsonN7/Solution.lean` while kee
 
 ## Result
 
-| | Original (`25f2fa5`) | Now (`ba6649c`) | Change |
+| | Original (`25f2fa5`) | Now | Change |
 |---|---:|---:|---:|
-| Words, total | 389,377 | 63,662 | -83.6% |
+| Words, total | 389,377 | 61,394 | -84.2% |
 | Words, data | 227,658 | 17,445 | -92.3% |
-| Words, proof | 154,705 | 44,182 | -71.4% |
-| Lines | 17,895 | 6,613 | -63.0% |
-| Bytes | 8,079,343 | 5,746,337 | -28.9% |
-| Full build | about 12 min | 10 min 49 s | |
+| Words, proof | 154,705 | 42,335 | -72.6% |
+| Lines | 17,895 | 6,348 | -64.5% |
+| Bytes | 8,079,343 | 5,734,529 | -29.0% |
+| Full build | about 12 min | 10 min 59 s | |
 | Peak memory of the build | about 19.3 GB | 15.8 GB | |
 
 **Metric.** Words are whitespace-separated tokens, counted by `formal/lean/scripts/wordcount.py`. A line counts as data
@@ -65,7 +65,7 @@ README and in `verification/`. Those results apply to the original file only. Th
 | Witness-free 1D checks | `18c345f`, `7d2c659` | 114,441 | The one-dimensional slab certificates (sums of squares with stored witnesses) replaced by a Bernstein-basis positivity check that needs no witness (`gen_bern.py`, `gen_cut.py`). |
 | Shared bases | `c1ff8e2`, `538c4cf` | 95,333 | Three monomial bases shared instead of repeated per block; triangular columns stored without their zero prefix (`zpad`). |
 | Case 1 certificate regenerated | `97244d2`, `03ed182` | 86,685 | Re-solved the Case 1 three-point SDP. The blocks for the multipliers 1-u, 1-v, 1-t turned out to be dead weight, so each 35x35 block became 1x1 (`case1_gen.py`, `case1_model.py`, `case1_stats.py`). |
-| Section rewrites | `574553f` to `ba6649c` | 63,662 | One subagent per section rewrote it from scratch against a REPL positioned just before it, keeping every declaration used later with an identical statement. See below. |
+| Section rewrites | `574553f` onward | 61,394 | One subagent per section rewrote it from scratch against a REPL positioned just before it, keeping every declaration used later with an identical statement. See below. |
 
 ### Section rewrites
 
@@ -81,6 +81,9 @@ README and in `verification/`. Those results apply to the original file only. Th
 | Reg (criticality, gauge) | 2,788 | 1,191 | -57% |
 | Asm_Typed7 | 2,416 | 1,308 | -46% |
 | Asm_Coerce | 2,568 | 1,422 | -45% |
+| Asm_SlabHead (1D Bernstein checker) | 1,963 | 1,155 | -41% |
+| Asm_Coerce2 | 1,819 | 1,049 | -42% |
+| Asm_CertF (packed blocks) | 1,737 | 1,047 | -40% |
 
 The rewrites removed intermediate lemma layers and replaced hand proofs with Mathlib facts (for example
 `Matrix.posSemidef_gram` for Gram positivity, and Mathlib reflections for the gauge rotation). They also replaced
@@ -114,9 +117,10 @@ only proofs changed.
 ## Where the words are now
 
 About 17.4k words are certificate data, 14k of them the Case 1 SDP certificate, which is at its minimum size for this
-formulation. The largest proof sections not yet rewritten are Asm_SlabHead (about 1.9k words), Asm_Coerce2 (1.7k),
-Asm_CertF (1.7k) and Case1 (1.6k). Rewrites have cut 40 to 73% per section, so another batch would likely save 2 to
-2.5k words. Golf rounds now save about 1k each.
+formulation. The largest proof regions not yet rewritten are Case1 (about 1.7k words), Asm_Glue1 (1.6k), Base (1.3k),
+Asm_Glue2 (1.1k), M3 (1.1k), TwoRegime (1.0k), Cert1Block (0.9k) and Asm_Glue4 (0.9k). Rewrites have cut 40 to 73%
+per section; the later ones land near 40% because more of what remains is definitions and statements that must stay
+identical.
 
 ## Reproducing
 

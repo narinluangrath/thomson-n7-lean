@@ -23,14 +23,14 @@ The measure is **word count** (whitespace-separated tokens), not characters or l
 joining lines, no squeezing whitespace, no packing numbers into hex. A shorter proof only counts if it passes the full
 build and the checks described in `COMPRESSION.md`.
 
-## Where we are (2026-10-02)
+## Where we are (2026-10-02, updated as work continues)
 
 | | Original | Now | Change |
 |---|---:|---:|---:|
-| Words | 389,377 | 63,662 | -83.6% |
+| Words | 389,377 | 61,394 | -84.2% |
 | Data words (certificate numbers) | 227,658 | 17,445 | -92.3% |
-| Proof words | 154,705 | 44,182 | -71.4% |
-| Lines | 17,895 | 6,613 | -63.0% |
+| Proof words | 154,705 | 42,335 | -72.6% |
+| Lines | 17,895 | 6,348 | -64.5% |
 
 The same two theorems (`thomson_seven` and `thomson_seven_unique`) still verify, with only Lean's standard axioms, and
 the statement still matches the fixed challenge file exactly.
@@ -42,8 +42,8 @@ the statement still matches the fixed challenge file exactly.
   single computed check. Some stored data became computation (a Hessian built from a formula instead of being stored).
 - **Re-solving one of the certificates** (an SDP) with smaller blocks once it turned out some blocks were dead weight.
 - **Rounds of AI "golf"** on the largest proofs.
-- **Rewriting whole sections from scratch,** keeping only what the rest of the proof needs. Ten sections were cut by 40
-  to 73% each. This is now the most productive approach.
+- **Rewriting whole sections from scratch,** keeping only what the rest of the proof needs. Thirteen sections were cut by
+  40 to 73% each. This is now the most productive approach.
 
 The full account, with every phase, what didn't work and the caveats, is in [`COMPRESSION.md`](COMPRESSION.md).
 
@@ -56,7 +56,7 @@ The full account, with every phase, what didn't work and the caveats, is in [`CO
 - **Unchanged:** about 17,000 words are still raw certificate numbers that no human reads, most of them one SDP
   certificate that is already at its minimum size for this formulation.
 
-**Next:** more section rewrites (about 7k proof words are in sections not yet rewritten), and eventually deciding
+**Next:** more section rewrites (about 10k proof words are in regions not yet rewritten), and eventually deciding
 whether the remaining structure is the "essence" or just a smaller pile.
 
 ---
