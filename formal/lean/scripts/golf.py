@@ -12,7 +12,7 @@ import json, os, re, subprocess, sys, time
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SOL = os.path.join(ROOT, 'ThomsonN7/Solution.lean')
-REPL = os.path.expanduser('~/src/repl/.lake/build/bin/repl')
+REPL = os.environ.get('LEAN_REPL', os.path.expanduser('~/src/repl/.lake/build/bin/repl'))
 
 # heartbeat cap for candidates: well under the default 200000 so a winner also builds without set_option
 CAP = 'set_option maxHeartbeats 100000 in\n'

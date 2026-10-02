@@ -6,7 +6,7 @@ keep the exact statement, and is checked in the environment just before the orig
 """
 import json, os, re, sys, time, uuid
 
-D = os.environ.get('VERIFY_DIR', '/tmp/claude-1000/-home-narin/9df4a59e-5e80-4ae0-8dfb-3d40370f24f2/scratchpad/verify')
+D = os.environ.get('VERIFY_DIR', '/tmp/thomson-verify')
 name, path = sys.argv[1], sys.argv[2]
 text = open(path).read()
 if not re.search(r'^(?:@\[[^\]]*\]\s*)?(?:private |protected |noncomputable )*(?:theorem|lemma|def)\s+'
