@@ -346,10 +346,9 @@ lemma two_mul_sum_Ioi {n : ℕ} (F : Fin n → Fin n → ℝ) (hF : ∀ i j, F i
 
 lemma coulombEnergy_comp_perm {n : ℕ} (σ : Equiv.Perm (Fin n)) (x : Fin n → R3) :
     coulombEnergy (fun i => x (σ i)) = coulombEnergy x := by
-  have key (y : Fin n → R3) : 2 * coulombEnergy y = ∑ i, ∑ j, ‖y i - y j‖⁻¹ := by
-    rw [coulombEnergy, two_mul_sum_Ioi _ fun i j => by rw [norm_sub_rev]]
-    congr! 2 with i _ j; aesop
-  linarith [key x, key fun i => x (σ i), (Fintype.sum_congr _ _ fun i => Equiv.sum_comp σ _).trans (Equiv.sum_comp σ fun i => ∑ j, ‖x i - x j‖⁻¹)]
+  rw [← mul_right_inj' two_ne_zero, coulombEnergy, coulombEnergy, two_mul_sum_Ioi, two_mul_sum_Ioi]
+  any_goals simp [norm_sub_rev]
+  exact Fintype.sum_equiv σ _ _ fun _ => Fintype.sum_equiv σ _ _ (by simp)
 
 lemma sphereConfig_comp {n : ℕ} (g : R3 ≃ₗᵢ[ℝ] R3) (σ : Equiv.Perm (Fin n)) {x : Fin n → R3}
     (hx : x ∈ SphereConfig n) : (fun i => g (x (σ i))) ∈ SphereConfig n :=
@@ -426,8 +425,8 @@ theorem exists_tangent_frame (x : R3) (hx : ‖x‖ = 1) :
   refine ⟨b 1, b 2, fun y z hy hz => ?_⟩
   have := b.sum_inner_mul_inner y z
   have := b.sum_inner_mul_inner y y
-  simp only [Fin.sum_univ_three, hb 0 rfl, real_inner_self_eq_norm_sq, hy, real_inner_comm y] at *
-  constructor <;> linarith
+  simp_all [Fin.sum_univ_three, hb 0 rfl, real_inner_comm y]
+  grind
 
 theorem matDot_add {m : ℕ} (F A B : Matrix (Fin m) (Fin m) ℝ) :
     matDot F (A + B) = matDot F A + matDot F B := by
@@ -621,7 +620,7 @@ lemma sum_fm [CommRing R] (g : ℤ × ℕ × ℕ × ℕ → R) (hg : ∀ x y, g 
   induction L <;> simp [*, add_mul, Function.comp_def, List.sum_map_mul_left]
 
 lemma key (e : Ex) (w D : ℕ) : (e.toList.map (|·.1|)).sum = e.l1 ∧ (∀ x ∈ e.toList, x.2.1 ≤ e.dx ∧ x.2.2.1 ≤ e.dy ∧ x.2.2.2 ≤ e.dz) ∧ (∀ u v t, e.ev u v t = (e.toList.map fun x => x.1 * (mon x.2.1 x.2.2.1 x.2.2.2).ev u v t).sum) ∧ e.kev w D = (e.toList.map fun x => x.1 * (2 ^ w) ^ (x.2.1 + D * (x.2.2.1 + D * x.2.2.2))).sum := by
-  induction e <;> simp [toList, l1, sum_fm, abs_mul, dx, dy, dz, ev, kev, pow_add, mul_add, mul_comm, mul_left_comm, mul_assoc, *] <;> first | ring1 | grind
+  induction e <;> simp [toList, l1, sum_fm, dx, dy, dz, ev, kev, pow_add, mul_add, mul_left_comm, mul_assoc, *] <;> first | ring1 | grind
 
 lemma regroup (g : α → ℕ) (a : α → ℤ) {N} {L : List α} (hL : ∀ x ∈ L, g x < N) :
     (∀ k, |(L.map fun x => if g x = k then a x else 0).sum| ≤ (L.map (|a ·|)).sum) ∧
@@ -783,10 +782,9 @@ lemma ok_parts {r : ℕ} {b : Blk} (h : b.ok r = true) :
 
 lemma qf_nonneg {r : ℕ} {b : Blk} (h : b.ok r = true) (x : ℕ → ℝ) :
     0 ≤ ∑ q ∈ Finset.range r, (b.dq q : ℝ) * (∑ a ∈ Finset.range r, (b.lq q a : ℝ) * x a) ^ 2
-      + ∑ a ∈ Finset.range r, ∑ c ∈ Finset.range r, x a * (b.del a c : ℝ) * x c := by
-  have := ok_parts h
-  exact add_nonneg (Finset.sum_nonneg fun q hq => mul_nonneg (mod_cast this.1 q hq) (sq_nonneg _))
-    (qform_dd_nonneg r _ x (mod_cast this.2.1) (mod_cast this.2.2))
+      + ∑ a ∈ Finset.range r, ∑ c ∈ Finset.range r, x a * (b.del a c : ℝ) * x c :=
+  add_nonneg (Finset.sum_nonneg fun q hq => mul_nonneg (mod_cast (ok_parts h).1 q hq) (sq_nonneg _))
+    (qform_dd_nonneg r _ x (mod_cast (ok_parts h).2.1) (mod_cast (ok_parts h).2.2))
 
 end Blk
 
@@ -819,10 +817,9 @@ def sbst (i j k : ℕ) : Ex → Ex
 
 lemma ev_sbst (i j k : ℕ) (e : Ex) (u v t : ℝ) :
     (sbst i j k e).ev u v t = e.ev (varVal u v t i) (varVal u v t j) (varVal u v t k) := by
-  induction e with
-  | mon => rcases i with _ | _ | _ | _ <;> rcases j with _ | _ | _ | _ <;> rcases k with _ | _ | _ | _ <;>
-    simp [sbst, varVal, pow_add, mul_comm, mul_left_comm, mul_assoc]
-  | _ => simp [sbst, *]
+  induction e <;> simp [sbst, *]
+  rcases i with _ | _ | _ | _ <;> rcases j with _ | _ | _ | _ <;> rcases k with _ | _ | _ | _ <;>
+    simp [varVal, pow_add, mul_comm, mul_left_comm, mul_assoc]
 
 def fpE (r : ℕ) (b : Blk) : Ex :=
   add (sumRange r fun q => smulNZ (b.dq q)
@@ -835,11 +832,9 @@ lemma ent_bil (r : ℕ) (b : Blk) (x y : ℕ → ℝ) :
       = ∑ q ∈ Finset.range r, (b.dq q : ℝ) * ((∑ a ∈ Finset.range r, (b.lq q a : ℝ) * x a)
           * ∑ a ∈ Finset.range r, (b.lq q a : ℝ) * y a)
         + ∑ a ∈ Finset.range r, ∑ c ∈ Finset.range r, (b.del a c : ℝ) * (x a * y c) := by
-  simp only [Blk.ent, Blk.list_sum_range_map, Finset.sum_mul_sum]
-  push_cast
-  simp only [Finset.mul_sum, Finset.sum_mul, add_mul, Finset.sum_add_distrib]
-  rw [Finset.sum_comm_cycle]
-  simp only [mul_comm, mul_assoc, mul_left_comm]
+  simp [Blk.ent, Blk.list_sum_range_map, Finset.mul_sum, Finset.sum_mul, add_mul, Finset.sum_add_distrib]
+  rw [← Finset.sum_comm_cycle, Finset.sum_comm]
+  ac_rfl
 
 def fkE (r : ℕ) (b : Blk) (k : ℕ) : Ex := mul (fpE r b) (q3E k)
 
@@ -1020,43 +1015,6 @@ end Cert3Block
 
 /- END CERT3 -/
 
-/- BEGIN M2 -/
-namespace M2
-
-/-! ## The number field `ℚ(√2, 2 sin (π/5))` -/
-
-/-- Elements `∑ x_(4i+j) a^i b^j` of `ℚ(a, b)`, `a = √2`, `b = 2 sin (π/5)`. -/
-structure K8 where
-  x0 : ℚ
-  x1 : ℚ
-  x2 : ℚ
-  x3 : ℚ
-  x4 : ℚ
-  x5 : ℚ
-  x6 : ℚ
-  x7 : ℚ
-  deriving DecidableEq
-
-namespace K8
-
-/-! ### Rational enclosures and positivity of elements of `K8` -/
-
-end K8
-
-namespace K8
-
-end K8
-
-/-! ### Polynomials with `K8` coefficients: dense lists, lowest degree first -/
-
-namespace Pl
-
-end Pl
-
-open Pl
-
-end M2
-/- END M2 -/
 
 /- BEGIN M3 -/
 namespace M3
@@ -1303,7 +1261,7 @@ open Base Reg InnerProductSpace
 lemma isometry_of_gram (u v : Fin 3 → R3) (h : ∀ i j, ⟪u i, u j⟫_ℝ = ⟪v i, v j⟫_ℝ)
     (hv : (Matrix.gram ℝ v).det ≠ 0) : ∃ g : R3 ≃ₗᵢ[ℝ] R3, ∀ i, g (u i) = v i := by
   let b := basisOfLinearIndependentOfCardEqFinrank (Matrix.linearIndependent_of_det_gram_ne_zero
-    ((show Matrix.gram ℝ v = Matrix.gram ℝ u by ext; simp [h]) ▸ hv)) (by simp)
+    (v := u) (by rwa [Matrix.gram, funext₂ h])) (by simp)
   have hf (i) : b.constr ℝ v (u i) = v i := by simpa [b] using b.constr_basis ℝ v i
   refine ⟨((b.constr ℝ v).isometryOfInner fun x y => ?_).toLinearIsometryEquiv (by simp), hf⟩
   rw [← b.sum_repr x, ← b.sum_repr y]
@@ -1442,29 +1400,15 @@ theorem local_of_windowA {lo hi : ℝ → ℝ} (hL : LocalGramA lo hi) {y : Fin 
     (coulombEnergy y = coulombEnergy pentBipyramid →
       ∃ (g : R3 ≃ₗᵢ[ℝ] R3) (σ : Equiv.Perm (Fin 7)), ∀ i, y i = g (pentBipyramid (σ i))) := by
   have := hL _ (sphereConfig_comp (.refl ℝ R3) σ.symm hy) fun i j hij => by
-    simpa using hσ (σ.symm i) (σ.symm j) (σ.symm.injective.ne hij)
+    simpa using hσ _ _ (σ.symm.injective.ne hij)
   simp [coulombEnergy_comp_perm] at this
-  exact ⟨this.1, fun h => let ⟨g, hg⟩ := this.2 h; ⟨g, σ, fun j => by simpa using hg (σ j)⟩⟩
+  exact this.imp_right (· · |>.imp fun g hg => ⟨σ, fun j => by simpa using hg (σ j)⟩)
 
 end TwoRegime
 /- END TR_G4 -/
 /- END TR_G -/
 
-/- BEGIN INTERFACES -/
-namespace Interfaces
 
-open Finset Base
-
-end Interfaces
-/- END INTERFACES -/
-
-/- BEGIN GLUE -/
-namespace Glue
-
-open Finset Base Interfaces
-
-end Glue
-/- END GLUE -/
 
 /- BEGIN TR_F -/
 namespace EPBounds
@@ -1511,9 +1455,8 @@ lemma pent_formula_bounds :
   obtain ⟨h5l, h5u⟩ := sqrt5_bounds
   obtain ⟨hal, hau⟩ := sin_pi_div_five_bounds
   rw [sin_two_pi_div_five]
-  have : 0 < sin (π / 5) := by linarith
   constructor <;> field_simp <;> nlinarith [mul_le_mul hau h5u (sqrt_nonneg 5) (by norm_num),
-    mul_le_mul hal h5l (by norm_num) this.le]
+    mul_le_mul hal h5l (by norm_num) (by linarith)]
 
 /-- **Rational enclosure of the minimum energy**: `14.452977 ≤ E(P) ≤ 14.452978`. -/
 lemma coulombEnergy_pent_bounds :
@@ -1610,23 +1553,19 @@ lemma box : ((30901699/100000000 : ℝ) ≤ c1 ∧ c1 ≤ 309017/1000000) ∧ ((
     s1 ≤ 23776413/25000000) ∧ ((2126627/2500000 : ℝ) ≤ phi c1 ∧ phi c1 ≤ 85065081/100000000) ∧
     ((52573111/100000000 : ℝ) ≤ phi c2 ∧ phi c2 ≤ 6571639/12500000) ∧ (35355339/50000000 : ℝ) ≤ phi 0 ∧
     phi 0 ≤ 70710679/100000000 := by
-  have h1 : (223606796/100000000 : ℝ) ≤ √5 := Real.le_sqrt_of_sq_le (by norm_num)
-  have h2 : √5 ≤ 2236068/1000000 := (Real.sqrt_le_left (by norm_num)).2 (by norm_num)
-  have : 4 * c1 = √5 - 1 := by unfold c1; ring
-  have := s1_sq
-  have := hF4
+  have : (223606796/100000000 : ℝ) ≤ √5 := Real.le_sqrt_of_sq_le (by norm_num)
+  have : √5 ≤ 2236068/1000000 := (Real.sqrt_le_left (by norm_num)).2 (by norm_num)
   have : 0 < s1 := Real.sin_pos_of_pos_of_lt_pi (by positivity) (by linarith [Real.pi_pos])
-  rw [show c2 = -1/2 - c1 by unfold c1 c2; ring]
-  refine ⟨⟨?_, ?_⟩, ⟨?_, ?_⟩, phi_mem ?_ ?_ ?_ ?_, phi_mem ?_ ?_ ?_ ?_, phi_mem ?_ ?_ ?_ ?_⟩ <;> nlinarith
+  refine ⟨⟨?_, ?_⟩, ⟨?_, ?_⟩, ?_, ?_, ?_⟩ <;> (try apply phi_mem) <;> nlinarith [s1_sq, hF4, c1.eq_1, c2.eq_1]
 
 lemma ev_mem (P : Poly) : (lo P : ℝ) ≤ ev P ∧ ev P ≤ hi P := by
   have hm (e : ℕ × ℕ × ℕ × ℕ × ℕ) : (monQ bl e : ℝ) ≤ mono e ∧ mono e ≤ monQ bh e := by
     have := box
     simp_all [monQ, mono, bl, bh]
     bound
-  simp only [lo, hi, ev, Rat.cast_list_sum, List.map_map, Function.comp_def]
+  simp [lo, hi, ev, Function.comp_def]
   constructor <;> refine List.sum_le_sum fun t _ => ?_ <;> obtain ⟨m1, m2⟩ := hm t.2 <;>
-    split_ifs with h <;> rify at h <;> push_cast <;> nlinarith
+    split_ifs with h <;> rify at h <;> nlinarith
 
 theorem qform (x : ℕ → ℝ) :
     449 / 100000 * ∑ i ∈ range 21, x i ^ 2 ≤ ∑ i ∈ range 21, ∑ j ∈ range 21, x i * ev (E i j) * x j := by
@@ -2411,7 +2350,7 @@ theorem case1_margin : ∀ y ∈ SphereConfig 7, (∀ i j, i ≠ j → (-9 / 10 
   refine TwoRegime.margin_of_threePoint_cut (H := Case1Data.cf.Hf) _ _ _ (fun k hk => fmat_psd _ ((check_parts cf_ok).2.2.2.1 k hk))
     (fun u v t hg hu hv ht => (Cert3.hpt_cut Case1Data.cf cf_ok hg (han ▸ hu) (han ▸ hv) (han ▸ ht)).trans ?_)
     fun t h1 h2 => (congrArg (· / _) (SlabOneD.peval_eq_sum _ t)).symm.trans_le (CutOneD.cutH_le_phi h1 h2)
-  rw [show Case1Data.cf.n = 7 from rfl]; gcongr; norm_num [Case1Data.cf]; linarith [EPBounds.coulombEnergy_pent_bounds.2]
+  gcongr <;> norm_num [Case1Data.cf, Nat.choose]; linarith [EPBounds.coulombEnergy_pent_bounds.2]
 
 end Case1
 end ThomsonN7
@@ -2427,10 +2366,6 @@ section Case2Red
 open scoped InnerProductSpace
 open Base
 
-/-- **Reduction of both open Challenge theorems to the near-antipodal case.** Given `case1_margin`
-(all pair inner products `>= -9/10` gives energy `>= E(P) + 3/10000`), `thomson_seven` and
-`thomson_seven_unique` follow from the statement `h2` for configurations that have some pair of
-inner product `< -9/10`. -/
 theorem seven_of_case2
     (h2 : ∀ y ∈ SphereConfig 7, (∃ i j, i ≠ j ∧ ⟪y i, y j⟫_ℝ < -9 / 10) →
       coulombEnergy pentBipyramid ≤ coulombEnergy y ∧
@@ -2439,8 +2374,8 @@ theorem seven_of_case2
     (∀ x ∈ SphereConfig 7, coulombEnergy pentBipyramid ≤ coulombEnergy x) ∧
     (∀ x ∈ SphereConfig 7, coulombEnergy x = coulombEnergy pentBipyramid →
       ∃ (g : R3 ≃ₗᵢ[ℝ] R3) (σ : Equiv.Perm (Fin 7)), ∀ i, x i = g (pentBipyramid (σ i))) := by
-  refine ⟨fun y hy => ?_, fun y hy => ?_⟩ <;> by_cases hc : ∃ i j, i ≠ j ∧ ⟪y i, y j⟫_ℝ < -9 / 10
-  all_goals first | simp_all [h2 y hy hc] | (intros; linarith [case1_margin y hy (by simpa using hc)])
+  constructor <;> intro y hy <;> by_cases hc : ∀ i j, i ≠ j → -9 / 10 ≤ ⟪y i, y j⟫_ℝ
+  all_goals first | (intros; linarith [case1_margin y hy hc]) | simp_all [h2 y hy]
 
 end Case2Red
 
@@ -2640,26 +2575,20 @@ lemma detpos {x y z p q r : ℝ} (hx : |x| ≤ 1 / 10) (hy : |y| ≤ 1 / 10) (hz
   unfold M3.det4h
   nlinarith [h x y hx hy, h x z hx hz, h y z hy hz, abs_le.1 hx, abs_le.1 hy, abs_le.1 hz, mul_nonneg (mul_nonneg hp hq) hr, mul_nonneg hq hr, mul_nonneg hp hr, mul_nonneg hp hq]
 
-/-- Gram entries with `x, y, z` near `0` and `p, q, r` near `cos (2π/5)` give a nonzero
-Gram determinant. -/
 lemma det_ne {τ x y z p q r : ℝ} (hτ : τ ≤ 1 / 10) (hx : |x| ≤ τ) (hy : |y| ≤ τ)
     (hz : |z| ≤ τ) (hp : |p - M3.cosB| ≤ τ) (hq : |q - M3.cosB| ≤ τ) (hr : |r - M3.cosB| ≤ τ) :
     M3.det4h 1 x y z p q r ≠ 0 := by
-  have := Real.sq_sqrt (show (0 : ℝ) ≤ 5 by norm_num)
-  have := Real.sqrt_nonneg 5
   rw [abs_le, M3.cosB] at hp hq hr
-  exact detpos (hx.trans hτ) (hy.trans hτ) (hz.trans hτ) (by nlinarith) (by nlinarith)
-    (by nlinarith) (by nlinarith) (by nlinarith) (by nlinarith)
+  refine detpos (hx.trans hτ) (hy.trans hτ) (hz.trans hτ) ?_ ?_ ?_ ?_ ?_ ?_ <;>
+    linarith [EPBounds.sqrt5_bounds]
 
-/-- No three unit vectors have all mutual inner products near `cos (4π/5)`. -/
 lemma no_cosA {τ : ℝ} (hτ : τ ≤ 1 / 10) {a b c : R3} (ha : ‖a‖ = 1) (hb : ‖b‖ = 1) (hc : ‖c‖ = 1)
     (h1 : |⟪a, b⟫_ℝ - M3.cosA| ≤ τ) (h2 : |⟪a, c⟫_ℝ - M3.cosA| ≤ τ)
     (h3 : |⟪b, c⟫_ℝ - M3.cosA| ≤ τ) : False := by
   have := real_inner_self_nonneg (x := a + b + c)
   simp only [inner_add_left, inner_add_right, real_inner_self_eq_norm_sq, ha, hb, hc,
-    real_inner_comm a b, real_inner_comm a c, real_inner_comm b c] at this
-  rw [abs_le, M3.cosA] at *
-  nlinarith [Real.sq_sqrt (show (0 : ℝ) ≤ 5 by norm_num), Real.sqrt_nonneg 5]
+    real_inner_comm, abs_le, M3.cosA] at *
+  linarith [EPBounds.sqrt5_bounds.1]
 
 /-- contact type (index into `M3.val`) of a pair `i < j` with poles `0, 1` and ring colouring `l` -/
 def T (l : List Bool) (i j : Fin 7) : Fin 4 :=
@@ -2852,47 +2781,6 @@ end ThomsonN7
 
 end Asm_Glue2b
 
-section Asm_Glue3
-/-!
-# Glue3: the typed three-point bound (`Typed7`) feeds the cap / slab glue (`Glue1`, `Glue2`)
-
-`ThreePoint.typed7_bound` bounds `e` by the typed double sum `∑ i<j, H7 HA HB HC i j ⟪x i, x j⟫`.
-Here we identify `H7` with the class selector `Glue.cls3` (poles are the indices `0, 1`) and
-restate the bound in exactly the shape needed by `Glue.cap_of_typed`, `Glue.cap_of_typed_tube`
-and `Glue.slab_of_typed`.
--/
-
-namespace ThomsonN7
-namespace Glue
-
-section Bridge
-
-open scoped InnerProductSpace
-open Base
-
-/-- The typed selector `H7` of `Typed7` is the class selector `cls3` of `Glue1`. -/
-lemma H7_eq_cls3 (HA HB HC : ℝ → ℝ) (i j : Fin 7) (t : ℝ) :
-    ThreePoint.H7 HA HB HC i j t = cls3 HA HB HC i j t := by
-  fin_cases i, j <;> rfl
-
-/-- The double sums of `H7` and `cls3` agree. -/
-lemma sum_H7_eq_sum_cls3 (HA HB HC : ℝ → ℝ) (g : Fin 7 → Fin 7 → ℝ) :
-    ∑ i : Fin 7, ∑ j ∈ Finset.Ioi i, ThreePoint.H7 HA HB HC i j (g i j) =
-      ∑ i : Fin 7, ∑ j ∈ Finset.Ioi i, cls3 HA HB HC i j (g i j) := by bound
-
-end Bridge
-
-section Assembly
-
-open scoped InnerProductSpace
-open Base
-
-end Assembly
-
-end Glue
-end ThomsonN7
-
-end Asm_Glue3
 
 section Asm_Glue4
 
@@ -3425,9 +3313,8 @@ lemma unpack_le {B : ℕ} (hB : 0 < B) (n m x : ℕ) : (∀ v ∈ unpackI B n x,
     · simp
     · exact ⟨by omega, by apply_assumption⟩
   refine ⟨hI n x, ?_⟩
-  induction m generalizing x <;> simp only [unpackM, List.forall_mem_cons]
-  · simp
-  · exact ⟨hI _ _, by apply_assumption⟩
+  induction m generalizing x <;> simp [unpackM]
+  exact ⟨hI _ _, by apply_assumption⟩
 
 def proj (k : ℕ) (τ : ℕ × ℕ × ℕ) : ℕ := if k = 0 then τ.1 else if k = 1 then τ.2.1 else τ.2.2
 
@@ -3482,11 +3369,11 @@ lemma sumE_map {α : Type*} (k w D : ℕ) (f : α → Ex) (b d : α → ℕ) : �
     (∀ x ∈ l, (f x).l1 ≤ b x ∧ degK k (f x) ≤ d x) → (sumE (l.map f)).l1 ≤ (l.map b).sum
       ∧ degK k (sumE (l.map f)) ≤ (l.map d).foldr max 0
       ∧ (sumE (l.map f)).kev w D = (l.map fun x => (f x).kev w D).sum
-  | [], _ => by simp [sumE, Ex.l1, degK, kev]
+  | [], _ => ⟨le_rfl, le_rfl, rfl⟩
   | x :: l, h => by
-    have := sumE_map k w D f b d l fun y hy => h y (by simp [hy])
-    have := h x (by simp)
-    simp only [List.map_cons, sumE, List.foldr_cons, Ex.l1, degK, kev, List.sum_cons] at *
+    have := sumE_map k w D f b d l (h · <| .tail _ ·)
+    have := h x (.head _)
+    simp [sumE, Ex.l1, degK, kev] at *
     omega
 
 def idL (Fx : Ex) (an : ℤ) (ad : ℕ) (bn : ℤ) (bd : ℕ) (S : List TBlk) : ℕ :=
@@ -3530,10 +3417,9 @@ lemma rowsN_spec (B cols : ℕ) (ps : List ℕ) (hps : ps.length = cols) :
       (((rowsN B cols ps rows x).getD q 0 : ℕ) : ℤ) - offB B * (ps.sum : ℕ)
         = ∑ a ∈ Finset.range cols,
             ((unpackM B cols rows x).getD q []).getD a 0 * (ps.getD a 0 : ℤ) := by
-  have : ∀ (ps : List ℕ) (x : ℕ), (dotN B ps x : ℤ) - offB B * (ps.sum : ℕ)
-      = ∑ a ∈ Finset.range ps.length, (unpackI B ps.length x).getD a 0 * (ps.getD a 0 : ℤ) := by
-    intro ps
-    induction ps <;> intro x <;> simp_all [dotN, unpackI, offB, Finset.sum_range_succ']
+  have h (l) : ∀ x, (dotN B l x : ℤ) - offB B * l.sum
+      = ∑ a ∈ Finset.range l.length, (unpackI B l.length x).getD a 0 * (l.getD a 0 : ℤ) := by
+    induction l <;> simp_all [dotN, unpackI, offB, Finset.sum_range_succ']
     grind
   intro rows
   induction rows <;> rintro x (_ | q) hq <;> simp_all [rowsN, unpackM]
@@ -3770,8 +3656,6 @@ end ThomsonN7
 end Asm_CertT
 
 
-section Asm_Bridge
-end Asm_Bridge
 
 section Asm_Bridge3
 
@@ -3839,10 +3723,8 @@ theorem capSpec_of_contactsR (cf : Cert.TCert) (hm : cf.checkMeta = true)
   have := cB.hB hcB hη hδB hτB
   have := cC.hC hcC hη hδC hn1 hn2 hτ1 hτ2
   refine ⟨cf.ef, δ, τ, cf.HAf, cf.HBf, cf.HCf, hτ, coulombEnergy_pent_le_of hE,
-    fun _ hy hhi hmin => ?_, ?_, ?_, ?_⟩
-  · have : cf.alo ≤ _ := halo ▸ neg_one_le_inner_of_unit (hy.1 0) (hy.1 1)
-    exact cf.sound_lo hm hA hB hG _ hy.1 (this.trans <| hmin · · ·) ⟨this, hhi⟩
-  all_goals simp_all [Cert.TCert.HAf, Cert.TCert.HBf, Cert.TCert.HCf, polyR_eq]
+    fun _ hy hhi hmin => cf.sound_lo hm hA hB hG _ hy.1 ?_ ⟨?_, hhi⟩, ?_, ?_, ?_⟩
+  all_goals simp_all [Cert.TCert.HAf, Cert.TCert.HBf, Cert.TCert.HCf, polyR_eq, neg_one_le_inner_of_unit, SphereConfig]
 
 end Glue
 end ThomsonN7
