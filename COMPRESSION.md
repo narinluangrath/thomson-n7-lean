@@ -8,12 +8,12 @@ This branch (`compress`) shrinks `formal/lean/ThomsonN7/Solution.lean` while kee
 
 | | Original (`25f2fa5`) | Now | Change |
 |---|---:|---:|---:|
-| Words, total | 389,377 | 56,969 | -85.4% |
+| Words, total | 389,377 | 56,106 | -85.6% |
 | Words, data | 227,658 | 17,178 | -92.5% |
-| Words, proof | 154,705 | 38,838 | -74.9% |
-| Lines | 17,895 | 5,794 | -67.6% |
-| Bytes | 8,079,343 | 5,098,843 | -36.9% |
-| Full build | about 12 min | 9 min 41 s | |
+| Words, proof | 154,705 | 38,147 | -75.3% |
+| Lines | 17,895 | 5,705 | -68.1% |
+| Bytes | 8,079,343 | 5,094,277 | -36.9% |
+| Full build | about 12 min | 9 min 38 s | |
 | Peak memory of the build | about 19.3 GB | 15.3 GB | |
 
 **Metric.** Words are whitespace-separated tokens, counted by `formal/lean/scripts/wordcount.py`. A line counts as data
@@ -65,7 +65,7 @@ README and in `verification/`. Those results apply to the original file only. Th
 | Witness-free 1D checks | `18c345f`, `7d2c659` | 114,441 | The one-dimensional slab certificates (sums of squares with stored witnesses) replaced by a Bernstein-basis positivity check that needs no witness (`gen_bern.py`, `gen_cut.py`). |
 | Shared bases | `c1ff8e2`, `538c4cf` | 95,333 | Three monomial bases shared instead of repeated per block; triangular columns stored without their zero prefix (`zpad`). |
 | Case 1 certificate regenerated | `97244d2`, `03ed182` | 86,685 | Re-solved the Case 1 three-point SDP. The blocks for the multipliers 1-u, 1-v, 1-t turned out to be dead weight, so each 35x35 block became 1x1 (`case1_gen.py`, `case1_model.py`, `case1_stats.py`). |
-| Section rewrites | `574553f` onward | 56,969 | One subagent per section rewrote it from scratch against a REPL positioned just before it, keeping every declaration used later with an identical statement. See below. |
+| Section rewrites | `574553f` onward | 56,106 | One subagent per section rewrote it from scratch against a REPL positioned just before it, keeping every declaration used later with an identical statement. See below. |
 
 ### Section rewrites
 
@@ -89,6 +89,9 @@ README and in `verification/`. Those results apply to the original file only. Th
 | M3 | 1,062 | 520 | -51% |
 | TwoRegime | 1,343 | 807 | -40% |
 | Asm_Glue2 | 1,164 | 638 | -45% |
+| Cert1Block | 900 | 730 | -19% |
+| Asm_Glue4 | 880 | 467 | -47% |
+| Asm_Typed2 | 796 | 516 | -35% |
 | Asm_Glue1 | 1,589 | 715 | -55% |
 
 The rewrites removed intermediate lemma layers and replaced hand proofs with Mathlib facts (for example
