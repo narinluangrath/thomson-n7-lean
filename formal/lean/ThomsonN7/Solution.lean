@@ -727,9 +727,6 @@ namespace Cert
 
 open ThreePoint
 
-/-! ## `Q_k` as a polynomial expression -/
-
-/-- `Q_k` as an expression. -/
 def q3E : ℕ → Ex
   | 0 => c 1
   | 1 => sub T (mul U V)
@@ -737,15 +734,7 @@ def q3E : ℕ → Ex
       (mul (mul (sub (c 1) (sq U)) (sub (c 1) (sq V))) (q3E k))
 
 lemma ev_q3E (u v t : ℝ) : ∀ k, (q3E k).ev u v t = Q3 k u v t
-  | 0 => by simp [q3E, Q3]
-  | 1 => by simp [q3E, Q3]
-  | k + 2 => by
-    simp only [q3E, Q3, ev_sub, ev_mul, ev_smul, ev_T, ev_U, ev_V, ev_c, ev_sq,
-      ev_q3E u v t (k + 1), ev_q3E u v t k]
-    push_cast
-    ring
-
-/-! ## Quadratic forms: `L D Lᵀ` plus a diagonally dominant remainder -/
+  | 0 | 1 | k + 2 => by simp [q3E, Q3, ev_q3E]
 
 lemma qform_dd_nonneg (r : ℕ) (Δ : ℕ → ℕ → ℝ) (x : ℕ → ℝ)
     (hs : ∀ i ∈ Finset.range r, ∀ j ∈ Finset.range r, Δ i j = Δ j i)
@@ -763,9 +752,6 @@ lemma qform_dd_nonneg (r : ℕ) (Δ : ℕ → ℕ → ℝ) (x : ℕ → ℝ)
   simp [← Finset.sum_div, Finset.sum_mul] at h h3 h5
   linarith
 
-/-! ## Integer data of a positive semidefinite block -/
-
-/-- Integer data of the block `M = ∑_q d_q l_q l_qᵀ + Δ`: pivots `d`, columns `l`, remainder `Δ`. -/
 structure Blk where
   d : List ℤ
   l : List (List ℤ)
@@ -773,20 +759,15 @@ structure Blk where
 
 namespace Blk
 
-/-- Pivot `q`. -/
 def dq (b : Blk) (q : ℕ) : ℤ := b.d.getD q 0
 
-/-- Entry `a` of column `q`. -/
 def lq (b : Blk) (q a : ℕ) : ℤ := (b.l.getD q []).getD a 0
 
-/-- Entry `(a, c)` of the remainder. -/
 def del (b : Blk) (a c : ℕ) : ℤ := (b.Δ.getD a []).getD c 0
 
-/-- The integer Gram matrix entry `∑_q d_q l_qa l_qc + Δ_ac` (`q < r`). -/
 def ent (r : ℕ) (b : Blk) (a c : ℕ) : ℤ :=
   ((List.range r).map fun q => b.dq q * b.lq q a * b.lq q c).sum + b.del a c
 
-/-- The computable check: pivots nonnegative, `Δ` symmetric and diagonally dominant. -/
 def ok (r : ℕ) (b : Blk) : Bool :=
   (List.range r).all fun i =>
     decide (0 ≤ b.dq i) &&
@@ -800,15 +781,14 @@ lemma ok_parts {r : ℕ} {b : Blk} (h : b.ok r = true) :
     (∀ i ∈ Finset.range r, 0 ≤ b.dq i) ∧
     (∀ i ∈ Finset.range r, ∀ j ∈ Finset.range r, b.del i j = b.del j i) ∧
     (∀ i ∈ Finset.range r,
-      ∑ j ∈ Finset.range r, (if i = j then (0 : ℤ) else |b.del i j|) ≤ b.del i i) := by simp_all [ok, List.all_eq_true, List.mem_range, Bool.and_eq_true, decide_eq_true_eq, list_sum_range_map]
+      ∑ j ∈ Finset.range r, (if i = j then (0 : ℤ) else |b.del i j|) ≤ b.del i i) := by simp_all [ok, list_sum_range_map, imp_and, forall_and]
 
-/-- Nonnegativity of the quadratic form of a checked block. -/
 lemma qf_nonneg {r : ℕ} {b : Blk} (h : b.ok r = true) (x : ℕ → ℝ) :
     0 ≤ ∑ q ∈ Finset.range r, (b.dq q : ℝ) * (∑ a ∈ Finset.range r, (b.lq q a : ℝ) * x a) ^ 2
       + ∑ a ∈ Finset.range r, ∑ c ∈ Finset.range r, x a * (b.del a c : ℝ) * x c := by
-  obtain ⟨hd, hs, hdd⟩ := ok_parts h
-  exact add_nonneg (Finset.sum_nonneg fun q hq => mul_nonneg (mod_cast hd q hq) (sq_nonneg _))
-    (qform_dd_nonneg r _ x (fun i hi j hj => mod_cast hs i hi j hj) fun i hi => by exact_mod_cast hdd i hi)
+  have := ok_parts h
+  exact add_nonneg (Finset.sum_nonneg fun q hq => mul_nonneg (mod_cast this.1 q hq) (sq_nonneg _))
+    (qform_dd_nonneg r _ x (mod_cast this.2.1) (mod_cast this.2.2))
 
 end Blk
 
@@ -2549,42 +2529,11 @@ end ThomsonN7
 end Asm_Typed
 
 section Asm_Typed2
-open Finset Matrix
-open scoped RealInnerProductSpace
 
 namespace ThomsonN7
 namespace ThreePoint
 
-/-! # Typed three-point bound with free pair shares
-
-Each triple `{i, j, l}` receives a share `W i j l` of the pair function of `{i, j}` (and
-similarly for the constant), so that the total over the triples containing a pair is prescribed.
--/
-
-section TypedComb2
-
-variable {n : ℕ}
-
-/-- The decomposition of the full root sum into distinct triples, marginals and constants. -/
-theorem sum_root_decomp (s : Fin n → ℝ → ℝ → ℝ → ℝ) (τ : Fin n → Fin n → ℝ)
-    (hsymm : ∀ i j, τ i j = τ j i) (hdiag : ∀ i, τ i i = 1) :
-    ∑ i, ∑ j, ∑ l, s i (τ i j) (τ i l) (τ j l)
-      = dsum (fun i j l => s i (τ i j) (τ i l) (τ j l))
-        + ∑ i, ∑ j, (if i ≠ j then mrg s i (τ i j) else 0) + ∑ i, s i 1 1 1 := by
-  rw [sum_all_eq]
-  simp only [sum_ne_eq_sub, mrg, hdiag, Finset.sum_sub_distrib, Finset.sum_add_distrib, hsymm]
-  ring
-
-/-- The sum over ordered distinct triples of a pair share. -/
-theorem dsum_share (W : Fin n → Fin n → Fin n → ℝ → ℝ) (τ : Fin n → Fin n → ℝ)
-    (Ht : Fin n → Fin n → ℝ → ℝ)
-    (hW : ∀ i j, i ≠ j → ∀ t, ∑ l, (if i ≠ l ∧ j ≠ l then W i j l t else 0) = Ht i j t) :
-    dsum (fun i j l => W i j l (τ i j))
-      = ∑ i, ∑ j, (if i ≠ j then Ht i j (τ i j) else 0) := by
-  refine Finset.sum_congr rfl fun i _ => Finset.sum_congr rfl fun j _ => ?_
-  by_cases hij : i = j <;> simp [hij, ← hW i j]
-
-theorem typed_bound_comb2 (hn : 3 ≤ n) (s : Fin n → ℝ → ℝ → ℝ → ℝ)
+theorem typed_bound_comb2 {n : ℕ} (hn : 3 ≤ n) (s : Fin n → ℝ → ℝ → ℝ → ℝ)
     (H : Fin n → Fin n → ℝ → ℝ) (hH : ∀ i j t, H j i t = H i j t) (e : ℝ)
     (τ : Fin n → Fin n → ℝ) (hsymm : ∀ i j, τ i j = τ j i) (hdiag : ∀ i, τ i i = 1)
     (W : Fin n → Fin n → Fin n → ℝ → ℝ) (c : Fin n → Fin n → Fin n → ℝ)
@@ -2601,15 +2550,15 @@ theorem typed_bound_comb2 (hn : 3 ≤ n) (s : Fin n → ℝ → ℝ → ℝ → 
   set g := fun i j l => W i j l (τ i j)
   have h0 := dsum_nonneg hpt
   rw [dsum_sub, dsum_sub, dsum_add, dsum_add, dsum_swap23 g, dsum_cyc g, dsum_os6 _, hc] at h0
-  have hg' : dsum g = ∑ i, ∑ j, (if i ≠ j then H i j (τ i j) else 0)
-      - 2 * ∑ i, ∑ j, (if i ≠ j then mrg s i (τ i j) else 0) := by
-    rw [dsum_share W τ _ hW, two_mul]
-    nth_rw 4 [Finset.sum_comm]
-    simp [← Finset.sum_add_distrib, ← Finset.sum_sub_distrib, ite_sub_ite, ite_add_ite, ne_comm, hsymm, sub_sub]
-  linarith [sum_root_decomp s τ hsymm hdiag,
-    sum_ne_eq_two_sum_Ioi (fun i j => H i j (τ i j)) (fun i j => by rw [hH, hsymm])]
-
-end TypedComb2
+  have hg : dsum g = ∑ i, ∑ j, ((if i ≠ j then H i j (τ i j) else 0)
+      - (if i ≠ j then mrg s i (τ i j) else 0) - if i ≠ j then mrg s j (τ i j) else 0) :=
+    Finset.sum_congr rfl fun i _ => Finset.sum_congr rfl fun j _ => by
+      by_cases hij : i = j <;> simp [g, hij, ← hW i j]
+  simp only [Finset.sum_sub_distrib] at hg
+  rw [Finset.sum_comm (f := fun i j => if i ≠ j then mrg s j (τ i j) else 0)] at hg
+  have hI := sum_ne_eq_two_sum_Ioi (fun i j => H i j (τ i j)) (fun i j => by rw [hH, hsymm])
+  simp only [sum_all_eq, sum_ne_eq_sub, mrg, hdiag, Finset.sum_sub_distrib, Finset.sum_add_distrib, hsymm, ne_comm] at hroot hg hI
+  linarith
 
 end ThreePoint
 end ThomsonN7
@@ -2988,34 +2937,13 @@ end ThomsonN7
 end Asm_Glue3
 
 section Asm_Glue4
-/-!
-# Glue4: the final interface (`CapSpec`, `SlabSpec`) and the assembly `seven_of_specs`
-
-The near-sharp cap and the margin slabs are certified by *typed* three-point data
-(`Typed7`): PSD blocks `FP FR`, class minorants `HA HB HC`, multipliers `ψBa ψCb`, constants
-`cal cbe`, together with one-dimensional facts on the minorants.  `CapSpec a0` (resp.
-`SlabSpec lo hi`) is the proposition "such data exist"; every certificate producer has to prove
-one of these propositions and nothing else.  `seven_of_specs` is the assembly: a cap spec at
-`a 0` and slab specs on `[a k, a (k+1)]` for `k < K`, with `a K ≥ -9/10`, give both Challenge
-statements for `N = 7`.
-
-The tube-rigidity hypothesis of the near-sharp cap and the local (Regime B) statement are
-discharged here once and for all (`Glue.tubeRigid_of_le`, `Glue.localGramA_of_le`).
--/
 
 namespace ThomsonN7
 namespace Glue
 
-section Final
-
 open scoped InnerProductSpace
 open Base
 
-/-- **Cap specification.**  A near-sharp cap certificate on the cap `⟪y 0, y 1⟫ ≤ a0`: class
-minorants `HA HB HC` whose typed sum is bounded below by `e` on minimal-pair configurations of the
-cap, with `E(P) ≤ e + δ`, a tube width `τ ≤ 1/165000`, and the one-dimensional facts that the
-minorants lie below `phi` and that a slack `≤ δ` puts the inner product within `τ` of the class
-nodes (`-1`, `0`, `c1`/`c2`). -/
 def CapSpec (a0 : ℝ) : Prop :=
   ∃ (e δ τ : ℝ) (HA HB HC : ℝ → ℝ),
     τ ≤ 1 / 165000 ∧ coulombEnergy pentBipyramid ≤ e + δ ∧
@@ -3027,16 +2955,6 @@ def CapSpec (a0 : ℝ) : Prop :=
     (∀ t, -1 ≤ t → t < 1 →
       HC t ≤ phi t ∧ (phi t - HC t ≤ δ → |t - c1| ≤ τ ∨ |t - c2| ≤ τ))
 
-/-- A cap specification proves the cap claim for minimal-pair configurations. -/
-theorem capSpec_sound {a0 : ℝ} (h : CapSpec a0) :
-    ∀ y ∈ SphereConfig 7, ⟪y 0, y 1⟫_ℝ ≤ a0 →
-      (∀ i j, i ≠ j → ⟪y 0, y 1⟫_ℝ ≤ ⟪y i, y j⟫_ℝ) → Concl y :=
-  let ⟨_, _, _, _, _, _, hτ, h⟩ := h
-  cap_of_typed_tube _ _ _ (localGramA_of_le hτ) (tubeRigid_of_le (by linarith)) h.2.1 h.1 h.2.2.1 h.2.2.2.1 h.2.2.2.2
-
-/-- **Slab specification.**  A margin certificate on the slab `lo ≤ ⟪y 0, y 1⟫ ≤ hi`: class
-minorants `HA HB HC` below `phi` whose typed sum is bounded below by some `e > E(P)` on
-minimal-pair configurations of the slab. -/
 def SlabSpec (lo hi : ℝ) : Prop :=
   ∃ (e : ℝ) (HA HB HC : ℝ → ℝ),
     coulombEnergy pentBipyramid < e ∧
@@ -3047,24 +2965,17 @@ def SlabSpec (lo hi : ℝ) : Prop :=
     (∀ t, lo ≤ t → t < 1 → HB t ≤ phi t) ∧
     (∀ t, lo ≤ t → t < 1 → HC t ≤ phi t)
 
-/-- A slab specification proves the slab claim for minimal-pair configurations. -/
-theorem slabSpec_sound {lo hi : ℝ} (h : SlabSpec lo hi) :
-    ∀ y ∈ SphereConfig 7, lo ≤ ⟪y 0, y 1⟫_ℝ → ⟪y 0, y 1⟫_ℝ ≤ hi →
-      (∀ i j, i ≠ j → ⟪y 0, y 1⟫_ℝ ≤ ⟪y i, y j⟫_ℝ) →
-      coulombEnergy pentBipyramid < coulombEnergy y :=
-  by obtain ⟨_, _, _, _, _⟩ := h; apply slab_of_typed <;> tauto
-
-/-- **Assembly.**  A cap specification at `a 0` and slab specifications on `[a k, a (k+1)]`
-for `k < K`, with `-9/10 ≤ a K`, prove both open Challenge statements for `N = 7`. -/
 theorem seven_of_specs (a : ℕ → ℝ) (K : ℕ) (hK : -9 / 10 ≤ a K)
     (hcap : CapSpec (a 0)) (hslab : ∀ k, k < K → SlabSpec (a k) (a (k + 1))) :
     (∀ x ∈ SphereConfig 7, coulombEnergy pentBipyramid ≤ coulombEnergy x) ∧
     (∀ x ∈ SphereConfig 7, coulombEnergy x = coulombEnergy pentBipyramid →
       ∃ (g : R3 ≃ₗᵢ[ℝ] R3) (σ : Equiv.Perm (Fin 7)), ∀ i, x i = g (pentBipyramid (σ i))) :=
-  seven_of_cap_slabs a K hK (capSpec_sound hcap)
-    (fun k hk y hy h1 h2 hmin => slabSpec_sound (hslab k hk) y hy h1.le h2 hmin)
-
-end Final
+  let ⟨_, _, _, _, _, _, hτ, h⟩ := hcap
+  seven_of_cap_slabs a K hK (cap_of_typed_tube _ _ _ (localGramA_of_le hτ)
+    (tubeRigid_of_le (by linarith)) h.2.1 h.1 h.2.2.1 h.2.2.2.1 h.2.2.2.2)
+    fun k hk y hy h1 =>
+      let ⟨_, _, _, _, h⟩ := hslab k hk
+      slab_of_typed _ _ _ h.1 h.2.1 h.2.2.1 h.2.2.2.1 h.2.2.2.2 y hy h1.le
 
 end Glue
 end ThomsonN7
