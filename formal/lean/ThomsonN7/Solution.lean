@@ -434,45 +434,29 @@ namespace ThreePoint
 open Finset Matrix
 open scoped RealInnerProductSpace
 
-/-! # Bachoc–Vallentin three-point positivity on `S²` (any block size, any `k`)
 
-`Q3 k u v t = ((1-u²)(1-v²))^{k/2} T_k((t-uv)/√((1-u²)(1-v²)))` via the Chebyshev recursion.
--/
-
-/-- `Q_k(u,v,t)`: `Q_0 = 1`, `Q_1 = t - uv`,
-`Q_{k+2} = 2 (t-uv) Q_{k+1} - (1-u²)(1-v²) Q_k`. -/
 noncomputable def Q3 : ℕ → ℝ → ℝ → ℝ → ℝ
   | 0, _, _, _ => 1
   | 1, u, v, t => t - u * v
   | k + 2, u, v, t =>
       2 * (t - u * v) * Q3 (k + 1) u v t - (1 - u ^ 2) * (1 - v ^ 2) * Q3 k u v t
 
-/-- `Y_k(u,v,t)_{ab} = uᵃ vᵇ Q_k(u,v,t)`, `a, b < m`. -/
 noncomputable def Y3 (m k : ℕ) (u v t : ℝ) : Matrix (Fin m) (Fin m) ℝ :=
   Matrix.of fun a b => u ^ (a : ℕ) * v ^ (b : ℕ) * Q3 k u v t
 
-/-- The Bachoc–Vallentin matrix `S_k = (1/6) Σ_{σ ∈ S₃} Y_k ∘ σ`, symmetric in `(u,v,t)`. -/
 noncomputable def S3 (m k : ℕ) (u v t : ℝ) : Matrix (Fin m) (Fin m) ℝ :=
   (1 / 6 : ℝ) •
     (Y3 m k u v t + Y3 m k u t v + Y3 m k v u t + Y3 m k v t u + Y3 m k t u v + Y3 m k t v u)
 
-/-- The Frobenius pairing `⟨A, B⟩ = Σ_{ab} A_{ab} B_{ab}`. -/
 def matDot {m : ℕ} (A B : Matrix (Fin m) (Fin m) ℝ) : ℝ := ∑ a, ∑ b, A a b * B a b
 
 theorem S3_swap12 (m k : ℕ) (u v t : ℝ) : S3 m k u v t = S3 m k v u t := by
-  ext i j
-  simp only [S3, Y3, Matrix.smul_apply, Matrix.add_apply, Matrix.of_apply, smul_eq_mul]
-  ring
+  unfold S3
+  abel_nf
 
-theorem S3_swap23 (m k : ℕ) (u v t : ℝ) : S3 m k u v t = S3 m k u t v := by grind [S3, Y3, Matrix.smul_apply, Matrix.add_apply, Matrix.of_apply, smul_eq_mul]
-
-/-! ### Addition theorem (de Moivre) -/
-
-theorem Q3_eq_re (u v t : ℝ) (z z' : ℂ)
-    (hu : 1 - u ^ 2 = Complex.normSq z) (hv : 1 - v ^ 2 = Complex.normSq z')
-    (ht : t - u * v = (z * (starRingEnd ℂ) z').re) (k : ℕ) :
-    Q3 k u v t = ((z * (starRingEnd ℂ) z') ^ k).re := by
-  induction k using Nat.twoStepInduction <;> simp_all [Q3, pow_succ, Complex.normSq_apply] <;> ring
+theorem S3_swap23 (m k : ℕ) (u v t : ℝ) : S3 m k u v t = S3 m k u t v := by
+  unfold S3
+  abel_nf
 
 theorem quad_Y3_nonneg (m k : ℕ) {n : ℕ} (u : Fin n → ℝ) (t : Fin n → Fin n → ℝ)
     (a b : Fin n → ℝ) (hu : ∀ j, 1 - u j ^ 2 = a j ^ 2 + b j ^ 2)
@@ -480,79 +464,59 @@ theorem quad_Y3_nonneg (m k : ℕ) {n : ℕ} (u : Fin n → ℝ) (t : Fin n → 
     (w : Fin m → ℝ) :
     0 ≤ ∑ j, ∑ l, w ⬝ᵥ (Y3 m k (u j) (u l) (t j l)).mulVec w := by
   set z : Fin n → ℂ := fun j => ⟨a j, b j⟩
-  have hQ := fun j l => Q3_eq_re (u j) (u l) (t j l) (z j) (z l) (by simp [z, hu, ← sq])
-    (by simp [z, hu, ← sq]) (by simp [z, ht]) k
+  have hQ (k j l) : Q3 k (u j) (u l) (t j l) = ((z j * (starRingEnd ℂ) (z l)) ^ k).re := by
+    induction k using Nat.twoStepInduction <;> simp_all [Q3, pow_succ, z] <;> ring
   have s := fun f : ℂ → ℝ => sq_nonneg (∑ j, (∑ p, w p * u j ^ (p : ℕ)) * f (z j ^ k))
   convert add_nonneg (s Complex.re) (s Complex.im) using 1
-  simp only [sq, dotProduct, mulVec, Y3, of_apply, hQ, mul_pow, ← map_pow, Complex.mul_re, Complex.conj_re, Complex.conj_im, sum_mul_sum, mul_sum, sum_mul, ← sum_add_distrib]
+  simp [sq, dotProduct, mulVec, Y3, hQ, mul_pow, ← map_pow, Complex.mul_re, mul_sum, sum_mul, ← sum_add_distrib]
   congr! 1
   rw [sum_comm]
   congr! 3
   ring
 
-/-- Relabelling lemmas for triple sums. -/
-theorem tsum_swap12 {ι : Type*} [Fintype ι] (g : ι → ι → ι → ℝ) :
-    ∑ i, ∑ j, ∑ l, g i j l = ∑ i, ∑ j, ∑ l, g j i l := by
-  rw [Finset.sum_comm]
-
-theorem tsum_swap23 {ι : Type*} [Fintype ι] (g : ι → ι → ι → ℝ) :
-    ∑ i, ∑ j, ∑ l, g i j l = ∑ i, ∑ j, ∑ l, g i l j := by
-  refine Finset.sum_congr rfl fun i _ => ?_
-  rw [Finset.sum_comm]
-
-theorem sum_S3_eq_sum_Y3 (m k : ℕ) {n : ℕ} (t : Fin n → Fin n → ℝ) (hsym : ∀ i j, t j i = t i j)
-    (w : Fin m → ℝ) :
-    ∑ i, ∑ j, ∑ l, w ⬝ᵥ (S3 m k (t i j) (t i l) (t j l)).mulVec w
-      = ∑ i, ∑ j, ∑ l, w ⬝ᵥ (Y3 m k (t i j) (t i l) (t j l)).mulVec w := by
-  set Φ := fun i j l => w ⬝ᵥ (Y3 m k (t i j) (t i l) (t j l)).mulVec w
-  have h (i j l) : w ⬝ᵥ (S3 m k (t i j) (t i l) (t j l)).mulVec w
-      = (Φ i j l + Φ j i l + Φ i l j + Φ l i j + Φ j l i + Φ l j i) / 6 := by
-    simp [S3, Matrix.smul_mulVec, Matrix.add_mulVec, Φ, hsym]; ring
-  simp only [h, ← Finset.sum_div, Finset.sum_add_distrib]
-  linarith [tsum_swap12 Φ, tsum_swap23 Φ, tsum_swap23 fun i j l => Φ l i j,
-    tsum_swap12 fun i j l => Φ j l i, tsum_swap12 fun i j l => Φ l j i]
-
-/-- Every unit vector of `ℝ³` has an orthonormal frame of its orthogonal complement, giving
-tangent-plane coordinates with Parseval's identity: extend `{x}` to an orthonormal basis. -/
 theorem exists_tangent_frame (x : R3) (hx : ‖x‖ = 1) :
     ∃ e₁ e₂ : R3, ∀ y z : R3, ‖y‖ = 1 → ‖z‖ = 1 →
       (1 - ⟪x, y⟫ ^ 2 = ⟪e₁, y⟫ ^ 2 + ⟪e₂, y⟫ ^ 2) ∧
       (⟪y, z⟫ - ⟪x, y⟫ * ⟪x, z⟫ = ⟪e₁, y⟫ * ⟪e₁, z⟫ + ⟪e₂, y⟫ * ⟪e₂, z⟫) := by
   obtain ⟨b, hb⟩ := Orthonormal.exists_orthonormalBasis_extension_of_card_eq (𝕜 := ℝ) (v := fun _ : Fin 3 => x)
-    (s := {0}) (by simp) (by simp [orthonormal_iff_ite, real_inner_self_eq_norm_sq, hx])
+    (s := {0}) (by simp) (by simp [hx])
   refine ⟨b 1, b 2, fun y z hy hz => ?_⟩
   have := b.sum_inner_mul_inner y z
   have := b.sum_inner_mul_inner y y
   simp only [Fin.sum_univ_three, hb 0 rfl, real_inner_self_eq_norm_sq, hy, real_inner_comm y] at *
   constructor <;> linarith
 
-/-- **Bachoc–Vallentin positivity for `S²`.** For unit vectors `x i`, the moment matrix
-`Σ_{i,j,l} S_k(⟨xᵢ,xⱼ⟩, ⟨xᵢ,x_l⟩, ⟨xⱼ,x_l⟩)` is positive semidefinite (as a quadratic form). -/
-theorem bv_positivity (m k : ℕ) {n : ℕ} (x : Fin n → R3) (hx : ∀ i, ‖x i‖ = 1) (w : Fin m → ℝ) :
-    0 ≤ ∑ i, ∑ j, ∑ l, w ⬝ᵥ (S3 m k ⟪x i, x j⟫ ⟪x i, x l⟫ ⟪x j, x l⟫).mulVec w := by
-  rw [sum_S3_eq_sum_Y3 m k (⟪x ·, x ·⟫) fun _ _ => real_inner_comm _ _]
-  exact Finset.sum_nonneg fun i _ => let ⟨e₁, e₂, hfr⟩ := exists_tangent_frame (x i) (hx i)
-    quad_Y3_nonneg m k _ _ (⟪e₁, x ·⟫) (⟪e₂, x ·⟫) (fun j => (hfr _ _ (hx j) (hx j)).1)
-      (fun j l => (hfr _ _ (hx j) (hx l)).2) w
+theorem matDot_add {m : ℕ} (F A B : Matrix (Fin m) (Fin m) ℝ) :
+    matDot F (A + B) = matDot F A + matDot F B := by
+  simp [matDot, mul_add, sum_add_distrib]
 
-/-- Pairing of a PSD matrix with the moment matrix is nonnegative. -/
+theorem matDot_smul {m : ℕ} (F A : Matrix (Fin m) (Fin m) ℝ) (c : ℝ) :
+    matDot F (c • A) = c * matDot F A := by
+  simp [matDot, mul_sum, mul_left_comm]
+
 theorem matDot_moment_nonneg (m k : ℕ) {n : ℕ} (x : Fin n → R3) (hx : ∀ i, ‖x i‖ = 1)
     (F : Matrix (Fin m) (Fin m) ℝ) (hF : F.PosSemidef) :
     0 ≤ ∑ i, ∑ j, ∑ l, matDot F (S3 m k ⟪x i, x j⟫ ⟪x i, x l⟫ ⟪x j, x l⟫) := by
-  obtain ⟨r, v, hFv⟩ := Matrix.posSemidef_iff_eq_sum_vecMulVec.mp hF
-  convert sum_nonneg (s := univ) fun s _ => bv_positivity m k x hx (v s) using 1
-  simp only [matDot, hFv, Matrix.sum_apply, vecMulVec_apply, star_trivial, dotProduct, mulVec, sum_mul,
-    mul_sum, Finset.sum_comm (α := Fin r)]
-  congr! 6
-  ring
-
-/-! ### Combinatorics of ordered triple sums -/
-
-section Comb
+  obtain ⟨r, v, hFv⟩ := posSemidef_iff_eq_sum_vecMulVec.mp hF
+  set Φ := fun i j l => matDot F (Y3 m k ⟪x i, x j⟫ ⟪x i, x l⟫ ⟪x j, x l⟫)
+  have h0 : 0 ≤ ∑ i, ∑ j, ∑ l, Φ i j l := by
+    convert sum_nonneg fun s (_ : s ∈ univ) => sum_nonneg fun i (_ : i ∈ univ) =>
+      let ⟨e₁, e₂, hfr⟩ := exists_tangent_frame (x i) (hx i)
+      quad_Y3_nonneg m k _ _ (⟪e₁, x ·⟫) (⟪e₂, x ·⟫) (fun j => (hfr _ _ (hx j) (hx j)).1)
+        (fun j l => (hfr _ _ (hx j) (hx l)).2) (v s) using 1
+    simp only [Φ, matDot, hFv, Matrix.sum_apply, vecMulVec_apply, star_trivial, dotProduct, mulVec, sum_mul,
+      mul_sum, mul_assoc, mul_comm, sum_comm (α := Fin r)]
+  have h i j l : matDot F (S3 m k ⟪x i, x j⟫ ⟪x i, x l⟫ ⟪x j, x l⟫)
+      = (Φ i j l + Φ j i l + Φ i l j + Φ l i j + Φ j l i + Φ l j i) / 6 := by
+    simp [S3, matDot_add, matDot_smul, Φ, real_inner_comm]
+    ring
+  have T (g : Fin n → Fin n → Fin n → ℝ) : ∑ i, ∑ j, ∑ l, g i j l = ∑ i, ∑ j, ∑ l, g j i l ∧
+      ∑ i, ∑ j, ∑ l, g i j l = ∑ i, ∑ j, ∑ l, g i l j := ⟨sum_comm, sum_congr rfl fun _ _ => sum_comm⟩
+  simp only [h, ← sum_div, sum_add_distrib]
+  linarith [(T Φ).1, (T Φ).2, (T fun i j l => Φ l i j).2, (T fun i j l => Φ j l i).1, (T fun i j l => Φ l j i).1]
 
 variable {n : ℕ}
 
-/-- Sum over ordered triples of pairwise distinct indices. -/
 def dsum (f : Fin n → Fin n → Fin n → ℝ) : ℝ :=
   ∑ i, ∑ j, ∑ l, if i ≠ j ∧ i ≠ l ∧ j ≠ l then f i j l else 0
 
@@ -560,186 +524,72 @@ theorem sum_all_eq (f : Fin n → Fin n → Fin n → ℝ) :
     ∑ i, ∑ j, ∑ l, f i j l
       = dsum f + ∑ i, ∑ l, f i i l + ∑ i, ∑ j, f i j i + ∑ i, ∑ j, f i j j
           - 2 * ∑ i, f i i i := by
-  have h i j l : (if i ≠ j ∧ i ≠ l ∧ j ≠ l then f i j l else 0) = f i j l - (if i = j then f i j l else 0)
-      - (if l = i then f i j l else 0) - (if l = j then f i j l else 0) + 2 * if l = i ∧ j = i then f i j l else 0 := by
+  have h (i j l : Fin n) (c : ℝ) : (if i ≠ j ∧ i ≠ l ∧ j ≠ l then c else 0) = c - (if i = j then c else 0)
+      - (if l = i then c else 0) - (if l = j then c else 0) + 2 * if l = i ∧ j = i then c else 0 := by
     grind
   simp [dsum, h, sum_add_distrib, sum_sub_distrib, ← mul_sum, ite_and]
   ring
 
-end Comb
-
-section Comb2
-
-variable {n : ℕ}
-
 theorem dsum_add (f g : Fin n → Fin n → Fin n → ℝ) :
     dsum (fun i j l => f i j l + g i j l) = dsum f + dsum g := by
-  unfold dsum
-  rw [← Finset.sum_add_distrib]
-  refine Finset.sum_congr rfl fun i _ => ?_
-  rw [← Finset.sum_add_distrib]
-  refine Finset.sum_congr rfl fun j _ => ?_
-  rw [← Finset.sum_add_distrib]
-  refine Finset.sum_congr rfl fun l _ => ?_
-  split_ifs <;> simp
+  simp [dsum, ← sum_add_distrib, ite_add_ite]
 
 theorem dsum_sub (f g : Fin n → Fin n → Fin n → ℝ) :
     dsum (fun i j l => f i j l - g i j l) = dsum f - dsum g := by
-  unfold dsum
-  rw [← Finset.sum_sub_distrib]
-  refine Finset.sum_congr rfl fun i _ => ?_
-  rw [← Finset.sum_sub_distrib]
-  refine Finset.sum_congr rfl fun j _ => ?_
-  rw [← Finset.sum_sub_distrib]
-  refine Finset.sum_congr rfl fun l _ => ?_
-  split_ifs <;> simp
-
-theorem dsum_mul_left (c : ℝ) (f : Fin n → Fin n → Fin n → ℝ) :
-    dsum (fun i j l => c * f i j l) = c * dsum f := by
-  unfold dsum
-  simp only [Finset.mul_sum]
-  refine Finset.sum_congr rfl fun i _ => Finset.sum_congr rfl fun j _ =>
-    Finset.sum_congr rfl fun l _ => ?_
-  split_ifs <;> simp
+  simp [dsum, ← sum_sub_distrib, ite_sub_ite]
 
 theorem dsum_swap23 (f : Fin n → Fin n → Fin n → ℝ) :
     dsum (fun i j l => f i l j) = dsum f :=
   Finset.sum_congr rfl fun i _ => Finset.sum_comm.trans (by simp only [ne_comm, and_left_comm])
 
+theorem dsum_swap12 (f : Fin n → Fin n → Fin n → ℝ) :
+    dsum (fun i j l => f j i l) = dsum f :=
+  sum_comm.trans (by simp only [dsum, ne_comm, and_comm, and_left_comm])
+
 theorem dsum_cyc (f : Fin n → Fin n → Fin n → ℝ) :
-    dsum (fun i j l => f j l i) = dsum f := by
-  rw [dsum, dsum, Finset.sum_comm]
-  refine Finset.sum_congr rfl fun j _ => Finset.sum_comm.trans ?_
-  simp only [ne_comm, and_comm, and_left_comm]
+    dsum (fun i j l => f j l i) = dsum f :=
+  (dsum_swap12 _).trans (dsum_swap23 _)
 
-theorem card_third (hn : 2 ≤ n) (i j : Fin n) (hij : i ≠ j) :
-    (Finset.univ.filter fun l : Fin n => i ≠ j ∧ i ≠ l ∧ j ≠ l).card = n - 2 := by
-  simp [Finset.filter_and, Finset.filter_ne, hij, Finset.erase_inter, Finset.card_erase_of_mem]
-  omega
-
-theorem dsum_pair12 (hn : 2 ≤ n) (g : Fin n → Fin n → ℝ) :
-    dsum (fun i j _ => g i j)
-      = ((n : ℝ) - 2) * ∑ i, ∑ j, (if i ≠ j then g i j else 0) := by
-  simp [dsum, Finset.mul_sum]
-  congr!
-  split_ifs <;> simp_all [← Finset.sum_filter, Finset.filter_and, Finset.filter_ne, Nat.sub_sub]
-
-theorem dsum_pair13 (hn : 2 ≤ n) (g : Fin n → Fin n → ℝ) :
-    dsum (fun i _ l => g i l)
-      = ((n : ℝ) - 2) * ∑ i, ∑ j, (if i ≠ j then g i j else 0) :=
-  (dsum_swap23 (fun i j _ => g i j)).trans (dsum_pair12 hn g)
-
-theorem dsum_pair23 (hn : 2 ≤ n) (g : Fin n → Fin n → ℝ) :
-    dsum (fun _ j l => g j l)
-      = ((n : ℝ) - 2) * ∑ i, ∑ j, (if i ≠ j then g i j else 0) :=
-  (dsum_cyc (fun i j _ => g i j)).trans (dsum_pair12 hn g)
-
-theorem dsum_const (hn : 2 ≤ n) (c : ℝ) :
-    dsum (n := n) (fun _ _ _ => c) = c * ((n : ℝ) * ((n : ℝ) - 1) * ((n : ℝ) - 2)) := by
-  simp [dsum_pair12 hn, Finset.sum_ite, Finset.filter_ne, Nat.cast_sub (Nat.one_le_of_lt hn)]
-  ring
-
-end Comb2
-
-section Comb3
-
-variable {n : ℕ}
+theorem dsum_nonneg {f : Fin n → Fin n → Fin n → ℝ}
+    (h : ∀ i j l, i ≠ j → i ≠ l → j ≠ l → 0 ≤ f i j l) : 0 ≤ dsum f :=
+  sum_nonneg fun i _ => sum_nonneg fun j _ => sum_nonneg fun l _ => by grind
 
 theorem sum_ne_eq_two_sum_Ioi (h : Fin n → Fin n → ℝ) (hsymm : ∀ i j, h i j = h j i) :
     ∑ i, ∑ j, (if i ≠ j then h i j else 0) = 2 * ∑ i, ∑ j ∈ Finset.Ioi i, h i j := by
   simp [Base.two_mul_sum_Ioi h hsymm]
 
-end Comb3
-
-section Comb4
-
-variable {n : ℕ}
-
-/-- The scalar reduced kernel: the marginal terms are chosen so that the sum over ordered
-distinct triples is `(n - 2)` times the sum over all triples. -/
-noncomputable def Rs (s : ℝ → ℝ → ℝ → ℝ) (n : ℕ) (u v t : ℝ) : ℝ :=
-  ((n : ℝ) - 2) * s u v t + (s u u 1 + s v v 1 + s t t 1) + s 1 1 1 / ((n : ℝ) - 1)
-
 theorem sum_ne_eq_sub (a : Fin n → ℝ) (i : Fin n) :
     ∑ j, (if i ≠ j then a j else 0) = ∑ j, a j - a i := by
   simp [Finset.sum_ite, Finset.filter_ne]
 
-theorem dsum_Rs (hn : 3 ≤ n) (s : ℝ → ℝ → ℝ → ℝ)
+noncomputable def Rs (s : ℝ → ℝ → ℝ → ℝ) (n : ℕ) (u v t : ℝ) : ℝ :=
+  ((n : ℝ) - 2) * s u v t + (s u u 1 + s v v 1 + s t t 1) + s 1 1 1 / ((n : ℝ) - 1)
+
+theorem three_point_identity (hn : 3 ≤ n) (s : ℝ → ℝ → ℝ → ℝ)
     (hs12 : ∀ u v t, s u v t = s v u t) (hs23 : ∀ u v t, s u v t = s u t v)
-    (τ : Fin n → Fin n → ℝ) (hsymm : ∀ i j, τ i j = τ j i) (hdiag : ∀ i, τ i i = 1) :
-    dsum (fun i j l => Rs s n (τ i j) (τ i l) (τ j l))
-      = ((n : ℝ) - 2) * ∑ i, ∑ j, ∑ l, s (τ i j) (τ i l) (τ j l) := by
-  have : (n:ℝ) - 1 ≠ 0 := by linarith [show (3:ℝ) ≤ n by exact_mod_cast hn]
-  unfold Rs
-  rw [dsum_add, dsum_add, dsum_mul_left, dsum_add, dsum_add, dsum_pair12 (by omega),
-    dsum_pair13 (by omega), dsum_pair23 (by omega), dsum_const (by omega), sum_all_eq]
-  simp only [sum_ne_eq_sub]
-  simp [hdiag, hs12, hs23, hsymm]
+    (H : ℝ → ℝ) (e : ℝ) (x : Fin n → R3) (hx : ∀ i, ‖x i‖ = 1) :
+    dsum (fun i j l => ((H ⟪x i, x j⟫ + H ⟪x i, x l⟫ + H ⟪x j, x l⟫) / 3
+        - e / (n.choose 2 : ℝ)) - Rs s n ⟪x i, x j⟫ ⟪x i, x l⟫ ⟪x j, x l⟫)
+      + ((n : ℝ) - 2) * ∑ i, ∑ j, ∑ l, s ⟪x i, x j⟫ ⟪x i, x l⟫ ⟪x j, x l⟫
+    = 2 * ((n : ℝ) - 2) * (∑ i, ∑ j ∈ Finset.Ioi i, H ⟪x i, x j⟫ - e) := by
+  rw [eq_sub_of_add_eq (eq_sub_of_add_eq (eq_sub_of_add_eq (sub_eq_iff_eq_add.1 (sum_all_eq _).symm)))]
+  have h2 := sum_ne_eq_two_sum_Ioi (fun i j => H ⟪x i, x j⟫) (by simp [real_inner_comm])
+  simp only [sum_ne_eq_sub] at h2
+  simp [Rs, hx, real_inner_comm, sum_add_distrib, ← mul_sum, ← sum_div, (hs12 1 _ _).trans (hs23 _ 1 _), hs23 _ 1, Nat.cast_choose_two] at h2 ⊢
+  have : (n : ℝ) - 1 ≠ 0 := sub_ne_zero.2 (by norm_cast; omega)
   field_simp
-  ring
+  linear_combination 3 * (n - 1) * (n - 2 : ℝ) * h2
 
-theorem dsum_H (hn : 3 ≤ n) (H : ℝ → ℝ) (c : ℝ) (τ : Fin n → Fin n → ℝ)
-    (hsymm : ∀ i j, τ i j = τ j i) :
-    dsum (fun i j l => (H (τ i j) + H (τ i l) + H (τ j l)) / 3 - c)
-      = 2 * ((n : ℝ) - 2) * ∑ i, ∑ j ∈ Finset.Ioi i, H (τ i j)
-        - c * ((n : ℝ) * ((n : ℝ) - 1) * ((n : ℝ) - 2)) := by
-  simp only [div_eq_inv_mul]
-  rw [dsum_sub, dsum_mul_left, dsum_add, dsum_add, dsum_pair12, dsum_pair13, dsum_pair23, dsum_const,
-    sum_ne_eq_two_sum_Ioi _ fun i j => by rw [hsymm]]
-  ring
-  all_goals omega
-
-end Comb4
-
-section Final
-
-variable {n : ℕ}
-
-theorem dsum_nonneg {f : Fin n → Fin n → Fin n → ℝ}
-    (h : ∀ i j l, i ≠ j → i ≠ l → j ≠ l → 0 ≤ f i j l) : 0 ≤ dsum f := by
-  refine Finset.sum_nonneg fun i _ => Finset.sum_nonneg fun j _ => Finset.sum_nonneg fun l _ => ?_
-  split_ifs with hc
-  · exact h i j l hc.1 hc.2.1 hc.2.2
-  · exact le_rfl
-
-theorem inner_coords (x y : R3) : ⟪x, y⟫ = x 0 * y 0 + x 1 * y 1 + x 2 * y 2 := by
-  simp [PiLp.inner_apply, Fin.sum_univ_three, mul_comm]
-
-theorem normsq_coords (x : R3) (hx : ‖x‖ = 1) : x 0 ^ 2 + x 1 ^ 2 + x 2 ^ 2 = 1 := by
-  have := real_inner_self_eq_norm_sq x
-  rw [hx, inner_coords] at this
-  nlinarith [this]
-
-/-- The Gram determinant of three unit vectors in `ℝ³` is a square, hence nonnegative. -/
-theorem gram_det_nonneg (x y z : R3) (hx : ‖x‖ = 1) (hy : ‖y‖ = 1) (hz : ‖z‖ = 1) :
-    0 ≤ 1 + 2 * ⟪x, y⟫ * ⟪x, z⟫ * ⟪y, z⟫ - ⟪x, y⟫ ^ 2 - ⟪x, z⟫ ^ 2 - ⟪y, z⟫ ^ 2 := by
-  rw [inner_coords, inner_coords, inner_coords]
-  linear_combination sq_nonneg (x 0*(y 1*z 2-y 2*z 1)-x 1*(y 0*z 2-y 2*z 0)+x 2*(y 0*z 1-y 1*z 0))
-    - ((y 0*z 0+y 1*z 1+y 2*z 2)^2-1)*normsq_coords x hx
-    - ((x 0*z 0+x 1*z 1+x 2*z 2)^2-x 0^2-x 1^2-x 2^2)*normsq_coords y hy
-    - ((x 0*y 0+x 1*y 1+x 2*y 2)^2-(x 0^2+x 1^2+x 2^2)*(y 0^2+y 1^2+y 2^2))*normsq_coords z hz
-
-/-- The region of triples `(u, v, t)` of inner products of three unit vectors of `ℝ³`
-(Gram matrix positive semidefinite). -/
 def GramOK (u v t : ℝ) : Prop :=
   u ^ 2 ≤ 1 ∧ v ^ 2 ≤ 1 ∧ t ^ 2 ≤ 1 ∧ 0 ≤ 1 + 2 * u * v * t - u ^ 2 - v ^ 2 - t ^ 2
 
 theorem gramOK_inner (x y z : R3) (hx : ‖x‖ = 1) (hy : ‖y‖ = 1) (hz : ‖z‖ = 1) :
     GramOK ⟪x, y⟫ ⟪x, z⟫ ⟪y, z⟫ := by
-  refine ⟨?_, ?_, ?_, gram_det_nonneg x y z hx hy hz⟩ <;>
+  have := (posSemidef_gram ℝ ![x, y, z]).det_nonneg
+  simp [det_fin_three, gram, real_inner_comm, hx, hy, hz] at this
+  refine ⟨?_, ?_, ?_, by linarith⟩ <;>
     exact (sq_le_one_iff_abs_le_one _).2 ((abs_real_inner_le_norm _ _).trans (by simp [*]))
 
-theorem matDot_add {m : ℕ} (F A B : Matrix (Fin m) (Fin m) ℝ) :
-    matDot F (A + B) = matDot F A + matDot F B := by
-  simp only [matDot, Matrix.add_apply, mul_add, Finset.sum_add_distrib]
-
-theorem matDot_smul {m : ℕ} (F A : Matrix (Fin m) (Fin m) ℝ) (c : ℝ) :
-    matDot F (c • A) = c * matDot F A := by
-  simp only [matDot, Matrix.smul_apply, smul_eq_mul, Finset.mul_sum]
-  refine Finset.sum_congr rfl fun a _ => Finset.sum_congr rfl fun b _ => ?_
-  ring
-
-/-- The reduced matrix kernel `R_k` for `n` points. -/
 noncomputable def Rk (n m k : ℕ) (u v t : ℝ) : Matrix (Fin m) (Fin m) ℝ :=
   ((n : ℝ) - 2) • S3 m k u v t + (S3 m k u u 1 + S3 m k v v 1 + S3 m k t t 1)
     + (1 / ((n : ℝ) - 1)) • S3 m k 1 1 1
@@ -756,73 +606,6 @@ theorem sum_matDot_Rk (K n : ℕ) (m : ℕ → ℕ)
 theorem sum4_swap {ι κ : Type*} [Fintype ι] (s : Finset κ) (f : ι → ι → ι → κ → ℝ) :
     ∑ i, ∑ j, ∑ l, ∑ k ∈ s, f i j l k = ∑ k ∈ s, ∑ i, ∑ j, ∑ l, f i j l k := by
   simp_rw [Finset.sum_comm (t := s)]
-
-theorem three_point_identity (hn : 3 ≤ n) (s : ℝ → ℝ → ℝ → ℝ)
-    (hs12 : ∀ u v t, s u v t = s v u t) (hs23 : ∀ u v t, s u v t = s u t v)
-    (H : ℝ → ℝ) (e : ℝ) (x : Fin n → R3) (hx : ∀ i, ‖x i‖ = 1) :
-    dsum (fun i j l => ((H ⟪x i, x j⟫ + H ⟪x i, x l⟫ + H ⟪x j, x l⟫) / 3
-        - e / (n.choose 2 : ℝ)) - Rs s n ⟪x i, x j⟫ ⟪x i, x l⟫ ⟪x j, x l⟫)
-      + ((n : ℝ) - 2) * ∑ i, ∑ j, ∑ l, s ⟪x i, x j⟫ ⟪x i, x l⟫ ⟪x j, x l⟫
-    = 2 * ((n : ℝ) - 2) * (∑ i, ∑ j ∈ Finset.Ioi i, H ⟪x i, x j⟫ - e) := by
-  rw [dsum_sub, dsum_Rs hn s hs12 hs23 _ (by simp [real_inner_comm]) (by simp [hx]),
-    dsum_H hn H _ _ (by simp [real_inner_comm]), Nat.cast_choose_two]
-  field_simp [sub_ne_zero.2 (Nat.one_lt_cast.2 (by omega : 1 < n)).ne']
-  ring
-
-end Final
-
-/-! ### The kernels at the diagonal `(1,1,1)` -/
-
-section FinalZ
-
-variable {n : ℕ}
-
-end FinalZ
-
-/- BEGIN M5 -/
-section Critical
-
-end Critical
-
-section Critical
-
-end Critical
-
-section Critical
-
-end Critical
-
-section CriticalZ
-
-variable {n : ℕ}
-
-end CriticalZ
-
-section CriticalZsym
-
-variable {n : ℕ}
-
-theorem dsum_swap12 (f : Fin n → Fin n → Fin n → ℝ) :
-    dsum (fun i j l => f j i l) = dsum f :=
-  (dsum_swap23 _).trans (dsum_cyc _).symm
-
-section Perm
-
-variable (τ : Fin n → Fin n → ℝ) (hτ : ∀ i j, τ j i = τ i j) (f : ℝ → ℝ → ℝ → ℝ)
-
-include hτ
-
-end Perm
-
-end CriticalZsym
-
-section CriticalFinal
-
-variable {n : ℕ}
-
-end CriticalFinal
-
-/- END M5 -/
 
 end ThreePoint
 
@@ -1277,19 +1060,11 @@ namespace Cert
 
 open ThreePoint
 
-/-! ## Helpers: zero-skipping scaling, monomial-preserving substitution -/
-
-/-- `a * e`, skipping the multiplication when `a = 0`. -/
 def smulNZ (a : ℤ) (e : Ex) : Ex := if a = 0 then c 0 else smul a e
 
 lemma ev_smulNZ (a : ℤ) (e : Ex) (u v t : ℝ) : (smulNZ a e).ev u v t = a * e.ev u v t := by
-  unfold smulNZ
-  split_ifs with h
-  · simp [h]
-  · simp
+  by_cases h : a = 0 <;> simp [smulNZ, h]
 
-/-- Substitute the variables with codes `(i, j, k)` (`0, 1, 2 ↦ u, v, t`, otherwise `1`) for
-`(u, v, t)`, monomial by monomial (so that no products of large monomials arise). -/
 def sbst (i j k : ℕ) : Ex → Ex
   | .c n => .c n
   | .mon a b d =>
@@ -1299,123 +1074,57 @@ def sbst (i j k : ℕ) : Ex → Ex
   | .add p q => .add (sbst i j k p) (sbst i j k q)
   | .mul p q => .mul (sbst i j k p) (sbst i j k q)
 
-lemma varVal_pow (u v t : ℝ) (i a : ℕ) :
-    varVal u v t i ^ a = u ^ (if i = 0 then a else 0) * v ^ (if i = 1 then a else 0)
-      * t ^ (if i = 2 then a else 0) := by
-  match i with
-  | 0 => simp [varVal]
-  | 1 => simp [varVal]
-  | 2 => simp [varVal]
-  | i + 3 => simp [varVal]
-
 lemma ev_sbst (i j k : ℕ) (e : Ex) (u v t : ℝ) :
     (sbst i j k e).ev u v t = e.ev (varVal u v t i) (varVal u v t j) (varVal u v t k) := by
-  induction e <;> simp only [sbst, ev, pow_add, varVal_pow, *] <;> ring
+  induction e with
+  | mon => rcases i with _ | _ | _ | _ <;> rcases j with _ | _ | _ | _ <;> rcases k with _ | _ | _ | _ <;>
+    simp [sbst, varVal, pow_add, mul_comm, mul_left_comm, mul_assoc]
+  | _ => simp [sbst, *]
 
-/-! ## The `F`-blocks: `Λ · Fp(u,v)` -/
-
-/-- `Λ · Fp(u, v)` for the block `F = M / Λ`, as an expression. -/
 def fpE (r : ℕ) (b : Blk) : Ex :=
   add (sumRange r fun q => smulNZ (b.dq q)
         (mul (sumRange r fun a => smulNZ (b.lq q a) (mon a 0 0))
              (sumRange r fun a => smulNZ (b.lq q a) (mon 0 a 0))))
       (sumRange r fun a => sumRange r fun c => smulNZ (b.del a c) (mon a c 0))
 
-lemma sum3_comm (r : ℕ) (f : ℕ → ℕ → ℕ → ℝ) :
-    ∑ a ∈ Finset.range r, ∑ c ∈ Finset.range r, ∑ q ∈ Finset.range r, f a c q
-      = ∑ q ∈ Finset.range r, ∑ a ∈ Finset.range r, ∑ c ∈ Finset.range r, f a c q := by
-  rw [Finset.sum_congr rfl fun a _ => Finset.sum_comm]
-  exact Finset.sum_comm
-
-lemma cast_ent (r : ℕ) (b : Blk) (a c : ℕ) :
-    (b.ent r a c : ℝ) = (∑ q ∈ Finset.range r, (b.dq q : ℝ) * b.lq q a * b.lq q c)
-      + b.del a c := by
-  simp only [Blk.ent, Int.cast_add, Blk.list_sum_range_map]
+lemma ent_bil (r : ℕ) (b : Blk) (x y : ℕ → ℝ) :
+    ∑ a ∈ Finset.range r, ∑ c ∈ Finset.range r, (b.ent r a c : ℝ) * (x a * y c)
+      = ∑ q ∈ Finset.range r, (b.dq q : ℝ) * ((∑ a ∈ Finset.range r, (b.lq q a : ℝ) * x a)
+          * ∑ a ∈ Finset.range r, (b.lq q a : ℝ) * y a)
+        + ∑ a ∈ Finset.range r, ∑ c ∈ Finset.range r, (b.del a c : ℝ) * (x a * y c) := by
+  simp only [Blk.ent, Blk.list_sum_range_map, Finset.sum_mul_sum]
   push_cast
-  rfl
-
-lemma ev_fpE (r : ℕ) (b : Blk) (u v t : ℝ) :
-    (fpE r b).ev u v t
-      = ∑ a ∈ Finset.range r, ∑ c ∈ Finset.range r, (b.ent r a c : ℝ) * u ^ a * v ^ c := by
-  simp only [fpE, ev_add, ev_sumRange, ev_smulNZ, ev_mul, ev_mon, pow_zero, mul_one, one_mul,
-    cast_ent, add_mul, Finset.sum_add_distrib, Finset.sum_mul, Finset.mul_sum]
-  rw [← sum3_comm, Finset.sum_comm]
+  simp only [Finset.mul_sum, Finset.sum_mul, add_mul, Finset.sum_add_distrib]
+  rw [Finset.sum_comm_cycle]
   simp only [mul_comm, mul_assoc, mul_left_comm]
 
-/-! ## Block matrices and their quadratic forms -/
-
-lemma sum_fin_eq_range (m : ℕ) (f : ℕ → ℕ → ℝ) :
-    ∑ a : Fin m, ∑ b : Fin m, f a b = ∑ a ∈ Finset.range m, ∑ b ∈ Finset.range m, f a b := by
-  rw [← Fin.sum_univ_eq_sum_range (fun a => ∑ b ∈ Finset.range m, f a b) m]
-  exact Finset.sum_congr rfl fun a _ => Fin.sum_univ_eq_sum_range (fun b => f a b) m
-
-/-- `Λ · Fp_k(u,v,t)`, where `Fp_k = ∑_{ab} F_{ab} uᵃ vᵇ Q_k`. -/
 def fkE (r : ℕ) (b : Blk) (k : ℕ) : Ex := mul (fpE r b) (q3E k)
 
-lemma ev_fkE (r : ℕ) (b : Blk) (k : ℕ) (u v t : ℝ) :
-    (fkE r b k).ev u v t = ∑ a ∈ Finset.range r, ∑ c ∈ Finset.range r,
-      (b.ent r a c : ℝ) * (u ^ a * v ^ c * Q3 k u v t) := by
-  simp [fkE, ev_fpE, ev_q3E, Finset.sum_mul, mul_assoc]
-
-/-- The real matrix of an `F`-block: `(∑_q d_q l_q l_qᵀ + Δ) / Λ`. -/
 noncomputable def fmat (r Lam : ℕ) (b : Blk) : Matrix (Fin r) (Fin r) ℝ :=
   Matrix.of fun a c => (b.ent r a c : ℝ) / Lam
 
 lemma matDot_fmat_Y3 (r Lam : ℕ) (b : Blk) (k : ℕ) (u v t : ℝ) :
     matDot (fmat r Lam b) (Y3 r k u v t) = (fkE r b k).ev u v t / Lam := by
-  simp [matDot, fmat, Y3, ev_fkE, Finset.sum_div, div_mul_eq_mul_div, Finset.sum_range]
+  simp [fkE, fpE, ev_sumRange, ev_smulNZ, ev_q3E, ← ent_bil]
+  simp [matDot, fmat, Y3, Finset.sum_range, Finset.mul_sum, div_eq_mul_inv, mul_comm, mul_left_comm, mul_assoc]
 
-lemma Blk.ent_comm {r : ℕ} {b : Blk} (h : b.ok r = true) {a c : ℕ} (ha : a < r) (hc : c < r) :
-    b.ent r a c = b.ent r c a := by
-  obtain ⟨-, hs, -⟩ := Blk.ok_parts h
-  simp only [Blk.ent, hs a (Finset.mem_range.2 ha) c (Finset.mem_range.2 hc),
-    Blk.list_sum_range_map]
-  congr 1
-  exact Finset.sum_congr rfl fun q _ => by ring
-
-lemma Blk.qf_ent (r : ℕ) (b : Blk) (x : ℕ → ℝ) :
-    ∑ a ∈ Finset.range r, ∑ c ∈ Finset.range r, x a * (b.ent r a c : ℝ) * x c
-      = ∑ q ∈ Finset.range r, (b.dq q : ℝ) * (∑ a ∈ Finset.range r, (b.lq q a : ℝ) * x a) ^ 2
-        + ∑ a ∈ Finset.range r, ∑ c ∈ Finset.range r, x a * (b.del a c : ℝ) * x c := by
-  simp only [cast_ent, pow_two, Finset.mul_sum, Finset.sum_mul, mul_add, add_mul,
-    Finset.sum_add_distrib]
-  rw [sum3_comm]
-  simp only [mul_comm, mul_assoc, mul_left_comm]
-
-lemma Blk.qf_ent_nonneg {r : ℕ} {b : Blk} (h : b.ok r = true) (x : ℕ → ℝ) :
-    0 ≤ ∑ a ∈ Finset.range r, ∑ c ∈ Finset.range r, x a * (b.ent r a c : ℝ) * x c := by
-  rw [Blk.qf_ent]
-  exact Blk.qf_nonneg h x
+lemma ent_nonneg {r : ℕ} {b : Blk} (h : b.ok r = true) (x : ℕ → ℝ) :
+    0 ≤ ∑ a ∈ Finset.range r, ∑ c ∈ Finset.range r, (b.ent r a c : ℝ) * (x a * x c) := by
+  rw [ent_bil]
+  simpa [pow_two, mul_comm, mul_left_comm, mul_assoc] using Blk.qf_nonneg h x
 
 lemma fmat_psd {r : ℕ} (Lam : ℕ) {b : Blk} (h : b.ok r = true) : (fmat r Lam b).PosSemidef := by
-  refine .of_dotProduct_mulVec_nonneg (.ext fun i j => by simp [fmat, Blk.ent_comm h j.2 i.2]) fun x => ?_
-  have := div_nonneg (Blk.qf_ent_nonneg h fun a => if ha : a < r then x ⟨a, ha⟩ else 0)
-    Lam.cast_nonneg
-  rw [← sum_fin_eq_range, Finset.sum_div] at this
-  simpa [dotProduct, Matrix.mulVec, fmat, Finset.mul_sum, Finset.sum_div, div_mul_eq_mul_div, mul_div_assoc, mul_assoc] using this
+  obtain ⟨-, hs, -⟩ := Blk.ok_parts h
+  refine .of_dotProduct_mulVec_nonneg (.ext fun i j => ?_) fun x => ?_
+  · simp [fmat, Blk.ent, hs _ (Finset.mem_range.2 i.2) _ (Finset.mem_range.2 j.2), mul_right_comm]
+  have := div_nonneg (ent_nonneg h fun a => if ha : a < r then x ⟨a, ha⟩ else 0) Lam.cast_nonneg
+  simpa [Finset.sum_range, dotProduct, Matrix.mulVec, fmat, Finset.mul_sum, Finset.sum_div, div_eq_mul_inv,
+    mul_comm, mul_left_comm, mul_assoc] using this
 
-/-! ## Symmetrisation and the `F`-part of the identity -/
-
-/-- The sum over the six orderings of the arguments. -/
-def six (f : ℝ → ℝ → ℝ → ℝ) (x y z : ℝ) : ℝ :=
-  f x y z + f x z y + f y x z + f y z x + f z x y + f z y x
-
-lemma matDot_S3 {m : ℕ} (F : Matrix (Fin m) (Fin m) ℝ) (k : ℕ) (x y z : ℝ) :
-    matDot F (S3 m k x y z) = (1 / 6) * six (fun a b c => matDot F (Y3 m k a b c)) x y z := by
-  simp only [S3, matDot_smul, matDot_add, six]
-
-/-- The six-fold sum of `e` at the variables with codes `(i, j, k)`. -/
 def sixE (i j k : ℕ) (e : Ex) : Ex :=
   add (add (add (add (add (sbst i j k e) (sbst i k j e)) (sbst j i k e)) (sbst j k i e))
     (sbst k i j e)) (sbst k j i e)
 
-lemma ev_sixE (i j k : ℕ) (e : Ex) (u v t : ℝ) :
-    (sixE i j k e).ev u v t
-      = six (fun a b c => e.ev a b c) (varVal u v t i) (varVal u v t j) (varVal u v t k) := by
-  simp only [sixE, ev_add, ev_sbst, six]
-
-/-- The `F`-part of the identity, `6 (n-1) Λ ∑_k ⟨F_k, R_k⟩`, from the expressions
-`Λ · Fp_k` (`fs k`). -/
 def ftotE (n K : ℕ) (fs : ℕ → Ex) : Ex :=
   sumRange K fun k =>
     add (add (smul (((n : ℤ) - 1) * ((n : ℤ) - 2)) (sixE 0 1 2 (fs k)))
@@ -1423,39 +1132,16 @@ def ftotE (n K : ℕ) (fs : ℕ → Ex) : Ex :=
         (sixE 2 2 3 (fs k)))))
       (sixE 3 3 3 (fs k))
 
-/-- The value of the `k`-th summand of `ftotE`. -/
-noncomputable def ftotTerm (n : ℕ) (g : ℝ → ℝ → ℝ → ℝ) (u v t : ℝ) : ℝ :=
-  ((n : ℝ) - 1) * ((n : ℝ) - 2) * six g u v t
-    + ((n : ℝ) - 1) * (six g u u 1 + six g v v 1 + six g t t 1) + six g 1 1 1
-
-lemma ev_ftotE (n K : ℕ) (fs : ℕ → Ex) (u v t : ℝ) :
-    (ftotE n K fs).ev u v t
-      = ∑ k ∈ Finset.range K, ftotTerm n (fun a b c => (fs k).ev a b c) u v t := by simp [ftotE, ev_sumRange, ev_add, ev_smul, ev_sixE, ftotTerm, varVal]
-
-lemma key_F {r Lam : ℕ} (b : Blk) (k n : ℕ) (hL : (Lam : ℝ) ≠ 0) (hn : (n : ℝ) - 1 ≠ 0)
-    (u v t : ℝ) :
-    6 * ((n : ℝ) - 1) * Lam * matDot (fmat r Lam b) (Rk n r k u v t)
-      = ftotTerm n (fun a b' c => (fkE r b k).ev a b' c) u v t := by
-  simp [matDot_Rk, Rs, matDot_S3, matDot_fmat_Y3, six, ftotTerm]
-  field_simp
-
-/-! ## SOS blocks with multipliers -/
-
-/-- The exponent triple of the `a`-th basis monomial. -/
 def zt (zs : List (ℕ × ℕ × ℕ)) (a : ℕ) : ℕ × ℕ × ℕ := zs.getD a (0, 0, 0)
 
-/-- The `a`-th basis monomial as an expression. -/
 def zmon (zs : List (ℕ × ℕ × ℕ)) (a : ℕ) : Ex := mon (zt zs a).1 (zt zs a).2.1 (zt zs a).2.2
 
-/-- The product of the `a`-th and `c`-th basis monomials, as a single monomial. -/
 def zzmon (zs : List (ℕ × ℕ × ℕ)) (a c : ℕ) : Ex :=
   mon ((zt zs a).1 + (zt zs c).1) ((zt zs a).2.1 + (zt zs c).2.1) ((zt zs a).2.2 + (zt zs c).2.2)
 
-/-- The value of the `a`-th basis monomial. -/
 noncomputable def zval (zs : List (ℕ × ℕ × ℕ)) (u v t : ℝ) (a : ℕ) : ℝ :=
   u ^ (zt zs a).1 * v ^ (zt zs a).2.1 * t ^ (zt zs a).2.2
 
-/-- The quadratic form `∑_q d_q (l_q · z)² + zᵀ Δ z` of a block in the monomials `zs`. -/
 def sqfE (b : Blk) (zs : List (ℕ × ℕ × ℕ)) : Ex :=
   add (sumRange zs.length fun q => smulNZ (b.dq q)
         (Ex.sq (sumRange zs.length fun a => smulNZ (b.lq q a) (zmon zs a))))
@@ -1468,7 +1154,7 @@ lemma ev_sqfE (b : Blk) (zs : List (ℕ × ℕ × ℕ)) (u v t : ℝ) :
           * (∑ a ∈ Finset.range zs.length, (b.lq q a : ℝ) * zval zs u v t a) ^ 2
         + ∑ a ∈ Finset.range zs.length, ∑ c ∈ Finset.range zs.length,
           zval zs u v t a * (b.del a c : ℝ) * zval zs u v t c := by
-  simp only [sqfE, ev_add, ev_sumRange, ev_smulNZ, ev_sq, zmon, zzmon, ev_mon, zval, pow_add]
+  simp [sqfE, ev_sumRange, ev_smulNZ, zmon, zzmon, zval, pow_add]
   ac_rfl
 
 lemma sqfE_nonneg {b : Blk} {zs : List (ℕ × ℕ × ℕ)} (h : b.ok zs.length = true) (u v t : ℝ) :
@@ -1476,14 +1162,9 @@ lemma sqfE_nonneg {b : Blk} {zs : List (ℕ × ℕ × ℕ)} (h : b.ok zs.length 
   rw [ev_sqfE]
   exact Blk.qf_nonneg h (zval zs u v t)
 
-/-- Gram triples inside the cut `a = an / ad`: all three entries are `≥ a` (the plain case is
-`an = -1`, `ad = 1`). -/
 def GramCut (an : ℤ) (ad : ℕ) (u v t : ℝ) : Prop :=
   GramOK u v t ∧ (an : ℝ) ≤ ad * u ∧ (an : ℝ) ≤ ad * v ∧ (an : ℝ) ≤ ad * t
 
-/-- The multiplier with code `j`: `1-u²`, `1-v²`, `1-t²`, the Gram determinant, `1∓u`, `1∓v`,
-`1∓t` (codes `0`-`9`), and the cut multipliers `ad·u-an`, `ad·v-an`, `ad·t-an` (codes `10`-`12`);
-every other code is the constant `1`. -/
 def codeE (an : ℤ) (ad : ℕ) : ℕ → Ex
   | 0 => sub (c 1) (Ex.sq U)
   | 1 => sub (c 1) (Ex.sq V)
@@ -1506,52 +1187,29 @@ lemma codeE_nonneg (an : ℤ) (ad : ℕ) (code : ℕ) {u v t : ℝ} (h : GramCut
   unfold codeE
   split <;> simp [-sub_nonneg] <;> nlinarith
 
-/-- The product of the multipliers with the given codes (`[]` is `1`). -/
 def gE (an : ℤ) (ad : ℕ) (g : List ℕ) : Ex :=
   g.foldr (fun code acc => mul (codeE an ad code) acc) (c 1)
 
 lemma gE_nonneg (an : ℤ) (ad : ℕ) (g : List ℕ) {u v t : ℝ} (h : GramCut an ad u v t) :
     0 ≤ (gE an ad g).ev u v t := by
-  induction g with
-  | nil => simp [gE]
-  | cons code g ih =>
-    exact mul_nonneg (codeE_nonneg an ad code h) ih
+  induction g <;> simp_all [gE, mul_nonneg, codeE_nonneg _ _ _ h]
 
-/-- An SOS block: multiplier codes `g`, monomial basis `z`, and the positive semidefinite Gram
-data `B`. -/
 structure SBlk where
   g : List ℕ
   z : List (ℕ × ℕ × ℕ)
   B : Blk
 
-/-- The polynomial `Λ · g · (zᵀ S z)` of an SOS block. -/
 def sblkE (an : ℤ) (ad : ℕ) (s : SBlk) : Ex :=
   mul (gE an ad s.g) (sqfE s.B s.z)
 
-lemma sblkE_nonneg (an : ℤ) (ad : ℕ) {s : SBlk} (h : s.B.ok s.z.length = true) {u v t : ℝ}
-    (hg : GramCut an ad u v t) : 0 ≤ (sblkE an ad s).ev u v t := by
-  rw [sblkE, ev_mul]
-  exact mul_nonneg (gE_nonneg an ad s.g hg) (sqfE_nonneg h _ _ _)
-
-/-! ## The certificate and its soundness -/
-
-open scoped RealInnerProductSpace
-
-/-- The empty block. -/
 def Blk.empty : Blk := ⟨[], [], []⟩
 
-/-- The polynomial `∑_j h_j (u^j + v^j + t^j)`. -/
 def hE (h : List ℤ) : Ex :=
   sumRange h.length fun j => smulNZ (h.getD j 0) (add (add (mon j 0 0) (mon 0 j 0)) (mon 0 0 j))
 
-lemma ev_hE (h : List ℤ) (u v t : ℝ) :
-    (hE h).ev u v t
-      = ∑ j ∈ Finset.range h.length, (h.getD j 0 : ℝ) * (u ^ j + v ^ j + t ^ j) := by
-  simp only [hE, ev_sumRange, ev_smulNZ, ev_add, ev_mon, pow_zero, mul_one, one_mul]
+def chk (e : Ex) : Bool :=
+  decide (e.kev (Nat.log2 e.l1 + 1) (max e.dx (max e.dy e.dz) + 1) = 0)
 
-/-- A three-point certificate for `n` points: `H(x) = ∑_j h_j x^j / Λ`, `e = eps / Λ`, the cut
-`a = an / ad` (`an = -1`, `ad = 1` for no cut), the `F`-blocks `F_k` (in the basis `uᵃ vᵇ Q_k`) and
-the SOS blocks, all over the common denominator `Λ = Lam`. -/
 structure Cert3 where
   n : ℕ
   Lam : ℕ
@@ -1564,48 +1222,24 @@ structure Cert3 where
 
 namespace Cert3
 
-/-- The `k`-th `F`-block. -/
 def blk (cf : Cert3) (k : ℕ) : Blk := cf.F.getD k Blk.empty
 
-/-- The size of the `k`-th `F`-block. -/
 def m (cf : Cert3) (k : ℕ) : ℕ := (cf.blk k).Δ.length
 
-/-- The number of `F`-blocks. -/
 def K (cf : Cert3) : ℕ := cf.F.length
 
-/-- The `k`-th `F`-matrix. -/
 noncomputable def Fm (cf : Cert3) (k : ℕ) : Matrix (Fin (cf.m k)) (Fin (cf.m k)) ℝ :=
   fmat (cf.m k) cf.Lam (cf.blk k)
 
-/-- The polynomial minorant `H`. -/
 noncomputable def Hf (cf : Cert3) (x : ℝ) : ℝ :=
   (∑ j ∈ Finset.range cf.h.length, (cf.h.getD j 0 : ℝ) * x ^ j) / cf.Lam
 
-/-- The polynomial identity, scaled by `6 (n-1) C(n,2) Λ`, as an expression. -/
 def idE (cf : Cert3) : Ex :=
   sub (sub (sub (smul (2 * ((cf.n : ℤ) - 1) * (cf.n.choose 2 : ℕ)) (hE cf.h))
         (c (6 * ((cf.n : ℤ) - 1) * cf.eps)))
       (smul (cf.n.choose 2 : ℕ) (ftotE cf.n cf.K fun k => fkE (cf.m k) (cf.blk k) k)))
     (smul (6 * ((cf.n : ℤ) - 1) * (cf.n.choose 2 : ℕ)) (sumE (cf.S.map (sblkE cf.an cf.ad))))
 
-end Cert3
-
-/-- The Kronecker check that an expression vanishes identically. -/
-def chk (e : Ex) : Bool :=
-  decide (e.kev (Nat.log2 e.l1 + 1) (max e.dx (max e.dy e.dz) + 1) = 0)
-
-lemma chk_sound {e : Ex} (h : chk e = true) (u v t : ℝ) : e.ev u v t = 0 := by
-  have hk := of_decide_eq_true h
-  refine Ex.ev_eq_zero_of_kev e (Nat.log2 e.l1 + 1) (max e.dx (max e.dy e.dz) + 1)
-    ?_ ?_ ?_ ?_ hk u v t
-  · omega
-  · omega
-  · omega
-  · exact Nat.lt_log2_self
-
-namespace Cert3
-
-/-- The computable check. -/
 def check (cf : Cert3) : Bool :=
   decide (3 ≤ cf.n) && decide (0 < cf.Lam) && decide (0 < cf.ad) &&
   (List.range cf.K).all (fun k => (cf.blk k).ok (cf.m k)) &&
@@ -1613,59 +1247,27 @@ def check (cf : Cert3) : Bool :=
 
 lemma check_parts {cf : Cert3} (h : cf.check = true) :
     3 ≤ cf.n ∧ 0 < cf.Lam ∧ 0 < cf.ad ∧ (∀ k < cf.K, (cf.blk k).ok (cf.m k) = true) ∧
-    (cf.S.all (fun s => s.B.ok s.z.length) = true) ∧ chk cf.idE = true := by simp_all [check, Bool.and_eq_true, decide_eq_true_eq]
+    (cf.S.all (fun s => s.B.ok s.z.length) = true) ∧ chk cf.idE = true := by simp_all [check]
 
-end Cert3
-
-lemma sos_sum_nonneg (an : ℤ) (ad : ℕ) (S : List SBlk)
-    (hS : S.all (fun s => s.B.ok s.z.length) = true) {u v t : ℝ} (hg : GramCut an ad u v t) :
-    0 ≤ ((S.map (sblkE an ad)).map fun e => e.ev u v t).sum :=
-  List.sum_nonneg (by simp_all [sblkE_nonneg])
-
-/-- The real-number algebra at the end of the soundness proof. -/
-lemma final_ineq {n' C Λ Hs eps A Ssum : ℝ} (hn : 3 ≤ n') (hC : 0 < C) (hΛ : 0 < Λ)
-    (hS : 0 ≤ Ssum)
-    (hev : 2 * (n' - 1) * C * Hs - 6 * (n' - 1) * eps - C * (6 * (n' - 1) * Λ * A)
-      - 6 * (n' - 1) * C * Ssum = 0) :
-    A ≤ (Hs / Λ) / 3 - (eps / Λ) / C := by
-  field_simp
-  nlinarith [mul_nonneg (mul_nonneg hC.le hS) (by linarith : (0:ℝ) ≤ n' - 1)]
-
-namespace Cert3
-
-lemma Hf_sum (cf : Cert3) (u v t : ℝ) :
-    cf.Hf u + cf.Hf v + cf.Hf t
-      = (∑ j ∈ Finset.range cf.h.length, (cf.h.getD j 0 : ℝ) * (u ^ j + v ^ j + t ^ j))
-        / cf.Lam := by
-  unfold Hf
-  rw [← add_div, ← add_div, ← Finset.sum_add_distrib, ← Finset.sum_add_distrib]
-  congr 1
-  refine Finset.sum_congr rfl fun j _ => ?_
-  ring
-
-/-- The pointwise inequality on Gram triples of the cut. -/
-lemma hpt_gramCut (cf : Cert3) (hc : cf.check = true) {u v t : ℝ} (hg : GramCut cf.an cf.ad u v t) :
-    ∑ k ∈ Finset.range cf.K, matDot (cf.Fm k) (Rk cf.n (cf.m k) k u v t)
-      ≤ (cf.Hf u + cf.Hf v + cf.Hf t) / 3 - ((cf.eps : ℝ) / cf.Lam) / (cf.n.choose 2 : ℕ) := by
-  obtain ⟨hn, hL, -, -, hS, hz⟩ := check_parts hc
-  have hev := chk_sound hz u v t
-  rify at hL
-  push_cast [idE, ev_sub, ev_smul, ev_c, ev_hE, ev_ftotE, ev_sumE, ← key_F _ _ cf.n hL.ne' (sub_ne_zero.2 (by norm_cast; omega)), ← Finset.mul_sum] at hev
-  rw [Hf_sum]
-  exact final_ineq (by exact_mod_cast hn) (by exact_mod_cast Nat.choose_pos (by omega)) hL (sos_sum_nonneg cf.an cf.ad cf.S hS hg) hev
-
-lemma gramCut_of_le {cf : Cert3} (hA : 0 < cf.ad) {u v t : ℝ} (hg : GramOK u v t)
-    (hu : (cf.an : ℝ) / cf.ad ≤ u) (hv : (cf.an : ℝ) / cf.ad ≤ v)
-    (ht : (cf.an : ℝ) / cf.ad ≤ t) : GramCut cf.an cf.ad u v t := by
-  simp_all [GramCut, div_le_iff₀']
-
-/-- The pointwise inequality required by `three_point_bound_cut` (cut `a = an / ad`). -/
 lemma hpt_cut (cf : Cert3) (hc : cf.check = true) {u v t : ℝ} (hg : GramOK u v t)
     (hu : (cf.an : ℝ) / cf.ad ≤ u) (hv : (cf.an : ℝ) / cf.ad ≤ v)
     (ht : (cf.an : ℝ) / cf.ad ≤ t) :
     ∑ k ∈ Finset.range cf.K, matDot (cf.Fm k) (Rk cf.n (cf.m k) k u v t)
-      ≤ (cf.Hf u + cf.Hf v + cf.Hf t) / 3 - ((cf.eps : ℝ) / cf.Lam) / (cf.n.choose 2 : ℕ) :=
-  hpt_gramCut cf hc (gramCut_of_le (check_parts hc).2.2.1 hg hu hv ht)
+      ≤ (cf.Hf u + cf.Hf v + cf.Hf t) / 3 - ((cf.eps : ℝ) / cf.Lam) / (cf.n.choose 2 : ℕ) := by
+  obtain ⟨hn, hL, hA, -, hS, hz⟩ := check_parts hc
+  have hS' : 0 ≤ (sumE (cf.S.map (sblkE cf.an cf.ad))).ev u v t := by
+    rw [ev_sumE]
+    exact List.sum_nonneg (by simp_all [sblkE]; exact fun s hs => mul_nonneg (gE_nonneg _ _ _ (by simp_all [GramCut, div_le_iff₀'])) (sqfE_nonneg (hS s hs) ..))
+  have hC : (0 : ℝ) < (cf.n.choose 2 : ℕ) := by exact_mod_cast Nat.choose_pos (by omega)
+  have hev := Ex.ev_eq_zero_of_kev _ _ _ (by omega) (by omega) (by omega) Nat.lt_log2_self
+    (of_decide_eq_true hz) u v t
+  rify at hn hL
+  have hn1 : (0 : ℝ) < cf.n - 1 := by linarith
+  simp [idE, hE, Hf, ftotE, sixE, ev_sbst, varVal, Fm, matDot_Rk, Rs, S3, matDot_smul, matDot_add,
+    matDot_fmat_Y3, ev_sumRange, ev_smulNZ, ev_sumE, mul_add, Finset.sum_add_distrib, ← Finset.mul_sum,
+    ← Finset.sum_div, List.getD_eq_getElem?_getD] at hev hS' ⊢
+  field_simp
+  nlinarith [mul_nonneg (mul_nonneg hC.le hS') hn1.le]
 
 end Cert3
 
@@ -4248,400 +3850,65 @@ end ThomsonN7
 end Asm_Typed7
 
 section Asm_T4
-namespace ThomsonN7
-namespace M6
-
-/-! ### Integer interval arithmetic (exact, no rounding) -/
-
-/-- membership of a real number in a closed interval with integer endpoints -/
-def Imem (I : ℤ × ℤ) (x : ℝ) : Prop := (I.1 : ℝ) ≤ x ∧ x ≤ (I.2 : ℝ)
-
-def iadd (a b : ℤ × ℤ) : ℤ × ℤ := (a.1 + b.1, a.2 + b.2)
-
-def imul (a b : ℤ × ℤ) : ℤ × ℤ :=
-  (min (min (a.1 * b.1) (a.1 * b.2)) (min (a.2 * b.1) (a.2 * b.2)),
-   max (max (a.1 * b.1) (a.1 * b.2)) (max (a.2 * b.1) (a.2 * b.2)))
-
-def isq (a : ℤ × ℤ) : ℤ × ℤ :=
-  if 0 ≤ a.1 then (a.1 * a.1, a.2 * a.2)
-  else if a.2 ≤ 0 then (a.2 * a.2, a.1 * a.1)
-  else (0, max (a.1 * a.1) (a.2 * a.2))
-
-def iscale (c : ℤ) (a : ℤ × ℤ) : ℤ × ℤ :=
-  if 0 ≤ c then (c * a.1, c * a.2) else (c * a.2, c * a.1)
-
-lemma iadd_mem {a b : ℤ × ℤ} {x y : ℝ} (hx : Imem a x) (hy : Imem b y) :
-    Imem (iadd a b) (x + y) := by
-  unfold Imem iadd at *
-  push_cast
-  constructor <;> linarith [hx.1, hx.2, hy.1, hy.2]
-
-lemma iscale_mem {a : ℤ × ℤ} {x : ℝ} (c : ℤ) (hx : Imem a x) :
-    Imem (iscale c a) (c * x) := by
-  unfold Imem iscale at *
-  split_ifs with hc <;> rify at hc <;> constructor <;> push_cast <;> nlinarith
-
-lemma mul_ge_min4 {x y a1 a2 b1 b2 : ℝ} (hx1 : a1 ≤ x) (hx2 : x ≤ a2) (hy1 : b1 ≤ y)
-    (hy2 : y ≤ b2) : min (min (a1 * b1) (a1 * b2)) (min (a2 * b1) (a2 * b2)) ≤ x * y := by
-  by_contra! h
-  simp only [lt_min_iff] at h
-  rcases le_total 0 y with hy | hy <;> rcases le_total 0 a1 with ha | ha <;>
-    rcases le_total 0 a2 with hb | hb <;> nlinarith
-
-lemma mul_le_max4 {x y a1 a2 b1 b2 : ℝ} (hx1 : a1 ≤ x) (hx2 : x ≤ a2) (hy1 : b1 ≤ y)
-    (hy2 : y ≤ b2) : x * y ≤ max (max (a1 * b1) (a1 * b2)) (max (a2 * b1) (a2 * b2)) := by
-  by_contra! h
-  simp at h
-  cases le_total 0 y <;> cases le_total 0 a1 <;> cases le_total 0 a2 <;> nlinarith
-
-lemma imul_mem {a b : ℤ × ℤ} {x y : ℝ} (hx : Imem a x) (hy : Imem b y) :
-    Imem (imul a b) (x * y) := by
-  obtain ⟨hx1, hx2⟩ := hx
-  obtain ⟨hy1, hy2⟩ := hy
-  constructor
-  · have := mul_ge_min4 hx1 hx2 hy1 hy2
-    dsimp only [imul]
-    push_cast [Int.cast_min]
-    exact this
-  · have := mul_le_max4 hx1 hx2 hy1 hy2
-    dsimp only [imul]
-    push_cast [Int.cast_max]
-    exact this
-
-lemma isq_mem {a : ℤ × ℤ} {x : ℝ} (hx : Imem a x) : Imem (isq a) (x ^ 2) := by
-  obtain ⟨hx1, hx2⟩ := hx
-  unfold isq Imem
-  rcases le_total 0 x with h | h <;> split_ifs <;> rify at * <;> push_cast [Int.cast_max] <;>
-    constructor <;> nlinarith [le_max_left ((a.1 : ℝ) * a.1) (a.2 * a.2), le_max_right ((a.1 : ℝ) * a.1) (a.2 * a.2)]
-
-/-! ### Homogeneous Gram determinants and their interval enclosures -/
-
-/-- Gram determinant of three unit vectors, homogenised by `δ` (the diagonal entry) -/
-def det3h {R : Type*} [CommRing R] (δ a b c : R) : R :=
-  δ ^ 3 + 2 * a * b * c - δ * (a ^ 2 + b ^ 2 + c ^ 2)
-
-/-- Gram determinant of four unit vectors, homogenised (same as `M3.det4h`) -/
-def det4h {R : Type*} [CommRing R] (δ p01 p02 p03 p12 p13 p23 : R) : R :=
-  δ ^ 4 - δ ^ 2 * (p01 ^ 2 + p02 ^ 2 + p03 ^ 2 + p12 ^ 2 + p13 ^ 2 + p23 ^ 2)
-    + (p01 ^ 2 * p23 ^ 2 + p02 ^ 2 * p13 ^ 2 + p03 ^ 2 * p12 ^ 2)
-    + 2 * δ * (p01 * p12 * p02 + p01 * p13 * p03 + p02 * p23 * p03 + p12 * p23 * p13)
-    - 2 * (p01 * p02 * p13 * p23 + p01 * p03 * p12 * p23 + p02 * p03 * p12 * p13)
-
-def idet3 (δ : ℤ) (A B C : ℤ × ℤ) : ℤ × ℤ :=
-  iadd (iadd (δ ^ 3, δ ^ 3) (iscale 2 (imul (imul A B) C)))
-    (iscale (-δ) (iadd (iadd (isq A) (isq B)) (isq C)))
-
-lemma idet3_mem (δ : ℤ) {A B C : ℤ × ℤ} {a b c : ℝ} (ha : Imem A a) (hb : Imem B b)
-    (hc : Imem C c) : Imem (idet3 δ A B C) (det3h (δ : ℝ) a b c) := by
-  convert iadd_mem (iadd_mem (⟨le_rfl, le_rfl⟩ : Imem (δ ^ 3, δ ^ 3) _) (iscale_mem 2 (imul_mem (imul_mem ha hb) hc)))
-    (iscale_mem (-δ) (iadd_mem (iadd_mem (isq_mem ha) (isq_mem hb)) (isq_mem hc))) using 1
-  · rfl
-  push_cast [det3h]
-  ring
-
-def idet4 (δ : ℤ) (A B C D E F : ℤ × ℤ) : ℤ × ℤ :=
-  let s := iadd (iadd (iadd (isq A) (isq B)) (isq C)) (iadd (iadd (isq D) (isq E)) (isq F))
-  let q := iadd (iadd (imul (isq A) (isq F)) (imul (isq B) (isq E))) (imul (isq C) (isq D))
-  let t := iadd (iadd (imul (imul A D) B) (imul (imul A E) C))
-    (iadd (imul (imul B F) C) (imul (imul D F) E))
-  let u := iadd (iadd (imul (imul A B) (imul E F)) (imul (imul A C) (imul D F)))
-    (imul (imul B C) (imul D E))
-  iadd (iadd (iadd (δ ^ 4, δ ^ 4) (iscale (-(δ ^ 2)) s)) (iadd q (iscale (2 * δ) t))) (iscale (-2) u)
-
-lemma idet4_mem (δ : ℤ) {A B C D E F : ℤ × ℤ} {a b c d e f : ℝ} (ha : Imem A a)
-    (hb : Imem B b) (hc : Imem C c) (hd : Imem D d) (he : Imem E e) (hf : Imem F f) :
-    Imem (idet4 δ A B C D E F) (det4h (δ : ℝ) a b c d e f) := by
-  convert iadd_mem (iadd_mem (iadd_mem (⟨le_rfl, le_rfl⟩ : Imem (δ ^ 4, δ ^ 4) _)
-    (iscale_mem (-(δ ^ 2)) (iadd_mem (iadd_mem (iadd_mem (isq_mem ha) (isq_mem hb)) (isq_mem hc))
-      (iadd_mem (iadd_mem (isq_mem hd) (isq_mem he)) (isq_mem hf)))))
-    (iadd_mem (iadd_mem (iadd_mem (imul_mem (isq_mem ha) (isq_mem hf))
-      (imul_mem (isq_mem hb) (isq_mem he))) (imul_mem (isq_mem hc) (isq_mem hd)))
-      (iscale_mem (2 * δ) (iadd_mem (iadd_mem (imul_mem (imul_mem ha hd) hb)
-        (imul_mem (imul_mem ha he) hc))
-        (iadd_mem (imul_mem (imul_mem hb hf) hc) (imul_mem (imul_mem hd hf) he))))))
-    (iscale_mem (-2) (iadd_mem (iadd_mem (imul_mem (imul_mem ha hb) (imul_mem he hf))
-      (imul_mem (imul_mem ha hc) (imul_mem hd hf))) (imul_mem (imul_mem hb hc) (imul_mem hd he))))
-    using 1
-  · rfl
-  push_cast [det4h]
-  ring
-
-/-! ### Boxes, bisection and the two refutation checkers -/
-
-structure Box6 where
-  A : ℤ × ℤ
-  B : ℤ × ℤ
-  C : ℤ × ℤ
-  D : ℤ × ℤ
-  E : ℤ × ℤ
-  F : ℤ × ℤ
-
-def Box6.Mem (b : Box6) (a₁ a₂ a₃ a₄ a₅ a₆ : ℝ) : Prop :=
-  Imem b.A a₁ ∧ Imem b.B a₂ ∧ Imem b.C a₃ ∧ Imem b.D a₄ ∧ Imem b.E a₅ ∧ Imem b.F a₆
-
-def mid (I : ℤ × ℤ) : ℤ := (I.1 + I.2) / 2
-
-lemma mid_bounds {I : ℤ × ℤ} (h : I.1 ≤ I.2) : I.1 ≤ mid I ∧ mid I ≤ I.2 := by
-  unfold mid; omega
-
-/-- the coordinate (0..5) with the widest interval -/
-def widest (b : Box6) : ℕ :=
-  let w : List ℤ := [b.A.2 - b.A.1, b.B.2 - b.B.1, b.C.2 - b.C.1, b.D.2 - b.D.1,
-    b.E.2 - b.E.1, b.F.2 - b.F.1]
-  ((List.range 6).foldl (fun (best : ℕ × ℤ) i =>
-    if best.2 < w.getD i 0 then (i, w.getD i 0) else best) (0, w.getD 0 0)).1
-
-def Box6.split (j : ℕ) (b : Box6) : Box6 × Box6 :=
-  match j with
-  | 0 => ({ b with A := (b.A.1, mid b.A) }, { b with A := (mid b.A, b.A.2) })
-  | 1 => ({ b with B := (b.B.1, mid b.B) }, { b with B := (mid b.B, b.B.2) })
-  | 2 => ({ b with C := (b.C.1, mid b.C) }, { b with C := (mid b.C, b.C.2) })
-  | 3 => ({ b with D := (b.D.1, mid b.D) }, { b with D := (mid b.D, b.D.2) })
-  | 4 => ({ b with E := (b.E.1, mid b.E) }, { b with E := (mid b.E, b.E.2) })
-  | _ => ({ b with F := (b.F.1, mid b.F) }, { b with F := (mid b.F, b.F.2) })
-
-lemma imem_split {I : ℤ × ℤ} {x : ℝ} (h : Imem I x) :
-    Imem (I.1, mid I) x ∨ Imem (mid I, I.2) x := by
-  have hI : I.1 ≤ I.2 := by
-    have := le_trans h.1 h.2
-    exact_mod_cast this
-  rcases le_total x (mid I : ℝ) with hx | hx
-  · exact Or.inl ⟨h.1, hx⟩
-  · exact Or.inr ⟨hx, h.2⟩
-
-lemma Box6.mem_split (j : ℕ) {b : Box6} {a₁ a₂ a₃ a₄ a₅ a₆ : ℝ}
-    (h : b.Mem a₁ a₂ a₃ a₄ a₅ a₆) :
-    (b.split j).1.Mem a₁ a₂ a₃ a₄ a₅ a₆ ∨ (b.split j).2.Mem a₁ a₂ a₃ a₄ a₅ a₆ := by
-  rcases j with _|_|_|_|_|_ <;> simp only [Box6.split, Box6.Mem] at * <;> grind [imem_split]
-
-/-- refutation checker for a 4-subset: on the whole box either the Gram determinant `det4h`
-has no zero or one of the four `det3h` is negative. -/
-def chk4 (δ : ℤ) : ℕ → Box6 → Bool
-  | 0, _ => false
-  | n + 1, b =>
-    decide (0 < (idet4 δ b.A b.B b.C b.D b.E b.F).1) ||
-    decide ((idet4 δ b.A b.B b.C b.D b.E b.F).2 < 0) ||
-    decide ((idet3 δ b.A b.B b.D).2 < 0) || decide ((idet3 δ b.A b.C b.E).2 < 0) ||
-    decide ((idet3 δ b.B b.C b.F).2 < 0) || decide ((idet3 δ b.D b.E b.F).2 < 0) ||
-    (chk4 δ n (b.split (widest b)).1 && chk4 δ n (b.split (widest b)).2)
-
-theorem chk4_sound (δ : ℤ) : ∀ (n : ℕ) (b : Box6) (a₁ a₂ a₃ a₄ a₅ a₆ : ℝ),
-    chk4 δ n b = true → b.Mem a₁ a₂ a₃ a₄ a₅ a₆ →
-    det4h (δ : ℝ) a₁ a₂ a₃ a₄ a₅ a₆ ≠ 0 ∨ det3h (δ : ℝ) a₁ a₂ a₄ < 0 ∨
-      det3h (δ : ℝ) a₁ a₃ a₅ < 0 ∨ det3h (δ : ℝ) a₂ a₃ a₆ < 0 ∨ det3h (δ : ℝ) a₄ a₅ a₆ < 0 := by
-  refine Nat.rec (by simp [chk4]) fun n ih _ _ _ _ _ _ _ h hm => ?_
-  have ⟨hA, hB, hC, hD, hE, hF⟩ := hm
-  obtain ⟨_, _⟩ := idet4_mem δ hA hB hC hD hE hF
-  simp only [chk4, Bool.or_eq_true, Bool.and_eq_true, decide_eq_true_eq, or_assoc] at h
-  rcases h with h | h | h | h | h | h | ⟨h1, h2⟩ <;> try exact (Box6.mem_split _ hm).elim (ih _ _ _ _ _ _ _ h1) (ih _ _ _ _ _ _ _ h2)
-  all_goals by_contra! ⟨_, _, _, _, _⟩ <;> rify at h <;>
-    linarith [(idet3_mem δ hA hB hD).2, (idet3_mem δ hA hC hE).2, (idet3_mem δ hB hC hF).2, (idet3_mem δ hD hE hF).2]
-
-end M6
-end ThomsonN7
 
 open scoped InnerProductSpace
 
 namespace ThomsonN7
 namespace T4
 
-open M6
+lemma detpos {x y z p q r : ℝ} (hx : |x| ≤ 1 / 10) (hy : |y| ≤ 1 / 10) (hz : |z| ≤ 1 / 10)
+    (hp : 0 ≤ p) (hp' : p ≤ 1 / 2) (hq : 0 ≤ q) (hq' : q ≤ 1 / 2)
+    (hr : 0 ≤ r) (hr' : r ≤ 1 / 2) :
+    M3.det4h 1 x y z p q r ≠ 0 := by
+  have h (a b : ℝ) (ha : |a| ≤ 1 / 10) (hb : |b| ≤ 1 / 10) :=
+    abs_le.1 (abs_mul a b ▸ mul_le_mul ha hb (abs_nonneg _) (by norm_num))
+  have := h x y hx hy
+  have := h x z hx hz
+  have := h y z hy hz
+  rw [abs_le] at hx hy hz
+  unfold M3.det4h
+  nlinarith [mul_nonneg (mul_nonneg hp hq) hr, mul_nonneg hq hr, mul_nonneg hp hr, mul_nonneg hp hq]
 
-/-- The Gram determinant of three unit vectors is non-negative. -/
-lemma det3h_nonneg (u v w : R3) (hu : ‖u‖ = 1) (hv : ‖v‖ = 1) (hw : ‖w‖ = 1) :
-    0 ≤ det3h (1 : ℝ) ⟪u, v⟫_ℝ ⟪u, w⟫_ℝ ⟪v, w⟫_ℝ := by
-  have := (Matrix.posSemidef_gram ℝ ![u, v, w]).det_nonneg
-  simp_all [Matrix.det_fin_three, real_inner_comm, det3h]
-  linarith
+/-- Gram entries with `x, y, z` near `0` and `p, q, r` near `cos (2π/5)` give a nonzero
+Gram determinant. -/
+lemma det_ne {τ x y z p q r : ℝ} (hτ : τ ≤ 1 / 10) (hx : |x| ≤ τ) (hy : |y| ≤ τ)
+    (hz : |z| ≤ τ) (hp : |p - M3.cosB| ≤ τ) (hq : |q - M3.cosB| ≤ τ) (hr : |r - M3.cosB| ≤ τ) :
+    M3.det4h 1 x y z p q r ≠ 0 := by
+  have := Real.sq_sqrt (show (0 : ℝ) ≤ 5 by norm_num)
+  have := Real.sqrt_nonneg 5
+  rw [abs_le, M3.cosB] at hp hq hr
+  exact detpos (hx.trans hτ) (hy.trans hτ) (hz.trans hτ) (by nlinarith) (by nlinarith)
+    (by nlinarith) (by nlinarith) (by nlinarith) (by nlinarith)
 
-/-- Four unit vectors of `ℝ³` whose six pairwise inner products (times `1000`) lie in a box
-certified by `chk4` cannot exist. -/
-lemma box_exclude (n : ℕ) (bx : Box6) (hbx : chk4 1000 n bx = true) (e a b c : R3)
-    (he : ‖e‖ = 1) (ha : ‖a‖ = 1) (hb : ‖b‖ = 1) (hc : ‖c‖ = 1)
-    (hm : bx.Mem (1000 * ⟪e, a⟫_ℝ) (1000 * ⟪e, b⟫_ℝ) (1000 * ⟪e, c⟫_ℝ)
-      (1000 * ⟪a, b⟫_ℝ) (1000 * ⟪a, c⟫_ℝ) (1000 * ⟪b, c⟫_ℝ)) : False := by
-  have := det3h_nonneg e a b he ha hb
-  have := det3h_nonneg e a c he ha hc
-  have := det3h_nonneg e b c he hb hc
-  have := det3h_nonneg a b c ha hb hc
-  have hz := M3.det4h_inner_eq_zero ![e, a, b, c] (by simp [Fin.forall_fin_succ, he, ha, hb, hc])
-  rcases chk4_sound 1000 n bx _ _ _ _ _ _ hbx hm with h | h | h | h | h <;>
-    simp [det4h, M3.det4h, det3h] at * <;> first | exact h (by linear_combination 1000 ^ 4 * hz) | linarith
+/-- No three unit vectors have all mutual inner products near `cos (4π/5)`. -/
+lemma no_cosA {τ : ℝ} (hτ : τ ≤ 1 / 10) {a b c : R3} (ha : ‖a‖ = 1) (hb : ‖b‖ = 1) (hc : ‖c‖ = 1)
+    (h1 : |⟪a, b⟫_ℝ - M3.cosA| ≤ τ) (h2 : |⟪a, c⟫_ℝ - M3.cosA| ≤ τ)
+    (h3 : |⟪b, c⟫_ℝ - M3.cosA| ≤ τ) : False := by
+  have := real_inner_self_nonneg (x := a + b + c)
+  simp only [inner_add_left, inner_add_right, real_inner_self_eq_norm_sq, ha, hb, hc,
+    real_inner_comm a b, real_inner_comm a c, real_inner_comm b c] at this
+  rw [abs_le, M3.cosA] at *
+  nlinarith [Real.sq_sqrt (show (0 : ℝ) ≤ 5 by norm_num), Real.sqrt_nonneg 5]
 
-lemma imem_of {lo hi : ℤ} {x : ℝ} (h1 : (lo : ℝ) ≤ x) (h2 : x ≤ hi) : Imem (lo, hi) x :=
-  ⟨h1, h2⟩
+/-- contact type (index into `M3.val`) of a pair `i < j` with poles `0, 1` and ring colouring `l` -/
+def T (l : List Bool) (i j : Fin 7) : Fin 4 :=
+  if j < 2 then 0 else if i < 2 then 2 else
+    cond (l.getD ((j - 2 : ℕ) * (j - 3) / 2 + i - 2) false) 3 1
 
-lemma sqrt5_bounds : (2.236 : ℝ) < √5 ∧ √5 < 2.237 := by
-  have h0 : (0 : ℝ) ≤ √5 := Real.sqrt_nonneg 5
-  have h1 : √5 * √5 = 5 := Real.mul_self_sqrt (by norm_num)
-  constructor <;> nlinarith
+/-- sends the poles `0, 1` to `5, 6` and the ring vertex `r + 2` to `s r` -/
+def sig (s : Equiv.Perm (Fin 5)) : Equiv.Perm (Fin 7) :=
+  (finRotate 7 ^ 5).trans (finSumFinEquiv.permCongr (s.sumCongr (.refl (Fin 2))))
 
-/-- No three ring vectors with mutual inner products all near `cos (2π/5)` (together with a
-vector nearly orthogonal to all three). -/
-lemma no_mono_cosB {τ : ℝ} (hτ : τ ≤ 1 / 10) (e a b c : R3)
-    (he : ‖e‖ = 1) (ha : ‖a‖ = 1) (hb : ‖b‖ = 1) (hc : ‖c‖ = 1)
-    (hea : |⟪e, a⟫_ℝ| ≤ τ) (heb : |⟪e, b⟫_ℝ| ≤ τ) (hec : |⟪e, c⟫_ℝ| ≤ τ)
-    (hab : |⟪a, b⟫_ℝ - M3.cosB| ≤ τ) (hac : |⟪a, c⟫_ℝ - M3.cosB| ≤ τ)
-    (hbc : |⟪b, c⟫_ℝ - M3.cosB| ≤ τ) : False := by
-  refine box_exclude 1 ⟨(-100, 100), (-100, 100), (-100, 100), (209, 410), (209, 410), (209, 410)⟩
-    (by decide) e a b c he ha hb hc ?_
-  have := sqrt5_bounds
-  norm_num [Box6.Mem, Imem, abs_le, M3.cosB] at *
-  and_intros <;> linarith
+/-- A ring colouring without monochromatic triangle is a pentagon. -/
+theorem comb : ∀ l ∈ (List.replicate 10 [false, true]).sections,
+    (∀ i j k : Fin 7, 1 < i → i < j → j < k → ¬(T l i j = T l i k ∧ T l i k = T l j k)) →
+    ∃ s, ∀ i j : Fin 7, i < j → M3.cP (sig s i) (sig s j) = T l i j := by
+  decide +kernel
 
-/-- No three ring vectors with mutual inner products all near `cos (4π/5)` (together with a
-vector nearly orthogonal to all three). -/
-lemma no_mono_cosA {τ : ℝ} (hτ : τ ≤ 1 / 10) (e a b c : R3)
-    (he : ‖e‖ = 1) (ha : ‖a‖ = 1) (hb : ‖b‖ = 1) (hc : ‖c‖ = 1)
-    (hea : |⟪e, a⟫_ℝ| ≤ τ) (heb : |⟪e, b⟫_ℝ| ≤ τ) (hec : |⟪e, c⟫_ℝ| ≤ τ)
-    (hab : |⟪a, b⟫_ℝ - M3.cosA| ≤ τ) (hac : |⟪a, c⟫_ℝ - M3.cosA| ≤ τ)
-    (hbc : |⟪b, c⟫_ℝ - M3.cosA| ≤ τ) : False := by
-  refine box_exclude 1 ⟨(-100, 100), (-100, 100), (-100, 100), (-910, -709), (-910, -709), (-910, -709)⟩
-    (by decide) e a b c he ha hb hc ?_
-  have := sqrt5_bounds
-  norm_num [Box6.Mem, Imem, abs_le, M3.cosA] at *
-  and_intros <;> linarith
-
-/-! ### Combinatorics of the ring: a 2-colouring of `K₅` without monochromatic triangle is a pentagon -/
-
-/-- index of the pair `a < b` in a fixed enumeration of the ten pairs of `Fin 5` -/
-def pidx (a b : ℕ) : ℕ := a * (9 - a) / 2 + (b - a - 1)
-
-/-- colouring of the complete graph on `Fin 5` given by ten Booleans (list indexed by `pidx`) -/
-def mk10 (l : List Bool) (a b : Fin 5) : Bool :=
-  if (a : ℕ) < b then l.getD (pidx a b) false
-  else if (b : ℕ) < a then l.getD (pidx b a) false
-  else false
-
-/-- the pentagon colouring: `true` on cyclically adjacent pairs -/
-def pentc (i j : Fin 5) : Bool := decide (((i : ℕ) + 5 - j) % 5 = 1 ∨ ((j : ℕ) + 5 - i) % 5 = 1)
-
-/-- no monochromatic triangle in a colouring of `K₅` -/
-def triFree (x : Fin 5 → Fin 5 → Bool) : Bool :=
-  decide (∀ a b c : Fin 5, a < b → b < c → ¬ (x a b = true ∧ x a c = true ∧ x b c = true)) &&
-  decide (∀ a b c : Fin 5, a < b → b < c → ¬ (x a b = false ∧ x a c = false ∧ x b c = false))
-
-/-- the colouring is a relabelled pentagon colouring -/
-def isPent (x : Fin 5 → Fin 5 → Bool) : Bool :=
-  decide (∃ σ : Equiv.Perm (Fin 5), ∀ a b : Fin 5, a < b → x a b = pentc (σ a) (σ b))
-
-/-- Every 2-colouring of the edges of `K₅` without a monochromatic triangle is a pentagon
-(and its complement): finite check over the `2 ^ 10` colourings. -/
-theorem comb5_dec : ∀ b01 b02 b03 b04 b12 b13 b14 b23 b24 b34 : Bool,
-    triFree (mk10 [b01, b02, b03, b04, b12, b13, b14, b23, b24, b34]) = true →
-    isPent (mk10 [b01, b02, b03, b04, b12, b13, b14, b23, b24, b34]) = true := by
-  decide
-
-/-! ### The ring colouring of a configuration -/
-
-/-- ring colour: `true` iff the inner product of the ring vectors `a`, `b` (indices `a + 2`,
-`b + 2`) is within `τ` of `cos (2π/5)`. -/
-noncomputable def col (τ : ℝ) (y : Fin 7 → R3) (a b : Fin 5) : Bool :=
-  decide (|⟪y a.succ.succ, y b.succ.succ⟫_ℝ - M3.cosB| ≤ τ)
-
-lemma mk10_col (τ : ℝ) (y : Fin 7 → R3) (a b : Fin 5) (hab : a < b) :
-    mk10 [col τ y 0 1, col τ y 0 2, col τ y 0 3, col τ y 0 4, col τ y 1 2, col τ y 1 3,
-      col τ y 1 4, col τ y 2 3, col τ y 2 4, col τ y 3 4] a b = col τ y a b := by
-  fin_cases a <;> fin_cases b <;> simp [mk10, pidx] at hab ⊢
-
-/-! ### The relabelling of the bipyramid -/
-
-/-- pentagon vertex `a : Fin 5` as an index `0..4` of `Fin 7` -/
-def pentIdx (a : Fin 5) : Fin 7 := ⟨a.val, by omega⟩
-
-/-- The relabelling of `Fin 7` induced by a permutation `s` of the ring `Fin 5`:
-the poles `0, 1` go to the pole indices `5, 6` and the ring vertex `a + 2` goes to `s a`. -/
-def sig7 (s : Equiv.Perm (Fin 5)) (i : Fin 7) : Fin 7 :=
-  if h : i.val < 2 then ⟨i.val + 5, by omega⟩
-  else pentIdx (s ⟨i.val - 2, by omega⟩)
-
-lemma sig7_injective (s : Equiv.Perm (Fin 5)) : Function.Injective (sig7 s) := by
-  intro i j h
-  simp only [sig7, pentIdx, Fin.ext_iff] at h ⊢
-  split_ifs at h <;> simp only [Fin.val_inj, s.injective.eq_iff, Fin.mk.injEq] at h <;> omega
-
-/-- `sig7 s` as a permutation of `Fin 7` -/
-noncomputable def sigEquiv (s : Equiv.Perm (Fin 5)) : Equiv.Perm (Fin 7) :=
-  Equiv.ofBijective (sig7 s) ⟨sig7_injective s, Finite.injective_iff_surjective.1 (sig7_injective s)⟩
-
-lemma sigEquiv_apply (s : Equiv.Perm (Fin 5)) (i : Fin 7) : sigEquiv s i = sig7 s i := rfl
-
-lemma sig7_zero (s : Equiv.Perm (Fin 5)) : sig7 s 0 = 5 := by simp [sig7]
-
-lemma sig7_one (s : Equiv.Perm (Fin 5)) : sig7 s 1 = 6 := by simp [sig7]
-
-lemma sig7_ring (s : Equiv.Perm (Fin 5)) (a : Fin 5) : sig7 s a.succ.succ = pentIdx (s a) := by
-  simp [sig7]
-
-/-! ### Nominal Gram entries of the relabelled bipyramid -/
-
-lemma inner_P_pole_pole : ⟪pentBipyramid 5, pentBipyramid 6⟫_ℝ = -1 := by
-  rw [M3.inner_P]
-  simp [M3.cP, M3.val]
-
-lemma pentIdx_ne_five (a : Fin 5) : pentIdx a ≠ 5 := by
-  intro h
-  have := congrArg Fin.val h
-  simp [pentIdx] at this
-  omega
-
-lemma pentIdx_ne_six (a : Fin 5) : pentIdx a ≠ 6 := by grind [pentIdx]
-
-lemma pentIdx_lt (a : Fin 5) : (pentIdx a).val < 5 := a.isLt
-
-lemma inner_P_five_ring (a : Fin 5) : ⟪pentBipyramid 5, pentBipyramid (pentIdx a)⟫_ℝ = 0 := by
-  obtain ⟨-, -, h, -⟩ := M3.cP_pent_pole (pentIdx a) (pentIdx_lt a)
-  rw [M3.inner_P, ite_eq_right (pentIdx_ne_five a).symm, h]
-  simp [M3.val]
-
-lemma inner_P_six_ring (a : Fin 5) : ⟪pentBipyramid 6, pentBipyramid (pentIdx a)⟫_ℝ = 0 := by
-  obtain ⟨-, -, -, h⟩ := M3.cP_pent_pole (pentIdx a) (pentIdx_lt a)
-  rw [M3.inner_P, ite_eq_right (pentIdx_ne_six a).symm, h]
-  simp [M3.val]
-
-lemma pentIdx_injective : Function.Injective pentIdx := by decide
-lemma inner_P_ring (i j : Fin 5) (hij : i ≠ j) :
-    ⟪pentBipyramid (pentIdx i), pentBipyramid (pentIdx j)⟫_ℝ =
-      if pentc i j = true then M3.cosB else M3.cosA := by
-  fin_cases i <;> fin_cases j <;> simp_all [M3.inner_P, M3.cP, pentIdx, pentc, M3.val]
-
-/-! ### Ring rigidity -/
-
-lemma ring_ge2 (a : Fin 5) : 2 ≤ (a.succ.succ : Fin 7).val := by simp
-
-lemma ring_lt (a b : Fin 5) (h : a < b) : (a.succ.succ : Fin 7) < b.succ.succ :=
-  Fin.succ_lt_succ_iff.2 (Fin.succ_lt_succ_iff.2 h)
-
-lemma exists_ring (j : Fin 7) (hj : 2 ≤ j.val) : ∃ b : Fin 5, j = b.succ.succ :=
-  ⟨⟨j.val - 2, by omega⟩, Fin.ext (by simp; omega)⟩
-
-theorem ring_pentagon {τ : ℝ} (hτ : τ ≤ 1 / 10) (y : Fin 7 → R3) (hy : ∀ i, ‖y i‖ = 1)
-    (h0r : ∀ r : Fin 7, 2 ≤ r.val → |⟪y 0, y r⟫_ℝ| ≤ τ)
-    (hrr : ∀ r r' : Fin 7, 2 ≤ r.val → r < r' →
-      |⟪y r, y r'⟫_ℝ - M3.cosB| ≤ τ ∨ |⟪y r, y r'⟫_ℝ - M3.cosA| ≤ τ) :
-    ∃ s : Equiv.Perm (Fin 5), ∀ a b : Fin 5, a ≠ b →
-      |⟪y a.succ.succ, y b.succ.succ⟫_ℝ -
-        ⟪pentBipyramid (pentIdx (s a)), pentBipyramid (pentIdx (s b))⟫_ℝ| ≤ τ := by
-  have H0 a := h0r _ (ring_ge2 a)
-  have HA a b h := (hrr _ _ (ring_ge2 a) (ring_lt a b h)).resolve_left
-  obtain ⟨s, hs⟩ := of_decide_eq_true (comb5_dec (col τ y 0 1) (col τ y 0 2) (col τ y 0 3)
-      (col τ y 0 4) (col τ y 1 2) (col τ y 1 3) (col τ y 1 4) (col τ y 2 3) (col τ y 2 4)
-      (col τ y 3 4) (by
-    simp only [triFree, Bool.and_eq_true, decide_eq_true_eq]
-    constructor <;> rintro a b c hab hbc ⟨h1, h2, h3⟩ <;>
-      simp only [↓mk10_col, hab, hbc, hab.trans hbc, col, decide_eq_true_eq, decide_eq_false_iff_not] at h1 h2 h3
-    · exact no_mono_cosB hτ (y 0) _ _ _ (hy _) (hy _) (hy _) (hy _) (H0 a) (H0 b) (H0 c)
-        h1 h2 h3
-    · exact no_mono_cosA hτ (y 0) _ _ _ (hy _) (hy _) (hy _) (hy _) (H0 a) (H0 b) (H0 c)
-        (HA a b hab h1) (HA a c (hab.trans hbc) h2) (HA b c hbc h3)))
-  refine ⟨s, fun a b hab => ?_⟩
-  wlog h : a < b generalizing a b
-  · rw [real_inner_comm, real_inner_comm (pentBipyramid _)]
-    exact this b a hab.symm (hab.lt_or_gt.resolve_left h)
-  rw [inner_P_ring _ _ (s.injective.ne hab), ← hs a b h, mk10_col τ y a b h]
-  split_ifs with hc
-  exacts [of_decide_eq_true hc, HA a b h (hc ∘ decide_eq_true)]
-
+lemma T_eq (c : Fin 7 → Fin 7 → Bool) (i j : Fin 7) (hi : 1 < i) (h : i < j) :
+    T [c 2 3, c 2 4, c 3 4, c 2 5, c 3 5, c 4 5, c 2 6, c 3 6, c 4 6, c 5 6] i j =
+      cond (c i j) 3 1 := by
+  fin_cases i <;> fin_cases j <;> simp [T] at *
 theorem ring_rigid {τ : ℝ} (hτ : τ ≤ 1 / 10) (y : Fin 7 → R3) (hy : ∀ i, ‖y i‖ = 1)
     (h01 : |⟪y 0, y 1⟫_ℝ + 1| ≤ τ)
     (h0r : ∀ r : Fin 7, 2 ≤ r.val → |⟪y 0, y r⟫_ℝ| ≤ τ)
@@ -4650,18 +3917,30 @@ theorem ring_rigid {τ : ℝ} (hτ : τ ≤ 1 / 10) (y : Fin 7 → R3) (hy : ∀
       |⟪y r, y r'⟫_ℝ - M3.cosB| ≤ τ ∨ |⟪y r, y r'⟫_ℝ - M3.cosA| ≤ τ) :
     ∃ σ : Equiv.Perm (Fin 7), ∀ i j, i ≠ j →
       |⟪y i, y j⟫_ℝ - ⟪pentBipyramid (σ i), pentBipyramid (σ j)⟫_ℝ| ≤ τ := by
-  obtain ⟨s, hs⟩ := ring_pentagon hτ y hy h0r hrr
-  refine ⟨sigEquiv s, fun i j hij => ?_⟩
+  obtain ⟨c, hc⟩ : ∃ c : Fin 7 → Fin 7 → Bool, ∀ i j, c i j ↔ |⟪y i, y j⟫_ℝ - M3.cosB| ≤ τ :=
+    ⟨_, fun _ _ => decide_eq_true_iff⟩
+  have hA i j (hi : 1 < i) (h : i < j) (h' : c i j = false) :=
+    (hrr i j (by omega) h).resolve_left ((hc i j).not.1 (by simp [h']))
+  obtain ⟨s, hs⟩ := comb [c 2 3, c 2 4, c 3 4, c 2 5, c 3 5, c 4 5, c 2 6, c 3 6,
+       c 4 6, c 5 6] (List.mem_sections.2 (by simp)) fun i j k hi hij hjk => by
+    rw [T_eq c i j hi hij, T_eq c i k hi (hij.trans hjk), T_eq c j k (hi.trans hij) hjk]
+    cases h1 : c i j <;> cases h2 : c i k <;> cases h3 : c j k <;> simp
+    · exact no_cosA hτ (hy i) (hy j) (hy k) (hA i j hi hij h1) (hA i k hi (hij.trans hjk) h2)
+        (hA j k (hi.trans hij) hjk h3)
+    · exact det_ne hτ (h0r i (by omega)) (h0r j (by omega)) (h0r k (by omega))
+        ((hc i j).1 h1) ((hc i k).1 h2) ((hc j k).1 h3)
+        (M3.det4h_inner_eq_zero ![y 0, y i, y j, y k] (by simp [Fin.forall_fin_succ, hy]))
+  refine ⟨sig s, fun i j hij => ?_⟩
   wlog h : i < j generalizing i j
   · rw [real_inner_comm, real_inner_comm (pentBipyramid _)]
     exact this j i hij.symm (hij.lt_or_gt.resolve_left h)
-  rcases (by omega : 2 ≤ j.val ∨ i = 0 ∧ j = 1) with hj | ⟨rfl, rfl⟩
-  obtain ⟨b, rfl⟩ := exists_ring j hj
-  rcases (by omega : 2 ≤ i.val ∨ i = 0 ∨ i = 1) with hi | rfl | rfl
-  obtain ⟨a, rfl⟩ := exists_ring i hi
-  simpa [sigEquiv_apply, sig7_ring] using hs a b (by grind)
-  all_goals simp [sigEquiv_apply, sig7_zero, sig7_one, sig7_ring, inner_P_pole_pole, inner_P_five_ring,
-    inner_P_six_ring, h0r, h1r, h01]
+  simp only [M3.inner_P, (sig s).injective.ne hij, ↓reduceIte, hs i j h]
+  by_cases hi : 1 < i
+  · rw [T_eq c i j hi h]
+    cases h' : c i j
+    · simpa [M3.val] using hA i j hi h h'
+    · simpa [M3.val] using (hc i j).1 h'
+  fin_cases i <;> fin_cases j <;> simp [T, M3.val, h0r, h1r, h01] at h hi ⊢
 
 end T4
 end ThomsonN7

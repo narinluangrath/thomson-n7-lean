@@ -31,7 +31,7 @@ def chunks(text):
     out, cur, pending_prefix = [], [], False
     in_block_comment = 0
     for l in lines:
-        opens_prefix = l.startswith('/--') or l.startswith('@[')
+        opens_prefix = l.startswith('/--') or l.startswith('@[') or bool(re.match(r'^open .* in$', l))
         if in_block_comment == 0 and START.match(l) and not pending_prefix and cur:
             out.append('\n'.join(cur))
             cur = []
