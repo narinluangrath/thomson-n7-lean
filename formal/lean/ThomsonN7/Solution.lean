@@ -2025,178 +2025,95 @@ end ThomsonN7
 end RegLocalSection
 
 section Asm_SlabHead
-/-!
-# One-dimensional facts for the typed slab certificates: `H ≤ φ` on an interval
-
-`φ(t) = (√(2 - 2t))⁻¹`.  For `t < 1` put `y = √((1 - t)/2) > 0`, so that `t = 1 - 2 y²` and
-`φ(t) = 1/(2y)`.  A polynomial `H(t) = Q(t)/Lam` satisfies `H ≤ φ` iff `q(y) = Lam - 2 y Q(1 - 2y²) ≥ 0`.
-A certificate gives a rational interval `[A/D, B/D)` containing the `y`-range of the slab; the kernel
-checks `q ≥ 0` there by Bernstein coefficients, bisecting when needed (no witness data).
--/
-
 namespace ThomsonN7
 namespace SlabOneD
 
-/-- Integer polynomial (low degree first) evaluated at a real point. -/
 def peval : List ℤ → ℝ → ℝ
   | [], _ => 0
   | a :: as, y => (a : ℝ) + y * peval as y
 
-/-- Sum of integer polynomials. -/
 def padd : List ℤ → List ℤ → List ℤ
   | [], q => q
   | a :: as, [] => a :: as
   | a :: as, b :: bs => (a + b) :: padd as bs
 
-/-- Scalar multiple. -/
 def pscale (c : ℤ) (p : List ℤ) : List ℤ := p.map (c * ·)
 
-/-- Negation. -/
 def pneg (p : List ℤ) : List ℤ := p.map (- ·)
 
-/-- Product. -/
 def pmul : List ℤ → List ℤ → List ℤ
   | [], _ => []
   | a :: as, q => padd (pscale a q) (0 :: pmul as q)
 
 theorem peval_padd (p q : List ℤ) (y : ℝ) : peval (padd p q) y = peval p y + peval q y := by
-  induction p generalizing q with
-  | nil => simp [padd, peval]
-  | cons a as ih =>
-    cases q with
-    | nil => simp [padd, peval]
-    | cons b bs => simp only [padd, peval, ih]; push_cast; ring
+  induction p generalizing q <;> cases q <;> simp [padd, peval, *]; ring
 
 theorem peval_pscale (c : ℤ) (p : List ℤ) (y : ℝ) : peval (pscale c p) y = c * peval p y := by
-  induction p with
-  | nil => simp [pscale, peval]
-  | cons a as ih =>
-    simp only [pscale, List.map_cons, peval] at ih ⊢
-    rw [ih]; push_cast; ring
+  induction p <;> simp_all [pscale, peval]; ring
 
 theorem peval_pneg (p : List ℤ) (y : ℝ) : peval (pneg p) y = - peval p y := by
-  induction p with
-  | nil => simp [pneg, peval]
-  | cons a as ih =>
-    simp only [pneg, List.map_cons, peval] at ih ⊢
-    rw [ih]; push_cast; ring
+  simpa [pscale, pneg] using peval_pscale (-1) p y
 
 theorem peval_pmul (p q : List ℤ) (y : ℝ) : peval (pmul p q) y = peval p y * peval q y := by
-  induction p with
-  | nil => simp [pmul, peval]
-  | cons a as ih =>
-    simp only [pmul, peval_padd, peval_pscale, peval, ih]; ring
+  induction p <;> simp [pmul, peval_padd, peval_pscale, peval, *]; ring
 
-/-- `Q(1 - 2 y²)` for `Q` given by its coefficient list. -/
 def compQ : List ℤ → List ℤ
   | [] => []
   | c :: cs => padd [c] (pmul [1, 0, -2] (compQ cs))
 
 theorem peval_compQ (Q : List ℤ) (y : ℝ) : peval (compQ Q) y = peval Q (1 - 2 * y ^ 2) := by
-  induction Q with
-  | nil => simp [compQ, peval]
-  | cons c cs ih =>
-    simp only [compQ, peval_padd, peval_pmul, ih, peval]; ring
+  induction Q <;> simp only [compQ, peval_padd, peval_pmul, peval, *]; ring
 
-/-- The interval parameters: `t ≥ lo` reads `ν₂ (1 - t) ≤ 2 μ₂` and `t ≤ hi` reads `2 μ₁ ≤ ν₁ (1 - t)`. -/
 structure Par where
   mu2 : ℤ
   nu2 : ℤ
   mu1 : ℤ
   nu1 : ℤ
 
-/-! ## Positivity on an interval, checked without a witness
-
-For `x ≥ 0` the point `y = (A + B x) / (D (1 + x))` runs over `[A/D, B/D)`, and
-`bern p A B D = ∑ₖ pₖ (A + B x)ᵏ (D + D x)ⁿ⁻ᵏ` equals `(D (1 + x))ⁿ p(y)` (`n + 1 = p.length`).
-So nonnegative coefficients of `bern` (the Bernstein coefficients up to binomials) prove `p ≥ 0` on
-`[A/D, B/D)`; `okI` bisects the interval when they are not. -/
-
-/-- `p ^ k`. -/
 def ppow (p : List ℤ) : ℕ → List ℤ
   | 0 => [1]
   | k + 1 => pmul p (ppow p k)
 
-theorem peval_ppow (p : List ℤ) (y : ℝ) : ∀ k, peval (ppow p k) y = peval p y ^ k
-  | 0 => by simp [ppow, peval]
-  | k + 1 => by rw [ppow, peval_pmul, peval_ppow p y k, pow_succ']
+theorem peval_ppow (p : List ℤ) (y : ℝ) : ∀ k, peval (ppow p k) y = peval p y ^ k := by
+  intro k; induction k <;> simp [ppow, peval, peval_pmul, pow_succ', *]
 
 theorem peval_eq_sum (p : List ℤ) (y : ℝ) :
     peval p y = ∑ k ∈ Finset.range p.length, (p.getD k 0 : ℝ) * y ^ k := by
-  induction p with
-  | nil => simp [peval]
-  | cons a as ih =>
-    rw [peval, ih, List.length_cons, Finset.sum_range_succ', Finset.mul_sum]
-    simp [pow_succ]; ring_nf
+  induction p <;> simp_all [peval, Finset.sum_range_succ', pow_succ, Finset.mul_sum]; ring_nf
 
-theorem peval_foldr_padd (L : List (List ℤ)) (y : ℝ) :
-    peval (L.foldr padd []) y = (L.map (peval · y)).sum := by
-  induction L with
-  | nil => simp [peval]
-  | cons a L ih => simp [peval_padd, ih]
+theorem peval_eq_zero_of_all (p : List ℤ) (h : p.all (· == 0) = true) (y : ℝ) : peval p y = 0 := by
+  induction p <;> simp_all [peval]
 
-/-- `∑ₖ pₖ (A + B x)ᵏ (D + D x)ⁿ⁻ᵏ`. -/
 def bern (p : List ℤ) (A B D : ℤ) : List ℤ :=
   ((List.range p.length).map fun k =>
     pscale (p.getD k 0) (pmul (ppow [A, B] k) (ppow [D, D] (p.length - 1 - k)))).foldr padd []
 
-theorem peval_bern (p : List ℤ) (A B D : ℤ) (x : ℝ) (h : (D : ℝ) * (1 + x) ≠ 0) :
-    peval (bern p A B D) x
-      = ((D : ℝ) * (1 + x)) ^ (p.length - 1) * peval p ((A + B * x) / (D * (1 + x))) := by
-  rw [bern, peval_foldr_padd, List.map_map, Cert.Blk.list_sum_range_map, peval_eq_sum, Finset.mul_sum]
-  refine Finset.sum_congr rfl fun k hk => ?_
-  simp [peval_pscale, peval_pmul, peval_ppow, peval, div_pow,
-    ← pow_sub_mul_pow _ (Nat.le_sub_one_of_lt (Finset.mem_range.1 hk))]
-  field_simp
-
-theorem peval_nonneg_of_all (p : List ℤ) (hp : p.all (0 ≤ ·) = true) (x : ℝ) (hx : 0 ≤ x) :
-    0 ≤ peval p x := by
-  induction p with
-  | nil => simp [peval]
-  | cons a as ih =>
-    simp only [List.all_cons, Bool.and_eq_true, decide_eq_true_eq] at hp
-    simp only [peval]
-    have := ih hp.2
-    have : (0 : ℝ) ≤ a := by exact_mod_cast hp.1
-    positivity
-
-theorem peval_eq_zero_of_all (p : List ℤ) (h : p.all (· == 0) = true) (y : ℝ) : peval p y = 0 := by
-  induction p with
-  | nil => simp [peval]
-  | cons a as ih =>
-    simp only [List.all_cons, Bool.and_eq_true, beq_iff_eq] at h
-    simp only [peval, h.1, ih h.2]; simp
-
-theorem bern_sound (p : List ℤ) (A B D : ℤ) (h : (bern p A B D).all (0 ≤ ·) = true)
-    (hD : 0 < D) (y : ℝ) (h1 : (A : ℝ) / D ≤ y) (h2 : y < (B : ℝ) / D) :
-    0 ≤ peval p y := by
-  have hD' : (0 : ℝ) < D := Int.cast_pos.2 hD
-  have := (div_le_iff₀ hD').1 h1
-  have := (lt_div_iff₀ hD').1 h2
-  have hx0 : 0 ≤ (D * y - A) / (B - D * y) := div_nonneg (by linarith) (by linarith)
-  have := peval_nonneg_of_all _ h _ hx0
-  rw [peval_bern _ _ _ _ _ (by positivity)] at this
-  convert (mul_nonneg_iff_of_pos_left (by positivity)).1 this using 2
-  field_simp
-  ring
-
-/-- Bernstein check on `[A/D, B/D)`, bisecting up to `d` times. -/
 def okI (p : List ℤ) : ℕ → ℤ → ℤ → ℤ → Bool
   | 0, A, B, D => (bern p A B D).all (0 ≤ ·)
   | d + 1, A, B, D => (bern p A B D).all (0 ≤ ·) ||
       (okI p d (2 * A) (A + B) (2 * D) && okI p d (A + B) (2 * B) (2 * D))
 
-theorem okI_sound (p : List ℤ) : ∀ d A B D, okI p d A B D = true → 0 < D →
-    ∀ y : ℝ, (A : ℝ) / D ≤ y → y < (B : ℝ) / D → 0 ≤ peval p y
-  | 0, A, B, D, h, hD, y, h1, h2 => bern_sound p A B D h hD y h1 h2
-  | d + 1, A, B, D, h, hD, y, h1, h2 => by
-    rw [okI, Bool.or_eq_true, Bool.and_eq_true] at h
-    exact h.elim (bern_sound p A B D · hD y h1 h2) fun ⟨hl, hr⟩ =>
-      (lt_or_ge y (↑(A + B) / ↑(2 * D))).elim
-        (okI_sound p d _ _ _ hl (by omega) y (by simpa [mul_div_mul_left] using h1))
-        (okI_sound p d _ _ _ hr (by omega) y · (by simpa [mul_div_mul_left] using h2))
+theorem okI_sound (p : List ℤ) (d : ℕ) : ∀ A B D : ℤ, okI p d A B D → 0 < (D : ℝ) →
+    ∀ y : ℝ, A ≤ D * y → D * y < B → 0 ≤ peval p y := by
+  induction d <;> intro A B D h hD y h1 h2 <;> simp [okI] at h <;>
+    try obtain h | ⟨hl, hr⟩ := h
+  on_goal 3 =>
+    rename_i ih
+    rcases lt_or_ge (2 * D * y) (A + B) with h3 | h3 <;> [apply ih _ _ _ hl; apply ih _ _ _ hr] <;>
+      push_cast <;> linarith
+  all_goals
+    obtain ⟨x, hx, e⟩ : ∃ x : ℝ, 0 ≤ x ∧ A + x * B = y * (D + x * D) :=
+      ⟨_, div_nonneg (sub_nonneg.2 h1) (sub_pos.2 h2).le, by field_simp [(sub_pos.2 h2).ne']; ring⟩
+    have hf (L : List (List ℤ)) : peval (L.foldr padd []) x = (L.map (peval · x)).sum := by
+      induction L <;> simp [peval_padd, peval, *]
+    refine nonneg_of_mul_nonneg_right ?_ (by positivity : (0 : ℝ) < (D + D * x) ^ (p.length - 1))
+    convert (show 0 ≤ peval (bern p A B D) x by
+      revert h; induction bern p A B D <;> simp_all [peval]; intro h _; have := ‹_ → _› ‹_›; positivity) using 1
+    rw [bern, hf, List.map_map, Cert.Blk.list_sum_range_map, peval_eq_sum, Finset.mul_sum]
+    exact Finset.sum_congr rfl fun k hk => by
+      simp [peval_pscale, peval_pmul, peval_ppow, peval, e, mul_pow, ← pow_sub_mul_pow _ (Nat.le_sub_one_of_lt (Finset.mem_range.1 hk))]
+      ring
 
-/-- Data of a certificate for `H = Q / Lam`: positivity of `Lam - 2 y Q(1 - 2y²)` on `[A/D, B/D)`. -/
 structure Cert where
   Lam : ℕ
   Q : List ℤ
@@ -2204,43 +2121,31 @@ structure Cert where
   B : ℤ
   D : ℤ
 
-/-- `Lam - 2 y Q(1 - 2 y²)`. -/
 def Cert.poly (c : Cert) : List ℤ := padd [(c.Lam : ℤ)] (pneg (pmul [0, 2] (compQ c.Q)))
 
-/-- The computable check: `[A/D, B/D)` contains the `y`-interval of `P`, and the Bernstein check passes. -/
 def Cert.check (P : Par) (c : Cert) : Bool :=
   0 < c.Lam && 0 < c.D && c.A < c.B && 0 ≤ c.A && 0 < P.nu2 && (c.A == 0 || 0 < P.nu1) &&
     c.A * c.A * P.nu1 ≤ P.mu1 * (c.D * c.D) && P.mu2 * (c.D * c.D) < c.B * c.B * P.nu2 &&
     okI c.poly 6 c.A c.B c.D
 
-theorem Cert.nonneg (P : Par) (c : Cert) (hc : c.check P = true) (y : ℝ) (h0 : 0 ≤ y)
-    (h2 : (P.nu2 : ℝ) * y ^ 2 ≤ P.mu2) (h1 : (P.mu1 : ℝ) ≤ P.nu1 * y ^ 2) :
-    0 ≤ (c.Lam : ℝ) - 2 * y * peval c.Q (1 - 2 * y ^ 2) := by
-  simp [Cert.check] at hc
-  obtain ⟨⟨⟨⟨⟨⟨⟨⟨-, hD⟩, hAB⟩, hA⟩, hnu2⟩, hA0⟩, hlo⟩, hhi⟩, hok⟩ := hc
-  have := okI_sound c.poly 6 c.A c.B c.D hok hD y ?_ ?_
-  · simp [Cert.poly, peval_padd, peval_pneg, peval_pmul, peval_compQ, peval] at this
-    linarith
-  all_goals rify at *
-  · rw [div_le_iff₀ hD, ← sq_le_sq₀ hA (by positivity)]
-    rcases hA0 with h | h <;> nlinarith [mul_le_mul_of_nonneg_right h1 (sq_nonneg (c.D : ℝ))]
-  · rw [lt_div_iff₀ hD, ← sq_lt_sq₀ (by positivity) (by linarith)]
-    nlinarith [mul_le_mul_of_nonneg_right h2 (sq_nonneg (c.D : ℝ))]
-
-theorem Cert.lam_pos (P : Par) (c : Cert) (hc : c.check P = true) : (0 : ℝ) < c.Lam := by
-  simp only [Cert.check, Bool.and_eq_true, decide_eq_true_eq] at hc
-  exact_mod_cast hc.1.1.1.1.1.1.1.1
-
 theorem Cert.sound (P : Par) (c : Cert) (hc : c.check P = true) {t : ℝ}
     (h2 : (P.nu2 : ℝ) * (1 - t) ≤ 2 * P.mu2) (h1 : 2 * (P.mu1 : ℝ) ≤ P.nu1 * (1 - t))
     (ht : t < 1) :
     peval c.Q t / c.Lam ≤ (Real.sqrt (2 - 2 * t))⁻¹ := by
-  have hss := Real.sq_sqrt (by linarith : 0 ≤ 2 - 2 * t)
-  have h0 := c.nonneg P hc (√(2 - 2 * t) / 2) (by positivity) (by rw [div_pow, hss]; linarith)
-    (by rw [div_pow, hss]; linarith)
-  rw [show (1 : ℝ) - 2 * (√(2 - 2 * t) / 2) ^ 2 = t by rw [div_pow, hss]; ring] at h0
-  rw [div_le_iff₀ (Cert.lam_pos P c hc), inv_mul_eq_div, le_div_iff₀ (Real.sqrt_pos.2 (by linarith))]
-  linarith
+  obtain ⟨y, hy, rfl⟩ : ∃ y > 0, t = 1 - 2 * y ^ 2 :=
+    ⟨√((1 - t) / 2), Real.sqrt_pos.2 (by linarith), by rw [Real.sq_sqrt (by linarith)]; ring⟩
+  simp [Cert.check] at hc
+  rify at hc
+  obtain ⟨⟨⟨⟨⟨⟨⟨⟨hL, hD⟩, hAB⟩, hA⟩, hnu2⟩, hA0⟩, hlo⟩, hhi⟩, hok⟩ := hc
+  have := okI_sound c.poly 6 c.A c.B c.D hok hD y ?_ ?_
+  · simp [Cert.poly, peval_padd, peval_pneg, peval_pmul, peval_compQ, peval] at this
+    rw [show 2 - 2 * (1 - 2 * y ^ 2) = (2 * y) ^ 2 by ring, Real.sqrt_sq (by positivity)]
+    field_simp
+    linarith
+  · rw [← sq_le_sq₀ hA (by positivity)]
+    rcases hA0 with h | h <;> nlinarith
+  · rw [← sq_lt_sq₀ (by positivity) (by linarith)]
+    nlinarith
 
 end SlabOneD
 end ThomsonN7
@@ -3941,29 +3846,11 @@ end ThomsonN7.Glue.Coerce
 end Asm_Coerce
 
 section Asm_Coerce2
-/-!
-# Relaxed contact certificates (Coerce2)
 
-`Coerce.Contact1` / `Contact2` need an *exact* double root of `F` at a rational node, which integer
-SDP data cannot provide.  Here the factorisation is relaxed to
-
-  `s · F = (q y - p)² · G + R`   (resp. `(q1 y - p1)² (q2 y - p2)² · G + R`)
-
-with integers `s > 0`, polynomials `G, R` with `G ≥ g0 > 0` and `R ≥ 0` on `[0, 1]` (both by exact
-Bernstein chains).  Then `F ≥ 0` on `[0, 1]` (so `H ≤ phi`), and `F ≤ 2 Dq δ` forces
-`g0 (q y - p)² ≤ 2 s Dq δ`, i.e. the same coercivity as in the exact case with `Dq` replaced by
-`s Dq`.
--/
-
-namespace ThomsonN7
-namespace Glue
-namespace Coerce
+namespace ThomsonN7.Glue.Coerce
 
 open SlabOneD Base
 
-/-! ## A. One node -/
-
-/-- Relaxed one-node certificate (class `B`): `s F = (q y - p)² G + R`, `G ≥ g0`, `R ≥ 0`. -/
 structure Contact1R where
   Dq : ℕ
   Q : List ℤ
@@ -3977,7 +3864,6 @@ structure Contact1R where
   pieces : List BPiece
   piecesR : List BPiece
 
-/-- The check of a relaxed one-node certificate. -/
 def Contact1R.check (c : Contact1R) : Bool :=
   0 < c.Dq && 0 < c.q && 0 < c.s && 0 < c.g0n && 0 < c.g0d &&
     (padd (pscale (c.s : ℤ) (Fpoly c.Q c.Dq))
@@ -3985,61 +3871,6 @@ def Contact1R.check (c : Contact1R) : Bool :=
     chainOK (padd (pscale (c.g0d : ℤ) c.G) (pneg [(c.g0n : ℤ)])) c.pieces 0 1 1 1 &&
     chainOK c.R c.piecesR 0 1 1 1
 
-theorem Contact1R.factor (c : Contact1R) (hc : c.check = true) (y : ℝ) :
-    c.s * peval (Fpoly c.Q c.Dq) y = (c.q * y - c.p) ^ 2 * peval c.G y + peval c.R y := by
-  simp only [Contact1R.check, Bool.and_eq_true, decide_eq_true_eq] at hc
-  have h := peval_eq_zero_of_all _ hc.1.1.2 y
-  simp only [peval_padd, peval_pneg, peval_pmul, peval_pscale, peval_lin] at h
-  push_cast at h
-  nlinarith [h]
-
-theorem Contact1R.G_ge (c : Contact1R) (hc : c.check = true) {y : ℝ} (h0 : 0 ≤ y) (h1 : y ≤ 1) :
-    (c.g0n : ℝ) / c.g0d ≤ peval c.G y := by
-  simp [Contact1R.check] at hc
-  have := chainOK_nonneg _ _ 0 1 1 1 one_pos one_pos hc.1.2 y (by simpa) (by simpa)
-  rw [div_le_iff₀ (by simp_all)]
-  simp_all [peval_padd, peval_pscale, peval_pneg, peval]
-  linarith
-
-theorem Contact1R.R_nonneg (c : Contact1R) (hc : c.check = true) {y : ℝ} (h0 : 0 ≤ y)
-    (h1 : y ≤ 1) : 0 ≤ peval c.R y := by
-  simp only [Contact1R.check, Bool.and_eq_true, decide_eq_true_eq] at hc
-  have := chainOK_nonneg _ c.piecesR 0 1 1 1 one_pos one_pos hc.2 y (by simpa using h0)
-    (by simpa using h1)
-  exact this
-
-theorem Contact1R.tube (c : Contact1R) (hc : c.check = true) {δ η ν τ : ℝ} (hη : 0 ≤ η)
-    (hδ : 2 * c.s * c.Dq * δ ≤ ((c.g0n : ℝ) / c.g0d) * (c.q * η) ^ 2)
-    (hτ : |1 - 2 * ((c.p : ℝ) / c.q) ^ 2 - ν| + 2 * η * (2 * ((c.p : ℝ) / c.q) + η) ≤ τ)
-    {t : ℝ} (h1 : -1 ≤ t) (h2 : t < 1) :
-    peval c.Q t / c.Dq ≤ phi t ∧ (phi t - peval c.Q t / c.Dq ≤ δ → |t - ν| ≤ τ) := by
-  have hy := yOf_pos h2
-  have hy1 := yOf_le_one h1 h2
-  have hR := c.R_nonneg hc hy.le hy1
-  have hfac := c.factor hc (yOf t)
-  have hX := mul_le_mul_of_nonneg_left (c.G_ge hc hy.le hy1) (sq_nonneg (c.q * yOf t - c.p))
-  simp only [Contact1R.check, Bool.and_eq_true, decide_eq_true_eq] at hc
-  obtain ⟨⟨⟨⟨⟨⟨⟨hD, hq⟩, hs⟩, hg0n⟩, hg0d⟩, -⟩, -⟩, -⟩ := hc
-  have hg0 : (0 : ℝ) < (c.g0n : ℝ) / c.g0d := by positivity
-  have hsR := (Nat.cast_pos (α := ℝ)).2 hs
-  have hF : 0 ≤ peval (Fpoly c.Q c.Dq) (yOf t) := by nlinarith [sq_nonneg (c.q * yOf t - c.p)]
-  refine ⟨H_le_phi_of_F hD h2 hF, fun hs' => ?_⟩
-  rw [← one_sub_two_yOf_sq h2.le]
-  refine abs_t_sub_le hy (by positivity) (abs_le_of_sq_le_sq ?_ hη) hτ
-  rw [show yOf t - c.p / c.q = (c.q * yOf t - c.p) / c.q by field_simp, div_pow, div_le_iff₀ (by positivity)]
-  nlinarith [mul_le_mul_of_nonneg_left (F_le_of_slack hD h2 hy1 hF hs') hsR.le]
-
-/-- `hB` (pole--ring class, node `0`) from a relaxed one-node certificate. -/
-theorem Contact1R.hB (c : Contact1R) (hc : c.check = true) {δ η τ : ℝ} (hη : 0 ≤ η)
-    (hδ : 2 * c.s * c.Dq * δ ≤ ((c.g0n : ℝ) / c.g0d) * (c.q * η) ^ 2)
-    (hτ : |1 - 2 * ((c.p : ℝ) / c.q) ^ 2| + 2 * η * (2 * ((c.p : ℝ) / c.q) + η) ≤ τ) :
-    ∀ t, -1 ≤ t → t < 1 →
-      peval c.Q t / c.Dq ≤ phi t ∧ (phi t - peval c.Q t / c.Dq ≤ δ → |t| ≤ τ) :=
-  fun _ => by simpa using c.tube hc (ν := 0) hη hδ (by simpa)
-
-/-! ## B. Two nodes -/
-
-/-- Relaxed two-node certificate (class `C`): `s F = (q1 y - p1)² (q2 y - p2)² G + R`. -/
 structure Contact2R where
   Dq : ℕ
   Q : List ℤ
@@ -4055,7 +3886,6 @@ structure Contact2R where
   pieces : List BPiece
   piecesR : List BPiece
 
-/-- The check of a relaxed two-node certificate. -/
 def Contact2R.check (c : Contact2R) : Bool :=
   0 < c.Dq && 0 < c.q1 && 0 < c.q2 && 0 < c.s && 0 < c.g0n && 0 < c.g0d &&
     (padd (pscale (c.s : ℤ) (Fpoly c.Q c.Dq))
@@ -4064,58 +3894,40 @@ def Contact2R.check (c : Contact2R) : Bool :=
     chainOK (padd (pscale (c.g0d : ℤ) c.G) (pneg [(c.g0n : ℤ)])) c.pieces 0 1 1 1 &&
     chainOK c.R c.piecesR 0 1 1 1
 
-theorem Contact2R.factor (c : Contact2R) (hc : c.check = true) (y : ℝ) :
-    c.s * peval (Fpoly c.Q c.Dq) y =
-      ((c.q1 * y - c.p1) * (c.q2 * y - c.p2)) ^ 2 * peval c.G y + peval c.R y := by
-  simp only [Contact2R.check, Bool.and_eq_true, decide_eq_true_eq] at hc
-  have h := peval_eq_zero_of_all _ hc.1.1.2 y
-  simp only [peval_padd, peval_pneg, peval_pmul, peval_pscale, peval_lin] at h
-  push_cast at h
-  nlinarith [h]
-
-theorem Contact2R.G_ge (c : Contact2R) (hc : c.check = true) {y : ℝ} (h0 : 0 ≤ y) (h1 : y ≤ 1) :
-    (c.g0n : ℝ) / c.g0d ≤ peval c.G y := by
-  simp [Contact2R.check] at hc
-  rw [div_le_iff₀ (by exact_mod_cast hc.1.1.1.2)]
-  simpa [peval_padd, peval_pscale, peval_pneg, peval, mul_comm] using chainOK_nonneg _ _ 0 1 1 1 one_pos one_pos hc.1.2 y (by simpa) (by simpa)
-
-theorem Contact2R.R_nonneg (c : Contact2R) (hc : c.check = true) {y : ℝ} (h0 : 0 ≤ y)
-    (h1 : y ≤ 1) : 0 ≤ peval c.R y := by
-  simp only [Contact2R.check, Bool.and_eq_true, decide_eq_true_eq] at hc
-  have := chainOK_nonneg _ c.piecesR 0 1 1 1 one_pos one_pos hc.2 y (by simpa using h0)
-    (by simpa using h1)
-  exact this
-
-/-- **Coercivity, two nodes, relaxed.** -/
-theorem Contact2R.tube (c : Contact2R) (hc : c.check = true) {δ η ν1 ν2 τ : ℝ} (hη : 0 ≤ η)
-    (hδ : 2 * c.s * c.Dq * δ ≤ ((c.g0n : ℝ) / c.g0d) *
-      (c.q1 * c.q2 * η * ((c.p1 : ℝ) / c.q1 - (c.p2 : ℝ) / c.q2) / 2) ^ 2)
-    (hτ1 : |1 - 2 * ((c.p1 : ℝ) / c.q1) ^ 2 - ν1| + 2 * η * (2 * ((c.p1 : ℝ) / c.q1) + η) ≤ τ)
-    (hτ2 : |1 - 2 * ((c.p2 : ℝ) / c.q2) ^ 2 - ν2| + 2 * η * (2 * ((c.p2 : ℝ) / c.q2) + η) ≤ τ)
-    {t : ℝ} (h1 : -1 ≤ t) (h2 : t < 1) :
-    peval c.Q t / c.Dq ≤ phi t ∧
-      (phi t - peval c.Q t / c.Dq ≤ δ → |t - ν1| ≤ τ ∨ |t - ν2| ≤ τ) := by
+theorem relaxR {Q X G R : List ℤ} {Dq s g0n g0d : ℕ} {ps pR : List BPiece} {δ W t : ℝ}
+    (hD : 0 < Dq) (hs : 0 < s) (hg : 0 < g0n) (hg' : 0 < g0d)
+    (hz : ∀ x ∈ padd (pscale (s : ℤ) (Fpoly Q Dq)) (pneg (padd (pmul X G) R)), x = 0)
+    (hG : chainOK (padd (pscale (g0d : ℤ) G) (pneg [(g0n : ℤ)])) ps 0 1 1 1)
+    (hR : chainOK R pR 0 1 1 1) (hX : 0 ≤ peval X (yOf t))
+    (hδ : 2 * s * Dq * δ ≤ (g0n : ℝ) / g0d * W) (h1 : -1 ≤ t) (h2 : t < 1) :
+    peval Q t / Dq ≤ phi t ∧ (phi t - peval Q t / Dq ≤ δ → peval X (yOf t) ≤ W) := by
   have hy := yOf_pos h2
   have hy1 := yOf_le_one h1 h2
-  have hG := c.G_ge hc hy.le hy1
-  have hR := c.R_nonneg hc hy.le hy1
-  have hfac := c.factor hc (yOf t)
-  simp [Contact2R.check] at hc
-  obtain ⟨⟨⟨⟨⟨⟨⟨⟨hD, hq1⟩, hq2⟩, hs⟩, hg0n⟩, hg0d⟩, -⟩, -⟩, -⟩ := hc
-  rw [← mul_div_cancel₀ (c.p1 : ℝ) (Nat.cast_ne_zero.2 hq1.ne'),
-    ← mul_div_cancel₀ (c.p2 : ℝ) (Nat.cast_ne_zero.2 hq2.ne')] at hfac
-  have hF : 0 ≤ peval (Fpoly c.Q c.Dq) (yOf t) := nonneg_of_mul_nonneg_right
-    (hfac ▸ add_nonneg (mul_nonneg (sq_nonneg _) (hG.trans' (by positivity))) hR) (by positivity)
-  refine ⟨H_le_phi_of_F hD h2 hF, fun hs' => ?_⟩
-  rw [← one_sub_two_yOf_sq h2.le]
-  refine (two_node_alt hη (abs_le_of_sq_le_sq ?_ (by positivity))).imp
-    (abs_t_sub_le hy (by positivity) · hτ1) (abs_t_sub_le hy (by positivity) · hτ2)
-  rw [div_pow, mul_pow η, sq_abs]
-  exact le_of_mul_le_mul_left (a := (c.g0n : ℝ) / c.g0d * (c.q1 * c.q2) ^ 2) (by
-    linarith [mul_le_mul_of_nonneg_left hG (sq_nonneg ((c.q1 * yOf t - c.q1 * (c.p1 / c.q1)) * (c.q2 * yOf t - c.q2 * (c.p2 / c.q2)))),
-      mul_le_mul_of_nonneg_left (F_le_of_slack hD h2 hy1 hF hs') (Nat.cast_nonneg c.s)]) (by positivity)
+  have h3 := chainOK_nonneg _ _ 0 1 1 1 one_pos one_pos hG _ (by simpa using hy.le) (by simpa)
+  have h4 := chainOK_nonneg _ _ 0 1 1 1 one_pos one_pos hR _ (by simpa using hy.le) (by simpa)
+  have h5 := peval_eq_zero_of_all _ (by simpa) (yOf t)
+  simp [peval_padd, peval_pscale, peval_pneg, peval_pmul, peval] at h3 h5
+  rify at hs hg hg'
+  have hF : 0 ≤ peval (Fpoly Q Dq) (yOf t) := by nlinarith [mul_nonneg hX (by nlinarith : 0 ≤ peval G (yOf t))]
+  refine ⟨H_le_phi_of_F hD h2 hF, fun h => le_of_mul_le_mul_right ?_ hg⟩
+  rw [div_mul_eq_mul_div, le_div_iff₀ hg'] at hδ
+  nlinarith [mul_le_mul_of_nonneg_left h3 hX, mul_le_mul_of_nonneg_left (F_le_of_slack hD h2 hy1 hF h) (mul_pos hs hg').le]
 
-/-- `hC` (ring--ring class, nodes `c1, c2`) from a relaxed two-node certificate. -/
+theorem Contact1R.hB (c : Contact1R) (hc : c.check = true) {δ η τ : ℝ} (hη : 0 ≤ η)
+    (hδ : 2 * c.s * c.Dq * δ ≤ ((c.g0n : ℝ) / c.g0d) * (c.q * η) ^ 2)
+    (hτ : |1 - 2 * ((c.p : ℝ) / c.q) ^ 2| + 2 * η * (2 * ((c.p : ℝ) / c.q) + η) ≤ τ) :
+    ∀ t, -1 ≤ t → t < 1 →
+      peval c.Q t / c.Dq ≤ phi t ∧ (phi t - peval c.Q t / c.Dq ≤ δ → |t| ≤ τ) := by
+  intro t h1 h2
+  simp [Contact1R.check] at hc
+  obtain ⟨⟨⟨⟨⟨⟨⟨hD, hq⟩, hs⟩, hg⟩, hg'⟩, hz⟩, hG⟩, hR⟩ := hc
+  refine (relaxR hD hs hg hg' hz hG hR (by simp [peval_pmul, mul_self_nonneg]) hδ h1 h2).imp_right
+    fun h h' => ?_
+  have := h h'
+  rw [peval_pmul, peval_lin, ← mul_div_cancel₀ (c.p : ℝ) (Nat.cast_ne_zero.2 hq.ne')] at this
+  simpa [one_sub_two_yOf_sq h2.le] using abs_t_sub_le (yOf_pos h2) (by positivity) (ν := 0) (yn := c.p / c.q) (abs_le_of_sq_le_sq
+    (le_of_mul_le_mul_left (a := (c.q : ℝ) ^ 2) (by linarith) (by positivity)) hη) (by simpa)
+
 theorem Contact2R.hC (c : Contact2R) (hc : c.check = true) {δ η τ ε1 ε2 : ℝ} (hη : 0 ≤ η)
     (hδ : 2 * c.s * c.Dq * δ ≤ ((c.g0n : ℝ) / c.g0d) *
       (c.q1 * c.q2 * η * ((c.p1 : ℝ) / c.q1 - (c.p2 : ℝ) / c.q2) / 2) ^ 2)
@@ -4125,24 +3937,28 @@ theorem Contact2R.hC (c : Contact2R) (hc : c.check = true) {δ η τ ε1 ε2 : �
     (hτ2 : ε2 + 2 * η * (2 * ((c.p2 : ℝ) / c.q2) + η) ≤ τ) :
     ∀ t, -1 ≤ t → t < 1 →
       peval c.Q t / c.Dq ≤ phi t ∧
-        (phi t - peval c.Q t / c.Dq ≤ δ → |t - c1| ≤ τ ∨ |t - c2| ≤ τ) :=
-  fun _ => c.tube hc hη hδ (by linarith) (by linarith)
+        (phi t - peval c.Q t / c.Dq ≤ δ → |t - c1| ≤ τ ∨ |t - c2| ≤ τ) := by
+  intro t h1 h2
+  simp [Contact2R.check] at hc
+  obtain ⟨⟨⟨⟨⟨⟨⟨⟨hD, hq1⟩, hq2⟩, hs⟩, hg⟩, hg'⟩, hz⟩, hG⟩, hR⟩ := hc
+  refine (relaxR hD hs hg hg' hz hG hR (by simp [peval_pmul, mul_nonneg, mul_self_nonneg]) hδ h1 h2).imp_right
+    fun h h' => ?_
+  have := h h'
+  simp only [peval_pmul, peval_lin] at this
+  conv_lhs at this => rw [← mul_div_cancel₀ (c.p1 : ℝ) (Nat.cast_ne_zero.2 hq1.ne'),
+    ← mul_div_cancel₀ (c.p2 : ℝ) (Nat.cast_ne_zero.2 hq2.ne')]
+  rw [← one_sub_two_yOf_sq h2.le]
+  refine (two_node_alt hη (abs_le_of_sq_le_sq ?_ (by positivity))).imp
+    (abs_t_sub_le (yOf_pos h2) (by positivity) (yn := c.p1 / c.q1) · (by linarith))
+    (abs_t_sub_le (yOf_pos h2) (by positivity) (yn := c.p2 / c.q2) · (by linarith))
+  rw [div_pow, mul_pow η, sq_abs]
+  exact le_of_mul_le_mul_left (a := ((c.q1 : ℝ) * c.q2) ^ 2) (by linarith) (by positivity)
 
-end Coerce
-end Glue
-end ThomsonN7
+end ThomsonN7.Glue.Coerce
 
 end Asm_Coerce2
 
 section Asm_CertF
-/-! # Fast (linear-traversal) checking of sum-of-squares blocks
-
-The blocks `⟨d, l, Δ⟩` of `Cert1` are read by random access (`List.getD`), which costs `O(r³)`
-kernel steps per block.  Here the same quadratic form and the same positivity check are
-implemented by traversing the coefficient lists once, and proved equivalent to the random-access
-versions.  Also: packed integer data (one natural-number literal per array, decoded in the kernel).
--/
-
 namespace ThomsonN7
 
 open Kron Kron.Ex
@@ -4150,181 +3966,100 @@ namespace Cert
 
 open ThreePoint
 
-/-! ## Packed integer data -/
-
-/-- `n` signed fields of `B` bits (offset binary, least significant first) packed in `x`. -/
 def unpackI (B : ℕ) : ℕ → ℕ → List ℤ
   | 0, _ => []
   | n + 1, x =>
     (((x % (1 <<< B) : ℕ) : ℤ) - ((1 <<< (B - 1) : ℕ) : ℤ)) :: unpackI B n (x >>> B)
 
-/-- `rows` rows of `cols` fields of `B` bits each. -/
 def unpackM (B cols : ℕ) : ℕ → ℕ → List (List ℤ)
   | 0, _ => []
   | rows + 1, x =>
     unpackI B cols (x % (1 <<< (B * cols))) :: unpackM B cols rows (x >>> (B * cols))
 
-/-- A block `⟨d, l, Δ⟩` of size `r` from three packed integers with field widths `Bd Bl BD`. -/
 def mkBlk (r Bd Bl BD xd xl xD : ℕ) : Blk :=
   ⟨unpackI Bd r xd, unpackM Bl r r xl, unpackM BD r r xD⟩
 
-/-! ## The quadratic form of a block, by list traversal -/
-
-/-- The value of the monomial with exponent triple `τ`. -/
-noncomputable def mv (u v t : ℝ) (τ : ℕ × ℕ × ℕ) : ℝ := u ^ τ.1 * v ^ τ.2.1 * t ^ τ.2.2
-
-/-- `∑_a x_a z_a` where `z_a` runs through the monomials `τs` (missing `x_a` count as `0`). -/
 def linF : List (ℕ × ℕ × ℕ) → List ℤ → Ex
   | [], _ => c 0
   | τ :: τs, xs => add (smulNZ (xs.headD 0) (mon τ.1 τ.2.1 τ.2.2)) (linF τs xs.tail)
 
-/-- `∑_q d_q (l_q · z)²` with `q` running through the list `fs` (only its length matters). -/
 def sqF (zs : List (ℕ × ℕ × ℕ)) : List (ℕ × ℕ × ℕ) → List ℤ → List (List ℤ) → Ex
   | [], _, _ => c 0
   | _ :: fs, ds, ls =>
     add (smulNZ (ds.headD 0) (sq (linF zs (ls.headD [])))) (sqF zs fs ds.tail ls.tail)
 
-/-- `∑_c x_c z_a z_c` along a row. -/
 def rowF (ta : ℕ × ℕ × ℕ) : List (ℕ × ℕ × ℕ) → List ℤ → Ex
   | [], _ => c 0
   | τ :: τs, xs =>
     add (smulNZ (xs.headD 0) (mon (ta.1 + τ.1) (ta.2.1 + τ.2.1) (ta.2.2 + τ.2.2)))
       (rowF ta τs xs.tail)
 
-/-- `∑_{a,c} Δ_{ac} z_a z_c`. -/
 def quadF (zs : List (ℕ × ℕ × ℕ)) : List (ℕ × ℕ × ℕ) → List (List ℤ) → Ex
   | [], _ => c 0
   | ta :: tas, rows => add (rowF ta zs (rows.headD [])) (quadF zs tas rows.tail)
 
-/-- The quadratic form `∑_q d_q (l_q · z)² + zᵀ Δ z` of a block, built by list traversal. -/
 def sqfF (b : Blk) (zs : List (ℕ × ℕ × ℕ)) : Ex :=
   add (sqF zs zs b.d b.l) (quadF zs zs b.Δ)
 
-lemma getD_tail_succ (xs : List ℤ) (a : ℕ) : xs.tail.getD a 0 = xs.getD (a + 1) 0 := by
-  cases xs <;> simp
-
-lemma getD_tail_succ' (xs : List (List ℤ)) (a : ℕ) : xs.tail.getD a [] = xs.getD (a + 1) [] := by
-  cases xs <;> simp
-
-lemma ev_linF (u v t : ℝ) : ∀ (τs : List (ℕ × ℕ × ℕ)) (xs : List ℤ),
-    (linF τs xs).ev u v t
-      = ∑ a ∈ Finset.range τs.length, (xs.getD a 0 : ℝ) * mv u v t (τs.getD a (0, 0, 0)) := by
-  intro τs
-  induction τs <;> rintro (_ | _) <;> simp_all [linF, Finset.sum_range_succ', ev_smulNZ, mv, add_comm]
-
-lemma ev_rowF (u v t : ℝ) (ta : ℕ × ℕ × ℕ) : ∀ (τs : List (ℕ × ℕ × ℕ)) (xs : List ℤ),
-    (rowF ta τs xs).ev u v t
-      = ∑ a ∈ Finset.range τs.length,
-          (xs.getD a 0 : ℝ) * (mv u v t ta * mv u v t (τs.getD a (0, 0, 0))) := by
-  intro τs
-  induction τs <;> rintro (_ | _) <;>
-    simp_all [rowF, Finset.sum_range_succ', ev_smulNZ, ev_mon, mv, pow_add] <;> ring
-
-lemma ev_quadF (u v t : ℝ) (zs : List (ℕ × ℕ × ℕ)) : ∀ (tas : List (ℕ × ℕ × ℕ))
-    (rows : List (List ℤ)),
-    (quadF zs tas rows).ev u v t
-      = ∑ a ∈ Finset.range tas.length, ∑ c ∈ Finset.range zs.length,
-          ((rows.getD a []).getD c 0 : ℝ)
-            * (mv u v t (tas.getD a (0, 0, 0)) * mv u v t (zs.getD c (0, 0, 0))) := by
-  intro tas
-  induction tas with
-  | nil => simp [quadF]
-  | cons ta tas ih =>
-    intro rows
-    rw [List.length_cons, Finset.sum_range_succ', quadF, ev_add, ev_rowF, ih, add_comm]
-    cases rows <;> simp
-
-lemma ev_sqF (u v t : ℝ) (zs : List (ℕ × ℕ × ℕ)) : ∀ (fs : List (ℕ × ℕ × ℕ)) (ds : List ℤ)
-    (ls : List (List ℤ)),
-    (sqF zs fs ds ls).ev u v t
-      = ∑ q ∈ Finset.range fs.length, (ds.getD q 0 : ℝ)
-          * (∑ a ∈ Finset.range zs.length, ((ls.getD q []).getD a 0 : ℝ)
-              * mv u v t (zs.getD a (0, 0, 0))) ^ 2 := by
-  intro fs
-  induction fs <;> rintro (_ | _) (_ | _) <;>
-    simp_all [sqF, Finset.sum_range_succ', ev_smulNZ, ev_linF] <;> ring
-
-/-- The list-traversal form of a block has the same value as the random-access form. -/
 lemma ev_sqfF (b : Blk) (zs : List (ℕ × ℕ × ℕ)) (u v t : ℝ) :
     (sqfF b zs).ev u v t = (sqfE b zs).ev u v t := by
-  rw [sqfF, ev_add, ev_sqF, ev_quadF, ev_sqfE]
-  ac_rfl
+  have hr : ∀ ta τs xs, (rowF ta τs xs).ev u v t
+      = u ^ ta.1 * v ^ ta.2.1 * t ^ ta.2.2 * (linF τs xs).ev u v t := by
+    intro ta τs; induction τs <;> rintro (_ | _) <;> simp_all [rowF, linF, ev_smulNZ, pow_add]; ring
+  have : ∀ fs ls, (quadF zs fs ls).ev u v t
+      = ∑ a ∈ Finset.range fs.length, zval fs u v t a * (linF zs (ls.getD a [])).ev u v t ∧
+      ∀ ds, (sqF zs fs ds ls).ev u v t = ∑ q ∈ Finset.range fs.length,
+        (ds.getD q 0 : ℝ) * (linF zs (ls.getD q [])).ev u v t ^ 2 := by
+    intro fs; induction fs <;> rintro (_ | _) <;> refine ⟨?_, ?_⟩ <;> try rintro (_ | _)
+    all_goals simp_all [sqF, quadF, Finset.sum_range_succ', ev_smulNZ, zval, zt, add_comm]
+  have hl : ∀ τs xs, (linF τs xs).ev u v t
+      = ∑ a ∈ Finset.range τs.length, (xs.getD a 0 : ℝ) * zval τs u v t a := by
+    intro τs; induction τs <;> rintro (_ | _) <;>
+      simp_all [linF, Finset.sum_range_succ', ev_smulNZ, zval, zt, add_comm]
+  simp [sqfF, ev_sqfE, this, hl, Blk.dq, Blk.lq, Blk.del, Finset.mul_sum, mul_assoc]
 
-/-! ## The positivity check, by list traversal -/
-
-/-- The first `n` columns of a matrix, as rows (short rows padded with `0`). -/
 def transposeSq : ℕ → List (List ℤ) → List (List ℤ)
   | 0, _ => []
   | n + 1, M => (M.map fun row => row.headD 0) :: transposeSq n (M.map List.tail)
 
-/-- `∑_{j ≠ i} |x_j|` along a list whose first position is `k`. -/
 def offAbs (i : ℕ) : ℕ → List ℤ → ℤ
   | _, [] => 0
   | k, x :: xs => (if i = k then 0 else |x|) + offAbs i (k + 1) xs
 
-/-- Diagonal dominance of all rows (row `i` counted from `k`). -/
 def domAll : ℕ → List (List ℤ) → Bool
   | _, [] => true
   | k, row :: rows => decide (offAbs k 0 row ≤ row.getD k 0) && domAll (k + 1) rows
 
-/-- The fast computable check: pivots nonnegative, `Δ` symmetric and diagonally dominant. -/
 def okF (r : ℕ) (b : Blk) : Bool :=
   b.d.all (fun x => decide (0 ≤ x)) &&
   decide (b.Δ.map (List.take r) = transposeSq r b.Δ) &&
   domAll 0 b.Δ
 
-lemma getD_map_list (f : List ℤ → List ℤ) (hf : f [] = []) (M : List (List ℤ)) (i : ℕ) :
-    (M.map f).getD i [] = f (M.getD i []) := by grind
-lemma transposeSq_getD : ∀ (n : ℕ) (M : List (List ℤ)) (i : ℕ), i < n → ∀ j,
-    ((transposeSq n M).getD i []).getD j 0 = (M.getD j []).getD i 0 := by
-  intro n
-  induction n with
-  | zero => simp
-  | succ n ih =>
-    rintro M (_ | i) hi j
-    · cases h : M[j]? <;> simp [transposeSq, List.getD_eq_getElem?_getD, h, List.head?_eq_getElem?]
-    · rw [transposeSq, List.getD_cons_succ, ih _ i (by omega) j, getD_map_list List.tail rfl]
-      cases M.getD j [] <;> simp
-
-lemma offAbs_eq (i : ℕ) : ∀ (row : List ℤ) (k : ℕ), offAbs i k row
-    = ∑ j ∈ Finset.range row.length, (if i = k + j then (0 : ℤ) else |row.getD j 0|) := by
-  intro row
-  induction row <;> simp_all [Finset.sum_range_succ', offAbs, add_comm, add_left_comm]
-
-lemma sum_range_le_offAbs (i r : ℕ) (row : List ℤ) :
-    ∑ j ∈ Finset.range r, (if i = j then (0 : ℤ) else |row.getD j 0|) ≤ offAbs i 0 row := by
-  rw [offAbs_eq]
-  refine (Finset.sum_le_sum_of_subset_of_nonneg (Finset.range_subset_range.2 (r.le_add_left row.length)) fun _ _ _ => by positivity).trans ?_
-  simp [Finset.sum_range_add, List.getD_eq_default]
-
-lemma domAll_spec : ∀ (M : List (List ℤ)) (k : ℕ), domAll k M = true → ∀ i,
-    offAbs (k + i) 0 (M.getD i []) ≤ (M.getD i []).getD (k + i) 0 := by
-  intro M
-  induction M <;> rintro k h (_ | i) <;> simp_all [domAll, offAbs]
-  rename_i ih
-  rw [← add_assoc, add_right_comm]
-  exact ih _ h.2 i
-
-lemma getD_nonneg_of_all : ∀ {l : List ℤ}, (∀ x ∈ l, 0 ≤ x) → ∀ i, 0 ≤ l.getD i 0 := by
-  intro l
-  induction l with
-  | nil => intro _ i; simp
-  | cons x xs ih =>
-    intro h i
-    cases i with
-    | zero => simpa using h x (by simp)
-    | succ i => simpa using ih (fun y hy => h y (by simp [hy])) i
-
-/-- Soundness of the fast check: it implies the random-access check of `Cert1`. -/
 lemma okF_sound {r : ℕ} {b : Blk} (h : okF r b = true) : b.ok r = true := by
-  simp only [okF, Bool.and_eq_true, List.all_eq_true, decide_eq_true_eq] at h
-  simp only [Blk.ok, List.all_eq_true, List.mem_range, Bool.and_eq_true, decide_eq_true_eq,
-    Blk.list_sum_range_map]
-  refine fun i hi => ⟨⟨getD_nonneg_of_all h.1.1 i, fun j hj => ?_⟩,
-    (sum_range_le_offAbs i r _).trans (by simpa [Blk.del] using domAll_spec b.Δ 0 h.2 i)⟩
-  have h1 := congrArg (fun M => (M.getD i []).getD j 0) h.1.2
-  simp only [getD_map_list _ List.take_nil, transposeSq_getD r b.Δ i hi] at h1
-  simpa [Blk.del, List.getD_eq_getElem?_getD, hj] using h1
+  have hT : ∀ n M i, i < n → ∀ j, ((transposeSq n M).getD i []).getD j 0 = (M.getD j []).getD i 0 := by
+    intro n; induction n <;> rintro M (_ | i) hi j <;>
+      simp_all [transposeSq, List.getD_eq_getElem?_getD] <;> cases M[j]? <;> simp [List.head?_eq_getElem?]
+  have hO : ∀ (row : List ℤ) i k r, ∑ j ∈ Finset.range r, (if i = k + j then (0 : ℤ) else |row.getD j 0|) ≤ offAbs i k row := by
+    intro row; induction row with
+    | nil => simp [offAbs]
+    | cons x xs ih =>
+      rintro i k (_ | r)
+      · exact add_nonneg (by positivity) (by simpa using ih i (k + 1) 0)
+      · simpa [Finset.sum_range_succ', offAbs, add_comm, add_left_comm, add_assoc] using ih i (k + 1) r
+  have hD : ∀ (M : List (List ℤ)) k, domAll k M = true → ∀ i, ∑ j ∈ Finset.range r,
+      (if k + i = j then (0 : ℤ) else |(M.getD i []).getD j 0|) ≤ (M.getD i []).getD (k + i) 0 := by
+    intro M; induction M with
+    | nil => simp
+    | cons row M ih =>
+      rintro k h (_ | i) <;> simp only [domAll, Bool.and_eq_true, decide_eq_true_eq] at h
+      · simpa using (hO row k 0 r).trans h.1
+      · rw [← add_assoc, add_right_comm]; exact ih _ h.2 i
+  simp [okF] at h
+  simp [Blk.ok, Blk.list_sum_range_map]
+  refine fun i hi => ⟨⟨by grind [List.getElem_mem, Blk.dq], fun j hj => ?_⟩, by simpa [Blk.del] using hD _ 0 h.2 i⟩
+  have := congrArg (fun M => (M.getD i ([].take r)).getD j 0) h.1.2
+  rw [List.getD_map, List.take_nil, hT r _ i hi] at this
+  simpa [Blk.del, hj] using this
 
 end Cert
 end ThomsonN7
