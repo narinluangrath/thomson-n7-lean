@@ -27,10 +27,10 @@ build and the checks described in `COMPRESSION.md`.
 
 | | Original | Now | Change |
 |---|---:|---:|---:|
-| Words | 389,377 | 56,106 | -85.6% |
+| Words | 389,377 | 53,722 | -86.2% |
 | Data words (certificate numbers) | 227,658 | 17,178 | -92.5% |
-| Proof words | 154,705 | 38,147 | -75.3% |
-| Lines | 17,895 | 5,705 | -68.1% |
+| Proof words | 154,705 | 36,011 | -76.7% |
+| Lines | 17,895 | 5,388 | -69.9% |
 
 The same two theorems (`thomson_seven` and `thomson_seven_unique`) still verify, with only Lean's standard axioms, and
 the statement still matches the fixed challenge file exactly.
@@ -42,7 +42,7 @@ the statement still matches the fixed challenge file exactly.
   single computed check. Some stored data became computation (a Hessian built from a formula instead of being stored).
 - **Re-solving one of the certificates** (an SDP) with smaller blocks once it turned out some blocks were dead weight.
 - **Rounds of AI "golf"** on the largest proofs.
-- **Rewriting whole sections from scratch,** keeping only what the rest of the proof needs. Twenty-two sections were cut,
+- **Rewriting whole sections from scratch,** keeping only what the rest of the proof needs. Twenty-three sections were cut,
   most by 40 to 73%. This is now the most productive approach.
 
 The full account, with every phase, what didn't work and the caveats, is in [`COMPRESSION.md`](COMPRESSION.md).
@@ -56,7 +56,7 @@ The full account, with every phase, what didn't work and the caveats, is in [`CO
 - **Unchanged:** about 17,000 words are still raw certificate numbers that no human reads, most of them one SDP
   certificate that is already at its minimum size for this formulation.
 
-**Next:** more section rewrites (about 4k proof words are in regions not yet rewritten), and eventually deciding
+**Next:** more section rewrites (only small regions, about 2k proof words, are left un-rewritten), and eventually deciding
 whether the remaining structure is the "essence" or just a smaller pile.
 
 ---

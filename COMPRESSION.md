@@ -8,13 +8,13 @@ This branch (`compress`) shrinks `formal/lean/ThomsonN7/Solution.lean` while kee
 
 | | Original (`25f2fa5`) | Now | Change |
 |---|---:|---:|---:|
-| Words, total | 389,377 | 56,106 | -85.6% |
+| Words, total | 389,377 | 53,722 | -86.2% |
 | Words, data | 227,658 | 17,178 | -92.5% |
-| Words, proof | 154,705 | 38,147 | -75.3% |
-| Lines | 17,895 | 5,705 | -68.1% |
-| Bytes | 8,079,343 | 5,094,277 | -36.9% |
-| Full build | about 12 min | 9 min 38 s | |
-| Peak memory of the build | about 19.3 GB | 15.3 GB | |
+| Words, proof | 154,705 | 36,011 | -76.7% |
+| Lines | 17,895 | 5,388 | -69.9% |
+| Bytes | 8,079,343 | 5,081,359 | -37.1% |
+| Full build | about 12 min | 10 min 17 s | |
+| Peak memory of the build | about 19.3 GB | 15.6 GB | |
 
 **Metric.** Words are whitespace-separated tokens, counted by `formal/lean/scripts/wordcount.py`. A line counts as data
 when at least half its tokens are numerals, however they are written. Proof words are everything else except line
@@ -65,7 +65,7 @@ README and in `verification/`. Those results apply to the original file only. Th
 | Witness-free 1D checks | `18c345f`, `7d2c659` | 114,441 | The one-dimensional slab certificates (sums of squares with stored witnesses) replaced by a Bernstein-basis positivity check that needs no witness (`gen_bern.py`, `gen_cut.py`). |
 | Shared bases | `c1ff8e2`, `538c4cf` | 95,333 | Three monomial bases shared instead of repeated per block; triangular columns stored without their zero prefix (`zpad`). |
 | Case 1 certificate regenerated | `97244d2`, `03ed182` | 86,685 | Re-solved the Case 1 three-point SDP. The blocks for the multipliers 1-u, 1-v, 1-t turned out to be dead weight, so each 35x35 block became 1x1 (`case1_gen.py`, `case1_model.py`, `case1_stats.py`). |
-| Section rewrites | `574553f` onward | 56,106 | One subagent per section rewrote it from scratch against a REPL positioned just before it, keeping every declaration used later with an identical statement. See below. |
+| Section rewrites, golf rounds 8 to 10, dead code | `574553f` onward | 53,722 | One subagent per section rewrote it from scratch against a REPL positioned just before it, keeping every declaration used later with an identical statement. See below. |
 
 ### Section rewrites
 
@@ -92,6 +92,7 @@ README and in `verification/`. Those results apply to the original file only. Th
 | Cert1Block | 900 | 730 | -19% |
 | Asm_Glue4 | 880 | 467 | -47% |
 | Asm_Typed2 | 796 | 516 | -35% |
+| Bridge (Asm_Bridge to Asm_Bridge3) | 1,859 | 772 | -58% |
 | Asm_Glue1 | 1,589 | 715 | -55% |
 
 The rewrites removed intermediate lemma layers and replaced hand proofs with Mathlib facts (for example
@@ -126,8 +127,9 @@ only proofs changed.
 ## Where the words are now
 
 About 17.4k words are certificate data, 14k of them the Case 1 SDP certificate, which is at its minimum size for this
-formulation. The largest proof regions not yet rewritten are Cert1Block (0.9k words), Asm_Glue4 (0.9k), Asm_Typed2
-(0.8k) and Asm_Bridge (0.7k). Rewrites have cut 40 to 73%
+formulation. What remains un-rewritten is small: regions of 150 to 450 proof words each (Asm_EPEnc, Asm_Typed,
+EPBounds, Asm_Final) and the per-certificate boilerplate of the six typed certificates (about 2.9k words of
+block definitions). Rewrites have cut 40 to 73%
 per section; the later ones land near 40% because more of what remains is definitions and statements that must stay
 identical.
 
