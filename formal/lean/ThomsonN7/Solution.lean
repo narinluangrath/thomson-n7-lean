@@ -2726,588 +2726,246 @@ end EPBounds
 end ThomsonN7
 
 section RegLocalSection
-/- BEGIN REGLOCAL (agent7): perturbative strict local minimality of the pentagonal bipyramid.
-   Splice AFTER Level1d (needs GAUGE = exists_gauge, P1/P3ext, Base, TwoRegime.LocalMinAt).
-   Pieces in order: Loc1 (H, B3) | QCore1 (certificate defs/lemmas) | Q2 (expansion) | QCore2 (core) | Loc2 (glue). -/
-open Real
+open Real Finset
 open scoped RealInnerProductSpace
 namespace ThomsonN7
-/- BEGIN LOC1 (agent7): exact chart identity (H) and cubic Bregman lower bound (B3) in h = y - P.
-   Splice AFTER the GAUGE block (needs P1, P3ext); compiles against Level1b.lean lines 1-3641. -/
-namespace Reg
 open Base
-
-/-- Gram matrix entry `⟪P_i, P_j⟫` of the bipyramid. -/
-noncomputable def gP (i j : Fin 7) : ℝ := inner ℝ (pentBipyramid i) (pentBipyramid j)
-
-lemma gP_lt_one {i j : Fin 7} (hij : i ≠ j) : gP i j < 1 :=
-  inner_lt_one_of_ne (pent_norm i) (pent_norm j) (pentBipyramid_injective.ne hij)
-
-/-- For a unit vector `y i = P i + h i` the normal component of `h i` is `-‖h i‖²/2`. -/
-lemma inner_P_h {y : Fin 7 → R3} (hy : ∀ i, ‖y i‖ = 1) (i : Fin 7) :
-    inner ℝ (pentBipyramid i) (y i - pentBipyramid i) = -(1 / 2) * ‖y i - pentBipyramid i‖ ^ 2 := by
-  simp [inner_sub_right, norm_sub_sq_real, hy, pent_norm, real_inner_comm]
-  ring
-
-lemma sum_W_inner_left (v : Fin 7 → R3) :
-    ∑ i, ∑ j, W i j * inner ℝ (pentBipyramid i) (v j)
-      = ∑ j, muP j * inner ℝ (pentBipyramid j) (v j) := by
-  rw [Finset.sum_comm]
-  simp [W_symm, ← real_inner_smul_left, ← sum_inner, pent_critical]
-
-lemma sum_W_inner_right (v : Fin 7 → R3) :
-    ∑ i, ∑ j, W i j * inner ℝ (v i) (pentBipyramid j)
-      = ∑ i, muP i * inner ℝ (v i) (pentBipyramid i) := by
-  simp [← real_inner_smul_right, ← inner_sum, pent_critical]
-
-/-- The Gram increment `⟪y_i, y_j⟫ - ⟪P_i, P_j⟫`. -/
-noncomputable def tau (y : Fin 7 → R3) (i j : Fin 7) : ℝ := inner ℝ (y i) (y j) - gP i j
-
-lemma tau_symm (y : Fin 7 → R3) (i j : Fin 7) : tau y i j = tau y j i := by
-  unfold tau gP
-  rw [real_inner_comm (y i), real_inner_comm (pentBipyramid i)]
-
-lemma tau_expand (y : Fin 7 → R3) (i j : Fin 7) :
-    tau y i j = inner ℝ (pentBipyramid i) (y j - pentBipyramid j)
-      + inner ℝ (y i - pentBipyramid i) (pentBipyramid j)
-      + inner ℝ (y i - pentBipyramid i) (y j - pentBipyramid j) := by
-  unfold tau gP
-  simp only [inner_sub_left, inner_sub_right]
-  ring
-
-/-- **(H)** For unit `y = P + h`, the first-order term `∑_{i<j} W_ij τ_ij` is the quadratic form
-`½ ∑_{ij} (W_ij - δ_ij μ_i) ⟪h_i, h_j⟫` (from the criticality of `P`). -/
-lemma sum_W_tau {y : Fin 7 → R3} (hy : ∀ i, ‖y i‖ = 1) :
-    ∑ i, ∑ j ∈ Finset.Ioi i, W i j * tau y i j
-      = 1 / 2 * ∑ i, ∑ j, W i j * inner ℝ (y i - pentBipyramid i) (y j - pentBipyramid j)
-        - 1 / 2 * ∑ i, muP i * ‖y i - pentBipyramid i‖ ^ 2 := by
-  have h1 : ∑ i, ∑ j ∈ Finset.Ioi i, W i j * tau y i j * 2 = ∑ i, ∑ j, W i j * tau y i j := by
-    rw [← sum_Ioi_add_swap _ fun i => by simp [W_diag]]; simp only [W_symm, tau_symm, mul_two]
-  simp only [← Finset.sum_mul, tau_expand, mul_add, Finset.sum_add_distrib,
-    sum_W_inner_left fun j => y j - pentBipyramid j, sum_W_inner_right fun j => y j - pentBipyramid j,
-    inner_P_h hy, fun i => (real_inner_comm _ _).trans (inner_P_h hy i), mul_left_comm (muP _),
-    ← Finset.mul_sum] at h1 ⊢
-  linarith
-
-/-- **(B3)**: the cubic Bregman lower bound for the energy difference of a unit configuration
-`y` (injective) from the bipyramid, in terms of `h = y - P`. -/
-theorem energy_ge_cubic {y : Fin 7 → R3} (hy : ∀ i, ‖y i‖ = 1) (hinj : Function.Injective y) :
-    1 / 2 * ∑ i, ∑ j, W i j * inner ℝ (y i - pentBipyramid i) (y j - pentBipyramid j)
-      - 1 / 2 * ∑ i, muP i * ‖y i - pentBipyramid i‖ ^ 2
-      + ∑ i, ∑ j ∈ Finset.Ioi i, (3 / 2 * phi (gP i j) ^ 5 * tau y i j ^ 2
-          + 5 / 2 * phi (gP i j) ^ 7 * tau y i j ^ 3)
-      ≤ coulombEnergy y - coulombEnergy pentBipyramid := by
-  simp only [coulombEnergy_eq_sum_phi hy, coulombEnergy_eq_sum_phi pent_norm, ← sum_W_tau hy,
-    ← Finset.sum_add_distrib, ← Finset.sum_sub_distrib]
-  gcongr with i _ j hj
-  have hij := (Finset.mem_Ioi.1 hj).ne
-  have := phi_bregman_cubic (gP_lt_one hij) (inner_lt_one_of_ne (hy i) (hy j) (hinj.ne hij))
-  simp only [tau, gP, W_ne hij] at *
-  linarith
-
-end Reg
-
-/- END LOC1 -/
-
-end ThomsonN7
-
-/- BEGIN QCORE1 -/
-namespace ThomsonN7
 namespace Reg
 
-/-- Polynomials in `c s p q r`: a list of (coefficient, exponents of `c s p q r`). -/
 abbrev Poly := List (ℚ × ℕ × ℕ × ℕ × ℕ × ℕ)
 
-/-- The monomial `c^a s^b p^d q^e r^f`. -/
-noncomputable def mono (e : ℕ × ℕ × ℕ × ℕ × ℕ) (c s p q r : ℝ) : ℝ :=
-  c ^ e.1 * s ^ e.2.1 * p ^ e.2.2.1 * q ^ e.2.2.2.1 * r ^ e.2.2.2.2
+noncomputable def mono (e : ℕ × ℕ × ℕ × ℕ × ℕ) : ℝ :=
+  c1 ^ e.1 * s1 ^ e.2.1 * phi c1 ^ e.2.2.1 * phi c2 ^ e.2.2.2.1 * phi 0 ^ e.2.2.2.2
 
-noncomputable def Poly.ev (P : Poly) (c s p q r : ℝ) : ℝ := (P.map fun t => (t.1 : ℝ) * mono t.2 c s p q r).sum
+noncomputable def ev (P : Poly) : ℝ := (P.map fun t => t.1 * mono t.2).sum
 
-/-- The 61 coefficients of the Hessian form `Fq`. -/
-def Ps : List Poly := [
-  [(3, 2, 0, 5, 0, 0), (3, 2, 0, 0, 5, 0), (-1, 1, 0, 3, 0, 0), (3, 1, 0, 0, 5, 0), (1, 1, 0, 0, 3, 0), (3/4, 0, 0, 0, 5, 0), (1/2, 0, 0, 0, 3, 0), (2, 0, 0, 0, 0, 0)],
-  [(3, 1, 0, 5, 0, 0), (1, 0, 0, 3, 0, 0)],
-  [(-3, 1, 0, 0, 5, 0), (-3/2, 0, 0, 0, 5, 0), (1, 0, 0, 0, 3, 0)],
-  [(1, 0, 0, 0, 0, 3)],
-  [(12, 2, 2, 0, 5, 0), (-1, 1, 0, 3, 0, 0), (1, 1, 0, 0, 3, 0), (3, 0, 2, 5, 0, 0), (1/2, 0, 0, 0, 3, 0), (2, 0, 0, 0, 0, 0)],
-  [(3, 0, 1, 5, 0, 0), (-4, 0, 1, 0, 0, 0)],
-  [(4, 1, 0, 0, 0, 0), (1, 0, 0, 3, 0, 0)],
-  [(6, 1, 1, 0, 5, 0), (-8, 1, 1, 0, 0, 0)],
-  [(-4, 1, 0, 0, 0, 0), (1, 0, 0, 0, 3, 0), (-2, 0, 0, 0, 0, 0)],
-  [(-6, 1, 1, 0, 5, 0), (8, 1, 1, 0, 0, 0)],
-  [(-3, 0, 1, 5, 0, 0), (4, 0, 1, 0, 0, 0)],
-  [(-1, 1, 0, 3, 0, 0), (1, 1, 0, 0, 3, 0), (1/2, 0, 0, 0, 3, 0), (3, 0, 0, 0, 0, 5), (2, 0, 0, 0, 0, 0)],
-  [(3, 0, 0, 0, 0, 5), (-4, 0, 0, 0, 0, 0)],
-  [(-3, 0, 0, 0, 0, 5), (4, 0, 0, 0, 0, 0)],
-  [(3/2, 2, 0, 5, 0, 0), (3, 2, 0, 0, 5, 0), (2, 2, 0, 0, 0, 0), (3/2, 1, 0, 5, 0, 0), (-1, 1, 0, 3, 0, 0), (3/2, 1, 0, 0, 5, 0), (1, 1, 0, 0, 3, 0), (2, 0, 2, 0, 0, 0), (15/8, 0, 0, 5, 0, 0), (3/8, 0, 0, 0, 5, 0), (1/2, 0, 0, 0, 3, 0)],
-  [(-6, 2, 1, 5, 0, 0), (6, 2, 1, 0, 5, 0), (-3, 1, 1, 5, 0, 0)],
-  [(-3, 2, 0, 5, 0, 0), (8, 1, 2, 0, 0, 0), (-3/2, 1, 0, 5, 0, 0), (1, 0, 0, 3, 0, 0)],
-  [(-3, 1, 1, 5, 0, 0), (4, 1, 1, 0, 0, 0), (-3/2, 0, 1, 5, 0, 0), (2, 0, 1, 0, 0, 0)],
-  [(-3, 2, 0, 0, 5, 0), (-8, 1, 2, 0, 0, 0), (-3/2, 1, 0, 0, 5, 0), (1, 0, 0, 0, 3, 0)],
-  [(-3, 1, 1, 0, 5, 0), (4, 1, 1, 0, 0, 0), (-3/2, 0, 1, 0, 5, 0), (2, 0, 1, 0, 0, 0)],
-  [(3, 2, 0, 0, 5, 0), (-4, 0, 2, 0, 0, 0), (1, 0, 0, 0, 3, 0)],
-  [(3, 1, 1, 0, 5, 0), (-4, 1, 1, 0, 0, 0)],
-  [(6, 2, 2, 5, 0, 0), (6, 2, 2, 0, 5, 0), (2, 2, 0, 0, 0, 0), (-1, 1, 0, 3, 0, 0), (1, 1, 0, 0, 3, 0), (3/2, 0, 2, 0, 5, 0), (2, 0, 2, 0, 0, 0), (1/2, 0, 0, 0, 3, 0)],
-  [(6, 2, 1, 5, 0, 0), (-8, 2, 1, 0, 0, 0)],
-  [(-4, 2, 0, 0, 0, 0), (6, 1, 2, 5, 0, 0), (-2, 1, 0, 0, 0, 0), (1, 0, 0, 3, 0, 0)],
-  [(-6, 2, 1, 0, 5, 0), (8, 2, 1, 0, 0, 0)],
-  [(-4, 2, 0, 0, 0, 0), (-6, 1, 2, 0, 5, 0), (-2, 1, 0, 0, 0, 0), (1, 0, 0, 0, 3, 0)],
-  [(-3, 1, 1, 0, 5, 0), (4, 1, 1, 0, 0, 0)],
-  [(4, 2, 0, 0, 0, 0), (-3, 0, 2, 0, 5, 0), (1, 0, 0, 0, 3, 0)],
-  [(2, 2, 0, 0, 0, 0), (-1, 1, 0, 3, 0, 0), (1, 1, 0, 0, 3, 0), (2, 0, 2, 0, 0, 0), (1/2, 0, 0, 0, 3, 0), (3, 0, 0, 0, 0, 5)],
-  [(-4, 2, 0, 0, 0, 0), (8, 1, 2, 0, 0, 0), (-2, 1, 0, 0, 0, 0), (1, 0, 0, 3, 0, 0)],
-  [(-4, 2, 0, 0, 0, 0), (-8, 1, 2, 0, 0, 0), (-2, 1, 0, 0, 0, 0), (1, 0, 0, 0, 3, 0)],
-  [(4, 2, 0, 0, 0, 0), (-4, 0, 2, 0, 0, 0), (1, 0, 0, 0, 3, 0)],
-  [(3, 1, 0, 0, 0, 5), (-4, 1, 0, 0, 0, 0)],
-  [(3, 0, 1, 0, 0, 5), (-4, 0, 1, 0, 0, 0)],
-  [(-3, 1, 0, 0, 0, 5), (4, 1, 0, 0, 0, 0)],
-  [(-3, 0, 1, 0, 0, 5), (4, 0, 1, 0, 0, 0)],
-  [(8, 2, 2, 0, 0, 0), (3, 2, 0, 5, 0, 0), (3/2, 2, 0, 0, 5, 0), (2, 2, 0, 0, 0, 0), (3/2, 1, 0, 5, 0, 0), (-1, 1, 0, 3, 0, 0), (1, 1, 0, 0, 3, 0), (2, 1, 0, 0, 0, 0), (3/8, 0, 0, 5, 0, 0), (3/2, 0, 0, 0, 5, 0), (1/2, 0, 0, 0, 3, 0), (1/2, 0, 0, 0, 0, 0)],
-  [(6, 2, 1, 5, 0, 0), (6, 1, 1, 5, 0, 0), (-3, 1, 1, 0, 5, 0)],
-  [(-16, 2, 2, 0, 0, 0), (3, 2, 0, 5, 0, 0), (3, 1, 0, 5, 0, 0), (3/4, 0, 0, 5, 0, 0), (1, 0, 0, 3, 0, 0)],
-  [(-6, 2, 1, 5, 0, 0), (8, 2, 1, 0, 0, 0), (-3, 1, 1, 5, 0, 0), (4, 1, 1, 0, 0, 0)],
-  [(6, 2, 1, 0, 5, 0), (-8, 2, 1, 0, 0, 0)],
-  [(6, 2, 2, 5, 0, 0), (8, 2, 2, 0, 0, 0), (2, 2, 0, 0, 0, 0), (-1, 1, 0, 3, 0, 0), (1, 1, 0, 0, 3, 0), (2, 1, 0, 0, 0, 0), (3/2, 0, 2, 5, 0, 0), (3/2, 0, 2, 0, 5, 0), (1/2, 0, 0, 0, 3, 0), (1/2, 0, 0, 0, 0, 0)],
-  [(6, 2, 1, 5, 0, 0), (-8, 2, 1, 0, 0, 0), (3, 1, 1, 5, 0, 0), (-4, 1, 1, 0, 0, 0)],
-  [(-12, 2, 2, 5, 0, 0), (4, 2, 0, 0, 0, 0), (4, 1, 0, 0, 0, 0), (1, 0, 0, 3, 0, 0), (1, 0, 0, 0, 0, 0)],
-  [(3, 1, 1, 0, 5, 0), (-4, 1, 1, 0, 0, 0), (3/2, 0, 1, 0, 5, 0), (-2, 0, 1, 0, 0, 0)],
-  [(8, 2, 2, 0, 0, 0), (2, 2, 0, 0, 0, 0), (-1, 1, 0, 3, 0, 0), (1, 1, 0, 0, 3, 0), (2, 1, 0, 0, 0, 0), (1/2, 0, 0, 0, 3, 0), (3, 0, 0, 0, 0, 5), (1/2, 0, 0, 0, 0, 0)],
-  [(-16, 2, 2, 0, 0, 0), (4, 2, 0, 0, 0, 0), (4, 1, 0, 0, 0, 0), (1, 0, 0, 3, 0, 0), (1, 0, 0, 0, 0, 0)],
-  [(-3, 1, 0, 0, 0, 5), (4, 1, 0, 0, 0, 0), (-3/2, 0, 0, 0, 0, 5), (2, 0, 0, 0, 0, 0)],
-  [(6, 1, 1, 0, 0, 5), (-8, 1, 1, 0, 0, 0)],
-  [(3, 1, 0, 0, 0, 5), (-4, 1, 0, 0, 0, 0), (3/2, 0, 0, 0, 0, 5), (-2, 0, 0, 0, 0, 0)],
-  [(-6, 1, 1, 0, 0, 5), (8, 1, 1, 0, 0, 0)],
-  [(-6, 2, 1, 5, 0, 0), (-6, 1, 1, 5, 0, 0), (3, 1, 1, 0, 5, 0)],
-  [(-6, 2, 1, 5, 0, 0), (8, 2, 1, 0, 0, 0)],
-  [(3, 1, 1, 5, 0, 0), (-4, 1, 1, 0, 0, 0), (3/2, 0, 1, 5, 0, 0), (-2, 0, 1, 0, 0, 0)],
-  [(6, 2, 1, 5, 0, 0), (-6, 2, 1, 0, 5, 0), (3, 1, 1, 5, 0, 0)],
-  [(6, 2, 0, 0, 0, 5), (3, 1, 0, 0, 0, 5), (9/4, 0, 0, 0, 0, 5), (33/16, 0, 0, 0, 0, 0)],
-  [(-31/8, 0, 0, 0, 0, 0)],
-  [(12, 2, 2, 0, 0, 5), (3, 0, 2, 0, 0, 5), (33/16, 0, 0, 0, 0, 0)],
-  [(135/64, 0, 0, 0, 0, 0)],
-  [(1/32, 0, 0, 0, 0, 0)]]
+def Poly.mul (P Q : Poly) : Poly := P.flatMap fun a => Q.map fun b => (a.1 * b.1, a.2 + b.2)
 
-noncomputable def CP (k : ℕ) (c s p q r : ℝ) : ℝ := (Ps.getD k []).ev c s p q r
+lemma ev_mul (P Q : Poly) : ev (P.mul Q) = ev P * ev Q := by
+  induction P with
+  | nil => simp [Poly.mul, ev]
+  | cons a P ih =>
+    simp only [Poly.mul, ev, List.flatMap_cons, List.map_append, List.sum_append, List.map_cons, List.sum_cons, List.map_map] at ih ⊢
+    rw [ih, add_mul, ← List.sum_map_mul_left (r := (a.1 : ℝ) * mono a.2)]
+    congr 2
+    refine List.map_congr_left fun b _ => ?_
+    simp [mono, pow_add]
+    ring
 
-/-- The box in which the five atoms live. -/
-def InBox (c s p q r : ℝ) : Prop :=
-  (30901699 / 100000000 : ℝ) ≤ c ∧ c ≤ (309017 / 1000000 : ℝ) ∧ (95105651 / 100000000 : ℝ) ≤ s ∧ s ≤ (23776413 / 25000000 : ℝ) ∧ (2126627 / 2500000 : ℝ) ≤ p ∧ p ≤ (85065081 / 100000000 : ℝ) ∧
-    (52573111 / 100000000 : ℝ) ≤ q ∧ q ≤ (6571639 / 12500000 : ℝ) ∧ (35355339 / 50000000 : ℝ) ≤ r ∧ r ≤ (70710679 / 100000000 : ℝ)
+lemma ev_append (P Q : Poly) : ev (P ++ Q) = ev P + ev Q := by simp [ev]
 
-/-- The box's lower and upper ends; all positive. -/
-def boxLo : List ℚ := [30901699/100000000, 95105651/100000000, 2126627/2500000, 52573111/100000000, 35355339/50000000]
-def boxHi : List ℚ := [309017/1000000, 23776413/25000000, 85065081/100000000, 6571639/12500000, 70710679/100000000]
-
-namespace Poly
+def bl : List ℚ := [30901699/100000000, 95105651/100000000, 2126627/2500000, 52573111/100000000, 35355339/50000000]
+def bh : List ℚ := [309017/1000000, 23776413/25000000, 85065081/100000000, 6571639/12500000, 70710679/100000000]
 
 def monQ (b : List ℚ) (e : ℕ × ℕ × ℕ × ℕ × ℕ) : ℚ :=
   b.getD 0 0 ^ e.1 * b.getD 1 0 ^ e.2.1 * b.getD 2 0 ^ e.2.2.1 * b.getD 3 0 ^ e.2.2.2.1 * b.getD 4 0 ^ e.2.2.2.2
 
-/-- Enclosure of a polynomial on the box, term by term. -/
-def lo (P : Poly) : ℚ := (P.map fun t => if 0 ≤ t.1 then t.1 * monQ boxLo t.2 else t.1 * monQ boxHi t.2).sum
-def hi (P : Poly) : ℚ := (P.map fun t => if 0 ≤ t.1 then t.1 * monQ boxHi t.2 else t.1 * monQ boxLo t.2).sum
+def lo (P : Poly) : ℚ := (P.map fun t => t.1 * monQ (if 0 ≤ t.1 then bl else bh) t.2).sum
+def hi (P : Poly) : ℚ := (P.map fun t => t.1 * monQ (if 0 ≤ t.1 then bh else bl) t.2).sum
 
-lemma mono_mem {c s p q r : ℝ} (hb : InBox c s p q r) (e : ℕ × ℕ × ℕ × ℕ × ℕ) :
-    (monQ boxLo e : ℝ) ≤ mono e c s p q r ∧ mono e c s p q r ≤ monQ boxHi e := by
-  simp_all [InBox, monQ, mono, boxLo, boxHi]
-  bound
+def C (x : ℚ) : Poly := [(x, 0, 0, 0, 0, 0)]
 
-lemma ev_mem {c s p q r : ℝ} (hb : InBox c s p q r) (P : Poly) :
-    (P.lo : ℝ) ≤ P.ev c s p q r ∧ P.ev c s p q r ≤ P.hi := by
-  simp only [lo, hi, ev, Rat.cast_list_sum, List.map_map, Function.comp_def]
-  constructor <;> refine List.sum_le_sum fun t _ => ?_ <;> obtain ⟨m1, m2⟩ := mono_mem hb t.2 <;>
-    split_ifs with h <;> rify at h <;> push_cast <;> nlinarith
+def pq (k a : ℕ) : Poly := ([[C 1, [], []], [[(1, 1, 0, 0, 0, 0)], [(1, 0, 1, 0, 0, 0)], []],
+  [[(-1/2, 0, 0, 0, 0, 0), (-1, 1, 0, 0, 0, 0)], [(2, 1, 1, 0, 0, 0)], []],
+  [[(-1/2, 0, 0, 0, 0, 0), (-1, 1, 0, 0, 0, 0)], [(-2, 1, 1, 0, 0, 0)], []],
+  [[(1, 1, 0, 0, 0, 0)], [(-1, 0, 1, 0, 0, 0)], []], [[], [], C 1], [[], [], C (-1)]].getD k []).getD a []
 
-end Poly
-end Reg
-end ThomsonN7
-/- END QCORE1 -/
+def wq (x : ℚ) (e k l : ℕ) : Poly :=
+  if k = l then [] else if 4 < k ∧ 4 < l then C (x / 2 ^ e) else if 4 < k ∨ 4 < l then [(x, 0, 0, 0, 0, e)]
+  else if (k + 5 - l) % 5 % 3 = 1 then [(x, 0, 0, e, 0, 0)] else [(x, 0, 0, 0, e, 0)]
 
-/- BEGIN Q2 -/
-open Real
-open scoped RealInnerProductSpace
-namespace ThomsonN7
-namespace Reg
-open Base
+def HP (i j : ℕ) : Poly :=
+  (if i % 3 = j % 3 then wq (1/2) 3 (i/3) (j/3) ++ (C 2).mul ((pq (i/3) 0).mul (pq (j/3) 0)
+    ++ (pq (i/3) 1).mul (pq (j/3) 1) ++ (pq (i/3) 2).mul (pq (j/3) 2)) ++
+    (if i / 3 = j / 3 then (if i < 15 then [(-1, 1, 0, 3, 0, 0), (1/2, 0, 0, 0, 3, 0), (1, 1, 0, 0, 3, 0)] else C (1/16)) else [])
+    else []) ++ ((wq (3/2) 5 (i/3) (j/3) ++ C (if i / 3 = j / 3 then 0 else -2)).mul (pq (j/3) (i%3))).mul (pq (i/3) (j%3))
+  ++ if i / 3 = j / 3 then [0, 1, 2, 3, 4, 5, 6].flatMap fun m => ((wq (3/2) 5 (i/3) m).mul (pq m (i%3))).mul (pq m (j%3)) else []
 
-lemma sum_Ioi_seven (f : Fin 7 → Fin 7 → ℝ) :
-    ∑ i, ∑ j ∈ Finset.Ioi i, f i j =
-      f 0 1 + f 0 2 + f 0 3 + f 0 4 + f 0 5 + f 0 6 + f 1 2 + f 1 3 + f 1 4 + f 1 5 + f 1 6
-      + f 2 3 + f 2 4 + f 2 5 + f 2 6 + f 3 4 + f 3 5 + f 3 6 + f 4 5 + f 4 6 + f 5 6 := by
-  simp [← Finset.filter_lt_eq_Ioi, Finset.sum_filter, Fin.sum_univ_seven, add_assoc]
+def E (i j : ℕ) : Poly := HP (min i j) (max i j)
+def M0 (i j : ℕ) : ℚ := (lo (E i j) + hi (E i j)) / 2
+def dl (i j : ℕ) : ℚ := (hi (E i j) - lo (E i j)) / 2
+def ldl : ℕ → List (List ℚ) → List (List ℚ)
+  | n + 1, (d :: r) :: M => (d :: r.map (· / d)) :: ldl n (List.zipWith (fun a row => List.zipWith (fun b m => m - a * b / d) r row.tail) r M)
+  | _, _ => []
+def cols : List (List ℚ) := ldl 21 ((List.range 21).map fun i => (List.range 21).map fun j => M0 i j - if i = j then 454/100000 else 0)
+def Lq (i k : ℕ) : ℚ := if i = k then 1 else if i < k then 0 else (cols.getD k []).getD (i - k) 0
+def Dq (k : ℕ) : ℚ := (cols.getD k []).getD 0 0
+def res (i j : ℕ) : ℚ := M0 i j - (if i = j then 449/100000 else 0) - ((List.range 21).map fun k => Lq i k * Dq k * Lq j k).sum
 
-lemma phi_neg_one : phi (-1) = 1 / 2 := by
-  unfold phi
-  have : (2 - 2 * (-1 : ℝ)) = 2 ^ 2 := by norm_num
-  norm_num
-
-lemma norm_sq_coord (v : R3) : ‖v‖ ^ 2 = v 0 ^ 2 + v 1 ^ 2 + v 2 ^ 2 := by
-  rw [EuclideanSpace.norm_sq_eq]
-  simp [Fin.sum_univ_three]
-
-lemma inner_coord (u v : R3) : inner ℝ u v = u 0 * v 0 + u 1 * v 1 + u 2 * v 2 := by
-  simp [PiLp.inner_apply, Fin.sum_univ_three]
-  ring
-
-/-- Coordinates of the bipyramid. -/
-noncomputable def pt : Fin 7 → Fin 3 → ℝ :=
-  ![![1, 0, 0], ![c1, s1, 0], ![c2, s2, 0], ![c2, -s2, 0], ![c1, -s1, 0], ![0, 0, 1], ![0, 0, -1]]
-
-lemma pcv (i : Fin 7) (m : Fin 3) : pentBipyramid i m = pt i m := by
-  fin_cases i <;> fin_cases m <;> simp [pt, pent_0, pent_1, pent_2, pent_3, pent_4, pent_5', pent_6']
-/-- Quadratic part of the second-order lower bound for the energy at the bipyramid, in the chart
-`y = P + h`. -/
-noncomputable def Qhess (h : Fin 7 → R3) : ℝ :=
-  1 / 2 * ∑ i, ∑ j, W i j * inner ℝ (h i) (h j) - 1 / 2 * ∑ i, muP i * ‖h i‖ ^ 2
-    + ∑ i, ∑ j ∈ Finset.Ioi i, 3 / 2 * phi (gP i j) ^ 5
-        * (inner ℝ (pentBipyramid i) (h j) + inner ℝ (h i) (pentBipyramid j)) ^ 2
-
-/-- The `(a, b)` entry of the antisymmetric part of `∑ᵢ Pᵢ ⊗ hᵢ` (rotation gauge functional). -/
-noncomputable def gaugeG (h : Fin 7 → R3) (a b : Fin 3) : ℝ :=
-  ∑ i, (pentBipyramid i a * h i b - pentBipyramid i b * h i a)
-
-/-- Penalty: normal components `⟪Pᵢ, hᵢ⟫` and the rotation gauge. -/
-noncomputable def Pen (h : Fin 7 → R3) : ℝ :=
-  ∑ i, inner ℝ (pentBipyramid i) (h i) ^ 2
-    + gaugeG h 0 1 ^ 2 + gaugeG h 0 2 ^ 2 + gaugeG h 1 2 ^ 2
-
-end Reg
-end ThomsonN7
-
-/- END Q2 -/
-
-/- BEGIN QCORE2 -/
-namespace ThomsonN7
-namespace Reg
-
-/-! ### The Hessian certificate as data
-
-`Fq = ∑ᵢⱼ xᵢ Hm i j xⱼ`. With `M₀` the midpoints of the enclosures `enc_k` and `δ` their radii,
-`Hm - λ I = L D Lᵀ + (R + E)` where `R = M₀ - λ I - L D Lᵀ` is computed from the data below and
-`|E| ≤ δ` entrywise; `check` verifies `D ≥ 0` and that `R + E` is diagonally dominant for every such `E`. -/
-
-namespace Hess
-
-/-- The coefficients, indexed. -/
-noncomputable def cp (c s p q r : ℝ) (k : ℕ) : ℝ := CP k c s p q r
-
-
-/-- Entry `(i, j)` of the Hessian matrix is `wt i j * cp (ix i j)`; index 61 means zero. -/
-def idx : List (List ℕ) := [[0, 61, 61, 1, 61, 61, 2, 61, 61, 2, 61, 61, 1, 61, 61, 3, 61, 61, 3, 61, 61], [61, 4, 61, 5, 6, 61, 7, 8, 61, 9, 8, 61, 10, 6, 61, 61, 3, 61, 61, 3, 61], [61, 61, 11, 61, 61, 6, 61, 61, 8, 61, 61, 8, 61, 61, 6, 12, 61, 3, 13, 61, 3], [1, 5, 61, 14, 15, 61, 16, 17, 61, 18, 19, 61, 20, 21, 61, 3, 61, 61, 3, 61, 61], [61, 6, 61, 15, 22, 61, 23, 24, 61, 25, 26, 61, 27, 28, 61, 61, 3, 61, 61, 3, 61], [61, 61, 6, 61, 61, 29, 61, 61, 30, 61, 61, 31, 61, 61, 32, 33, 34, 3, 35, 36, 3], [2, 7, 61, 16, 23, 61, 37, 38, 61, 39, 40, 61, 18, 41, 61, 3, 61, 61, 3, 61, 61], [61, 8, 61, 17, 24, 61, 38, 42, 61, 43, 44, 61, 45, 26, 61, 61, 3, 61, 61, 3, 61], [61, 61, 8, 61, 61, 30, 61, 61, 46, 61, 61, 47, 61, 61, 31, 48, 49, 3, 50, 51, 3], [2, 9, 61, 18, 25, 61, 39, 43, 61, 37, 52, 61, 16, 53, 61, 3, 61, 61, 3, 61, 61], [61, 8, 61, 19, 26, 61, 40, 44, 61, 52, 42, 61, 54, 24, 61, 61, 3, 61, 61, 3, 61], [61, 61, 8, 61, 61, 31, 61, 61, 47, 61, 61, 46, 61, 61, 30, 48, 51, 3, 50, 49, 3], [1, 10, 61, 20, 27, 61, 18, 45, 61, 16, 54, 61, 14, 55, 61, 3, 61, 61, 3, 61, 61], [61, 6, 61, 21, 28, 61, 41, 26, 61, 53, 24, 61, 55, 22, 61, 61, 3, 61, 61, 3, 61], [61, 61, 6, 61, 61, 32, 61, 61, 31, 61, 61, 30, 61, 61, 29, 33, 36, 3, 35, 34, 3], [3, 61, 12, 3, 61, 33, 3, 61, 48, 3, 61, 48, 3, 61, 33, 56, 61, 61, 57, 61, 61], [61, 3, 61, 61, 3, 34, 61, 3, 49, 61, 3, 51, 61, 3, 36, 61, 58, 61, 61, 57, 61], [61, 61, 3, 61, 61, 3, 61, 61, 3, 61, 61, 3, 61, 61, 3, 61, 61, 59, 61, 61, 60], [3, 61, 13, 3, 61, 35, 3, 61, 50, 3, 61, 50, 3, 61, 35, 57, 61, 61, 56, 61, 61], [61, 3, 61, 61, 3, 36, 61, 3, 51, 61, 3, 49, 61, 3, 34, 61, 57, 61, 61, 58, 61], [61, 61, 3, 61, 61, 3, 61, 61, 3, 61, 61, 3, 61, 61, 3, 61, 61, 60, 61, 61, 59]]
-
-/-- Strictly lower part of `L` (unit diagonal) and the pivots `D`. -/
-def Ld : List (List ℚ) := [[], [0], [0, 0], [253235/1048576, -209299/524288, 0], [0, 305943/1048576, 0, 26959/1048576], [0, 0, 24733/65536, 0, 0], [5889/524288, -94195/262144, 0, 342373/1048576, 9407/262144, 0], [0, -255345/524288, 0, 175023/1048576, 166529/524288, 0, -30937/262144], [0, 0, -330281/524288, 0, 0, 752147/1048576, 0, 0], [5889/524288, 94195/262144, 0, -65555/262144, 2369/131072, 0, 23869/65536, 26911/524288, 0], [0, -255345/524288, 0, 375727/1048576, -8743/524288, 0, -119265/1048576, 280465/1048576, 0, 205539/1048576], [0, 0, -330281/524288, 0, 0, -479573/1048576, 0, 0, 1696059/1048576, 0, 0], [253235/1048576, 209299/524288, 0, -578943/1048576, 125999/1048576, 0, -25825/262144, -110581/262144, 0, 87293/262144, 51029/524288, 0], [0, 305943/1048576, 0, -86037/1048576, -14953/524288, 0, 6897/262144, 3461/131072, 0, -99619/1048576, 249085/524288, 0, -147559/1048576], [0, 0, 24733/65536, 0, 0, -944419/1048576, 0, 0, 262003/262144, 0, 0, 848255/1048576, 0, 0], [87055/1048576, 0, -741543/1048576, 57539/1048576, -1847/1048576, 59127/1048576, 75681/1048576, -861/262144, 595443/1048576, 12549/131072, -43273/1048576, 184035/1048576, 158205/1048576, 12989/262144, -101731/1048576], [0, 29209/524288, 0, 7571/262144, 66103/1048576, -822379/1048576, 10403/524288, 32033/262144, 432407/1048576, -22561/524288, 137063/1048576, 223389/524288, 48791/1048576, 22493/1048576, 156545/524288, 0], [0, 0, 37781/524288, 0, 0, 54859/1048576, 0, 0, 552275/1048576, 0, 0, 69053/262144, 0, 0, 152691/1048576, 0, 0], [87055/1048576, 0, 741543/1048576, 57539/1048576, -1847/1048576, -59127/1048576, 75681/1048576, -861/262144, -595443/1048576, 12549/131072, -43273/1048576, -184035/1048576, 158205/1048576, 12989/262144, 101731/1048576, -268331/524288, 0, 0], [0, 29209/524288, 0, 7571/262144, 66103/1048576, 822379/1048576, 10403/524288, 32033/262144, -432407/1048576, -22561/524288, 137063/1048576, -223389/524288, 48791/1048576, 22493/1048576, -156545/524288, 0, -268331/524288, 0, 0], [0, 0, 37781/524288, 0, 0, 54859/1048576, 0, 0, 552275/1048576, 0, 0, 69053/262144, 0, 0, 152691/1048576, 0, 0, -60005/1048576, 0, 0]]
-def Dd : List ℚ := [1116347/524288, 3327189/1048576, 2572299/1048576, 2562215/1048576, 2052273/1048576, 1102967/524288, 1905159/1048576, 231859/131072, 208237/524288, 440613/262144, 1605231/1048576, 7/16384, 1192327/1048576, 1630595/1048576, 155/1048576, 1342171/1048576, 1342171/1048576, 2072119/1048576, 990603/1048576, 990603/1048576, 2065333/1048576]
-
-def ix (i j : ℕ) : ℕ := (idx.getD i []).getD j 61
-def wt (i j : ℕ) : ℚ := if i = j then 1 else 1 / 2
-def mid (k : ℕ) : ℚ := ((Ps.getD k []).lo + (Ps.getD k []).hi) / 2
-def rad (k : ℕ) : ℚ := ((Ps.getD k []).hi - (Ps.getD k []).lo) / 2
-def M0 (i j : ℕ) : ℚ := wt i j * mid (ix i j)
-def dl (i j : ℕ) : ℚ := wt i j * rad (ix i j)
-def Lq (i j : ℕ) : ℚ := if i = j then 1 else (Ld.getD i []).getD j 0
-def Dq (i : ℕ) : ℚ := Dd.getD i 0
-def lam : ℚ := 449/100000
-def ldl (i j : ℕ) : ℚ := ((List.range 21).map fun k => Lq i k * Dq k * Lq j k).sum
-def res (i j : ℕ) : ℚ := M0 i j - (if i = j then lam else 0) - ldl i j
-
-/-- The computable check. -/
 def check : Bool :=
   (List.range 21).all fun i => decide (0 ≤ Dq i) &&
-    (List.range 21).all (fun j => decide (ix i j = ix j i) && decide (res i j = res j i)) &&
-    decide (((List.range 21).map fun j => if i = j then dl i i else |res i j| + dl i j).sum ≤ res i i)
+    decide (((List.range 21).map fun j => if i = j then 0 else |res i j| + dl i j).sum ≤ res i i - dl i i)
 
 theorem check_ok : check = true := by decide +kernel
 
-end Hess
 
+lemma phi_mem {t a b : ℝ} (ht : t < 1) (h1 : a ^ 2 * (2 - 2 * t) ≤ 1) (h2 : 1 ≤ b ^ 2 * (2 - 2 * t))
+    (hb : 0 ≤ b) : a ≤ phi t ∧ phi t ≤ b := by
+  have := phi_sq_mul ht
+  have := phi_pos ht
+  constructor <;> nlinarith
 
-namespace Hess
-open Finset
+lemma box : ((30901699/100000000 : ℝ) ≤ c1 ∧ c1 ≤ 309017/1000000) ∧ ((95105651/100000000 : ℝ) ≤ s1 ∧
+    s1 ≤ 23776413/25000000) ∧ ((2126627/2500000 : ℝ) ≤ phi c1 ∧ phi c1 ≤ 85065081/100000000) ∧
+    ((52573111/100000000 : ℝ) ≤ phi c2 ∧ phi c2 ≤ 6571639/12500000) ∧ (35355339/50000000 : ℝ) ≤ phi 0 ∧
+    phi 0 ≤ 70710679/100000000 := by
+  have h1 : (223606796/100000000 : ℝ) ≤ √5 := Real.le_sqrt_of_sq_le (by norm_num)
+  have h2 : √5 ≤ 2236068/1000000 := (Real.sqrt_le_left (by norm_num)).2 (by norm_num)
+  have : 4 * c1 = √5 - 1 := by unfold c1; ring
+  have := s1_sq
+  have := hF4
+  have : 0 < s1 := Real.sin_pos_of_pos_of_lt_pi (by positivity) (by linarith [Real.pi_pos])
+  rw [show c2 = -1/2 - c1 by unfold c1 c2; ring]
+  refine ⟨⟨?_, ?_⟩, ⟨?_, ?_⟩, phi_mem ?_ ?_ ?_ ?_, phi_mem ?_ ?_ ?_ ?_, phi_mem ?_ ?_ ?_ ?_⟩ <;> nlinarith
 
-/-- The Hessian matrix: `Fq = ∑ᵢⱼ xᵢ Hm i j xⱼ`. -/
-noncomputable def Hm (c s p q r : ℝ) (i j : ℕ) : ℝ := (wt i j : ℝ) * cp c s p q r (ix i j)
+lemma ev_mem (P : Poly) : (lo P : ℝ) ≤ ev P ∧ ev P ≤ hi P := by
+  have hm (e : ℕ × ℕ × ℕ × ℕ × ℕ) : (monQ bl e : ℝ) ≤ mono e ∧ mono e ≤ monQ bh e := by
+    have := box
+    simp_all [monQ, mono, bl, bh]
+    bound
+  simp only [lo, hi, ev, Rat.cast_list_sum, List.map_map, Function.comp_def]
+  constructor <;> refine List.sum_le_sum fun t _ => ?_ <;> obtain ⟨m1, m2⟩ := hm t.2 <;>
+    split_ifs with h <;> rify at h <;> push_cast <;> nlinarith
 
-lemma cp_mem {c s p q r : ℝ} (hb : InBox c s p q r) (k : ℕ) :
-    ((Ps.getD k []).lo : ℝ) ≤ cp c s p q r k ∧ cp c s p q r k ≤ ((Ps.getD k []).hi : ℝ) :=
-  Poly.ev_mem hb _
-
-lemma Hm_err {c s p q r : ℝ} (hb : InBox c s p q r) (i j : ℕ) :
-    |Hm c s p q r i j - M0 i j| ≤ dl i j := by
-  unfold Hm M0 dl mid rad wt
-  split_ifs <;> push_cast <;> grind [cp_mem]
-
-lemma check_parts : ∀ i ∈ range 21, 0 ≤ Dq i ∧ (∀ j ∈ range 21, ix i j = ix j i ∧ res i j = res j i) ∧
-    ∑ j ∈ range 21, (if i = j then dl i i else |res i j| + dl i j) ≤ res i i := by
-  have h := check_ok
-  simp only [check, List.all_eq_true, List.mem_range, Bool.and_eq_true, decide_eq_true_eq] at h
-  intro i hi
-  obtain ⟨⟨h1, h2⟩, h3⟩ := h i (mem_range.1 hi)
-  exact ⟨h1, fun j hj => h2 j (mem_range.1 hj), by rwa [Cert.Blk.list_sum_range_map] at h3⟩
-
-/-- **The Hessian certificate.** -/
-theorem qform {c s p q r : ℝ} (hb : InBox c s p q r) (x : ℕ → ℝ) :
-    (lam : ℝ) * ∑ i ∈ range 21, x i ^ 2 ≤ ∑ i ∈ range 21, ∑ j ∈ range 21, x i * Hm c s p q r i j * x j := by
-  set Δ : ℕ → ℕ → ℝ := fun i j => res i j + (Hm c s p q r i j - M0 i j) with hΔ
-  have hdd := Cert.qform_dd_nonneg 21 Δ x (fun i hi j hj => by
-    obtain ⟨e1, e2⟩ := (check_parts i hi).2.1 j hj
-    simp only [hΔ, Hm, M0, wt, e1, e2, eq_comm]) fun i hi => by
-    have h3 := (Rat.cast_le (K := ℝ)).2 (check_parts i hi).2.2
-    push_cast [apply_ite (Rat.cast (K := ℝ))] at h3
-    have := sum_le_sum fun j (_ : j ∈ range 21) => (by
-      split_ifs
-      · simp
-      · simp only [hΔ, add_zero]; exact (abs_add_le _ _).trans (by linarith [Hm_err hb i j]) :
-      (if i = j then 0 else |Δ i j|) + (if i = j then (dl i i : ℝ) else 0)
-        ≤ if i = j then (dl i i : ℝ) else |(res i j : ℝ)| + dl i j)
-    rw [sum_add_distrib, sum_ite_eq, if_pos hi] at this
-    simp only [hΔ]; linarith [abs_le.1 (Hm_err hb i i)]
-  have hH : ∀ i j, x i * Hm c s p q r i j * x j = (if i = j then (lam : ℝ) * x i ^ 2 else 0)
-      + x i * (∑ k ∈ range 21, (Lq i k : ℝ) * Dq k * Lq j k) * x j + x i * Δ i j * x j := fun i j => by
-    simp only [hΔ, res, ldl, Cert.Blk.list_sum_range_map]; push_cast
-    split_ifs with h
-    · subst h; ring
-    · ring
-  have hb2 : ∑ i ∈ range 21, ∑ j ∈ range 21, x i * (∑ k ∈ range 21, (Lq i k : ℝ) * Dq k * Lq j k) * x j
+theorem qform (x : ℕ → ℝ) :
+    449 / 100000 * ∑ i ∈ range 21, x i ^ 2 ≤ ∑ i ∈ range 21, ∑ j ∈ range 21, x i * ev (E i j) * x j := by
+  have ok := check_ok
+  simp only [check, List.all_eq_true, List.mem_range, Bool.and_eq_true, decide_eq_true_eq,
+    Cert.Blk.list_sum_range_map] at ok
+  set Δ : ℕ → ℕ → ℝ := fun i j => ev (E i j) - (if i = j then 449 / 100000 else 0)
+    - ∑ k ∈ range 21, (Lq i k : ℝ) * Dq k * Lq j k
+  have hr : ∀ i j, (res i j : ℝ) = Δ i j - (ev (E i j) - M0 i j) := fun i j => by
+    simp only [Δ, res, Cert.Blk.list_sum_range_map]; split_ifs <;> push_cast <;> ring
+  have he : ∀ i j, |ev (E i j) - M0 i j| ≤ dl i j := fun i j => by
+    have := ev_mem (E i j)
+    simp only [M0, dl]; push_cast; rw [abs_le]; constructor <;> linarith
+  have hdd := Cert.qform_dd_nonneg 21 Δ x (fun i _ j _ => by
+    simp only [Δ, E, eq_comm (a := i), min_comm i, max_comm i]
+    exact congrArg _ (sum_congr rfl fun k _ => by ring)) fun i hi => by
+    have h3 := (Rat.cast_le (K := ℝ)).2 (ok i (mem_range.1 hi)).2
+    push_cast [apply_ite (Rat.cast (K := ℝ)), hr] at h3
+    refine (sum_le_sum fun j _ => ?_).trans (h3.trans ?_)
+    · split_ifs
+      · rfl
+      · have := abs_sub_abs_le_abs_sub (Δ i j) (Δ i j - (ev (E i j) - M0 i j))
+        rw [sub_sub_cancel] at this
+        linarith [he i j]
+    · linarith [abs_le.1 (he i i)]
+  have hL : ∑ i ∈ range 21, ∑ j ∈ range 21, x i * (∑ k ∈ range 21, (Lq i k : ℝ) * Dq k * Lq j k) * x j
       = ∑ k ∈ range 21, (Dq k : ℝ) * (∑ i ∈ range 21, (Lq i k : ℝ) * x i) ^ 2 := by
     simp only [sq, mul_sum, sum_mul]
     conv_lhs => arg 2; ext i; rw [sum_comm]
     rw [sum_comm]
     exact sum_congr rfl fun k _ => sum_congr rfl fun i _ => sum_congr rfl fun j _ => by ring
+  have hD : 0 ≤ ∑ k ∈ range 21, (Dq k : ℝ) * (∑ i ∈ range 21, (Lq i k : ℝ) * x i) ^ 2 :=
+    sum_nonneg fun k hk => mul_nonneg (by exact_mod_cast (ok k (mem_range.1 hk)).1) (sq_nonneg _)
+  have hH : ∀ i j, x i * ev (E i j) * x j = x i * Δ i j * x j + (if i = j then 449 / 100000 * x i ^ 2 else 0)
+      + x i * (∑ k ∈ range 21, (Lq i k : ℝ) * Dq k * Lq j k) * x j := fun i j => by
+    simp only [Δ]; split_ifs with h <;> [subst h; skip] <;> ring
   rw [mul_sum]
-  simp only [hH, sum_add_distrib, sum_ite_eq, sum_ite_mem, inter_self, hb2]
-  linarith [(sum_nonneg fun k hk => mul_nonneg (by exact_mod_cast (check_parts k hk).1) (sq_nonneg _) :
-    0 ≤ ∑ k ∈ range 21, (Dq k : ℝ) * (∑ i ∈ range 21, (Lq i k : ℝ) * x i) ^ 2)]
-
-end Hess
-
-
-end Reg
-end ThomsonN7
-/- END QCORE2 -/
-
-/- BEGIN LOC2 -/
-open Real
-open scoped RealInnerProductSpace
-namespace ThomsonN7
-namespace Reg
-open Base
-
-/-! ### The atom box for the penalised Hessian certificate -/
-
-lemma sqrt5_lo : (2236067977499789 / 1000000000000000 : ℝ) ≤ √5 := by
-  rw [Real.le_sqrt (by norm_num) (by norm_num)]; norm_num
-
-lemma sqrt5_hi : √5 ≤ (2236067977499790 / 1000000000000000 : ℝ) := by
-  rw [Real.sqrt_le_left (by norm_num)]; norm_num
-
-lemma box_phi {p u ulo uhi plo phi : ℝ} (hp : 0 < p) (hpu : p ^ 2 * u = 1) (h1 : ulo ≤ u)
-    (h2 : u ≤ uhi) (hulo : 0 < ulo) (hlo : plo ^ 2 * uhi ≤ 1) (hhi : 1 ≤ phi ^ 2 * ulo)
-    (hplo : 0 ≤ plo) (hphi : 0 ≤ phi) : plo ≤ p ∧ p ≤ phi := by
-  constructor <;> nlinarith [mul_le_mul_of_nonneg_left h2 (sq_nonneg plo), mul_le_mul_of_nonneg_left h1 (sq_nonneg phi)]
-
-lemma box_sq {p a alo ahi plo phi : ℝ} (hp : 0 < p) (hpa : p ^ 2 = a) (h1 : alo ≤ a)
-    (h2 : a ≤ ahi) (hlo : plo ^ 2 ≤ alo) (hhi : ahi ≤ phi ^ 2) (hplo : 0 ≤ plo)
-    (hphi : 0 ≤ phi) : plo ≤ p ∧ p ≤ phi := by
-  constructor <;> nlinarith
-
-lemma c1_box : (30901699 / 100000000 : ℝ) ≤ c1 ∧ c1 ≤ (309017 / 1000000 : ℝ) := by
-  have h5 := sqrt5_lo
-  have h6 := sqrt5_hi
-  unfold c1
-  constructor <;> linarith
-
-lemma c1_lt_one : c1 < 1 := by
-  have h6 := sqrt5_hi
-  unfold c1
+  simp only [hH, sum_add_distrib, sum_ite_eq, sum_ite_mem, inter_self, hL]
   linarith
 
-lemma c2_lt_one : c2 < 1 := by
-  have h5 := sqrt5_lo
-  unfold c2
-  linarith
+lemma phi_neg_one : phi (-1) = 1 / 2 := by
+  norm_num [phi, show (4 : ℝ) = 2 ^ 2 by norm_num]
 
-lemma s1_box : (95105651 / 100000000 : ℝ) ≤ s1 ∧ s1 ≤ (23776413 / 25000000 : ℝ) := by
-  have := c1_box
-  constructor <;> nlinarith [s1_sq, hF4, show 0 < s1 from Real.sin_pos_of_pos_of_lt_pi (by positivity) (by linarith [Real.pi_pos])]
-
-lemma phi_c1_box : (2126627 / 2500000 : ℝ) ≤ phi c1 ∧ phi c1 ≤ (85065081 / 100000000 : ℝ) := by
-  have h5 := sqrt5_lo
-  have h6 := sqrt5_hi
-  refine box_phi (phi_pos c1_lt_one) (phi_sq_mul c1_lt_one) (ulo := (276393202250021 / 200000000000000 : ℝ)) (uhi := (2763932022500211 / 2000000000000000 : ℝ))
-    ?_ ?_ (by norm_num) (by norm_num) (by norm_num) (by norm_num) (by norm_num)
-  · unfold c1; linarith
-  · unfold c1; linarith
-
-lemma phi_c2_box : (52573111 / 100000000 : ℝ) ≤ phi c2 ∧ phi c2 ≤ (6571639 / 12500000 : ℝ) := by
-  have h5 := sqrt5_lo
-  have h6 := sqrt5_hi
-  refine box_phi (phi_pos c2_lt_one) (phi_sq_mul c2_lt_one) (ulo := (7236067977499789 / 2000000000000000 : ℝ)) (uhi := (723606797749979 / 200000000000000 : ℝ))
-    ?_ ?_ (by norm_num) (by norm_num) (by norm_num) (by norm_num) (by norm_num)
-  · unfold c2; linarith
-  · unfold c2; linarith
-
-lemma phi_zero_box : (35355339 / 50000000 : ℝ) ≤ phi 0 ∧ phi 0 ≤ (70710679 / 100000000 : ℝ) := by
-  have h0 : (0 : ℝ) < 1 := one_pos
-  refine box_phi (phi_pos h0) (phi_sq_mul h0) (ulo := 2) (uhi := 2) (by norm_num) (by norm_num)
-    (by norm_num) (by norm_num) (by norm_num) (by norm_num) (by norm_num)
-
-lemma atoms_inBox : InBox c1 s1 (phi c1) (phi c2) (phi 0) :=
-  ⟨c1_box.1, c1_box.2, s1_box.1, s1_box.2, phi_c1_box.1, phi_c1_box.2, phi_c2_box.1,
-    phi_c2_box.2, phi_zero_box.1, phi_zero_box.2⟩
-
-lemma phi_c1_le : phi c1 ≤ 8507 / 10000 := by nlinarith [phi_c1_box.2]
-
-lemma phi_c2_le : phi c2 ≤ 8507 / 10000 := by nlinarith [phi_c2_box.2]
-
-lemma phi_zero_le : phi 0 ≤ 8507 / 10000 := by
-  have := phi_zero_box.2
-  linarith
-
-lemma phi_neg_one_le : phi (-1) ≤ 8507 / 10000 := by
-  rw [phi_neg_one]; norm_num
-lemma pb {i j : Fin 7} (h : i ≠ j) : phi (gP i j) ≤ 8507 / 10000 := by
-  fin_cases i <;> fin_cases j <;> simp [gP, gram, gt] at h ⊢ <;>
-    first | exact phi_c1_le | exact phi_c2_le | exact phi_zero_le | exact phi_neg_one_le
-/-- Per-pair remainder bound: with `τ = t1 + q`, `|t1| ≤ ρᵢ + ρⱼ`, `|q| ≤ ρᵢρⱼ`, `ρ ≤ r ≤ 1/1000`,
-`3/2 A τ² + 5/2 B τ³ - 3/2 A t1² ≥ -(3A + 10.1 B) r (ρᵢ² + ρⱼ²)` for `A, B ≥ 0`. -/
-lemma pair_rem {A B t1 q ri rj r : ℝ} (hA : 0 ≤ A) (hB : 0 ≤ B) (hri : 0 ≤ ri) (hrj : 0 ≤ rj)
-    (hri' : ri ≤ r) (hrj' : rj ≤ r) (hr : r ≤ 1 / 1000)
-    (ht1 : |t1| ≤ ri + rj) (hq : |q| ≤ ri * rj) :
-    -((3 * A + 101 / 10 * B) * r * (ri ^ 2 + rj ^ 2))
-      ≤ 3 / 2 * A * (t1 + q) ^ 2 + 5 / 2 * B * (t1 + q) ^ 3 - 3 / 2 * A * t1 ^ 2 := by
-  have e0 : -(r * (ri ^ 2 + rj ^ 2)) ≤ t1 * q := by
-    nlinarith [neg_abs_le (t1 * q), abs_mul t1 q, mul_le_mul ht1 hq (abs_nonneg _) (by positivity),
-      mul_nonneg (sub_nonneg.2 hrj') (sq_nonneg ri), mul_nonneg (sub_nonneg.2 hri') (sq_nonneg rj)]
-  have hu : |t1 + q| ≤ 1001 / 1000 * (ri + rj) := by
-    linarith [abs_add_le t1 q, mul_le_mul_of_nonneg_right (hri'.trans hr) hrj]
-  have hc : -(4013 / 1000 * r * (ri ^ 2 + rj ^ 2)) ≤ (t1 + q) ^ 3 := by
-    nlinarith [pow_le_pow_left₀ (abs_nonneg _) hu 3, neg_abs_le ((t1 + q) ^ 3), abs_pow (t1 + q) 3,
-      mul_nonneg (add_nonneg hri hrj) (sq_nonneg (ri - rj)),
-      mul_nonneg (by linarith : 0 ≤ 2 * r - ri - rj) (add_nonneg (sq_nonneg ri) (sq_nonneg rj))]
-  nlinarith [mul_le_mul_of_nonneg_left e0 hA, mul_nonneg hA (sq_nonneg q), mul_le_mul_of_nonneg_left hc hB,
-    mul_nonneg hB (mul_nonneg (hri.trans hri') (add_nonneg (sq_nonneg ri) (sq_nonneg rj)))]
-
-/-- The `(i, j)` remainder: the cubic Bregman lower bound term minus its quadratic part. -/
-noncomputable def Dpair (y : Fin 7 → R3) (i j : Fin 7) : ℝ :=
-  3 / 2 * phi (gP i j) ^ 5 * tau y i j ^ 2 + 5 / 2 * phi (gP i j) ^ 7 * tau y i j ^ 3
-    - 3 / 2 * phi (gP i j) ^ 5
-      * (inner ℝ (pentBipyramid i) (y j - pentBipyramid j)
-          + inner ℝ (y i - pentBipyramid i) (pentBipyramid j)) ^ 2
-
-lemma Dpair_lower {y : Fin 7 → R3} {r : ℝ} (hr : r ≤ 1 / 1000)
-    (hρ : ∀ i, ‖y i - pentBipyramid i‖ ≤ r) {i j : Fin 7} (hij : i ≠ j)
-    (hφ : phi (gP i j) ≤ 8507 / 10000) :
-    -(23 / 5 * r * (‖y i - pentBipyramid i‖ ^ 2 + ‖y j - pentBipyramid j‖ ^ 2))
-      ≤ Dpair y i j := by
-  have hA0 : 0 ≤ phi (gP i j) := (phi_pos (gP_lt_one hij)).le
-  rw [Dpair, tau_expand]
-  nlinarith [pair_rem (A := phi (gP i j) ^ 5) (B := phi (gP i j) ^ 7) (pow_nonneg hA0 5)
-    (pow_nonneg hA0 7) (norm_nonneg _) (norm_nonneg _) (hρ i) (hρ j) hr
-    ((abs_add_le _ _).trans ((add_le_add (abs_real_inner_le_norm (pentBipyramid i) (y j - pentBipyramid j))
-      (abs_real_inner_le_norm (y i - pentBipyramid i) (pentBipyramid j))).trans_eq (by simp [pent_norm, add_comm])))
-    (abs_real_inner_le_norm _ _), pow_le_pow_left₀ hA0 hφ 5, pow_le_pow_left₀ hA0 hφ 7,
-    mul_nonneg ((norm_nonneg _).trans (hρ i)) (add_nonneg (sq_nonneg ‖y i - pentBipyramid i‖)
-      (sq_nonneg ‖y j - pentBipyramid j‖))]
-
-lemma sum_Dpair_lower {y : Fin 7 → R3} {r : ℝ} (hr : r ≤ 1 / 1000)
-    (hρ : ∀ i, ‖y i - pentBipyramid i‖ ≤ r) :
-    -(28 * r * ∑ i, ‖y i - pentBipyramid i‖ ^ 2)
-      ≤ ∑ i, ∑ j ∈ Finset.Ioi i, Dpair y i j := by
-  have h0 := mul_nonneg ((norm_nonneg _).trans (hρ 0))
-    (Finset.sum_nonneg fun i (_ : i ∈ Finset.univ) => sq_nonneg ‖y i - pentBipyramid i‖)
-  refine le_trans ?_ (Finset.sum_le_sum fun i _ => Finset.sum_le_sum fun j hj =>
-    Dpair_lower hr hρ (Finset.mem_Ioi.1 hj).ne (pb (Finset.mem_Ioi.1 hj).ne))
-  simp only [sum_Ioi_seven]
-  simp only [Fin.sum_univ_seven] at *
-  linarith
-
-lemma gaugeG_zero {y : Fin 7 → R3}
-    (hg : ∀ a b : Fin 3, ∑ i, pentBipyramid i a * y i b = ∑ i, pentBipyramid i b * y i a)
-    (a b : Fin 3) : gaugeG (fun i => y i - pentBipyramid i) a b = 0 := by
-  simp [gaugeG, mul_sub, Finset.sum_sub_distrib, hg a b]
-  simp [mul_comm]
-
-lemma pen_eq {y : Fin 7 → R3} (hy : ∀ i, ‖y i‖ = 1)
-    (hg : ∀ a b : Fin 3, ∑ i, pentBipyramid i a * y i b = ∑ i, pentBipyramid i b * y i a) :
-    Pen (fun i => y i - pentBipyramid i) = 1 / 4 * ∑ i, ‖y i - pentBipyramid i‖ ^ 4 := by
-  simp [Pen, gaugeG_zero hg, inner_P_h hy, Finset.mul_sum]
-  ring_nf
-
-/-- The penalised Hessian bound `449/100000 ∑ ‖hᵢ‖² ≤ Qhess h + 2 Pen h`, from the certificate. -/
 lemma hessian_lower (h : Fin 7 → R3) :
-    449 / 100000 * ∑ i, ‖h i‖ ^ 2 ≤ Qhess h + 2 * Pen h := by
-  have hq := Hess.qform atoms_inBox fun i => h ⟨i / 3 % 7, by omega⟩ ⟨i % 3, by omega⟩
-  simp only [Finset.sum_range_succ, Hess.Hm, Hess.ix, Hess.idx, Hess.wt, Hess.cp,
-    Hess.lam, List.getD_cons_succ, List.getD_cons_zero] at hq
-  simp only [Qhess, Pen, gaugeG, sum_Ioi_seven, gP, gram]
-  simp only [Fin.sum_univ_seven, inner_coord, norm_sq_coord, Wt, muPv, pcv]
-  norm_num [gt, pt, μ, CP, Ps, Poly.ev, mono, phi_neg_one, s2_eq, (by unfold c1 c2; ring : c2 = -1 / 2 - c1)] at hq ⊢
+    449 / 100000 * ∑ i, ‖h i‖ ^ 2 ≤ ∑ i, ∑ j ∈ Ioi i, W i j * ⟪h i, h j⟫ - 1 / 2 * ∑ i, muP i * ‖h i‖ ^ 2
+      + ∑ i, ∑ j ∈ Ioi i, 3 / 2 * phi ⟪pentBipyramid i, pentBipyramid j⟫ ^ 5
+        * (⟪pentBipyramid i, h j⟫ + ⟪pentBipyramid j, h i⟫) ^ 2 + 2 * ∑ i, ⟪pentBipyramid i, h i⟫ ^ 2
+      + ∑ a, ∑ b, (∑ i, (pentBipyramid i a * h i b - pentBipyramid i b * h i a)) ^ 2 := by
+  have hq := qform fun i => h ⟨i / 3 % 7, by omega⟩ ⟨i % 3, by omega⟩
+  simp only [sum_range_succ, sum_range_zero, zero_add, E] at hq
+  simp only [min_def, max_def, Nat.reduceLeDiff, reduceIte] at hq
+  simp only [HP, Nat.reduceDiv, Nat.reduceMod, reduceIte, List.flatMap_cons, List.flatMap_nil, List.append_nil] at hq
+  simp only [ev_mul, ev_append] at hq
+  simp +decide only [pq, wq, C, List.getD_cons_succ, List.getD_cons_zero] at hq
+  simp only [← filter_lt_eq_Ioi, sum_filter, gram]
+  simp only [Fin.sum_univ_seven, Fin.sum_univ_three, PiLp.inner_apply, ← real_inner_self_eq_norm_sq, Wt, muPv, pent_0, pent_1, pent_2, pent_3, pent_4, pent_5', pent_6']
+  norm_num [gt, μ, ev, mono, phi_neg_one, s2_eq, (by unfold c1 c2; ring : c2 = -1 / 2 - c1)] at hq ⊢
   linear_combination hq
 
-/-- **Local inequality.** For a gauge-fixed unit injective configuration within `10⁻⁴` of the
-bipyramid (coordinatewise in `ℝ³`-norm), the energy excess is at least `10⁻³ ∑ ‖yᵢ - Pᵢ‖²`. -/
-theorem local_ineq {y : Fin 7 → R3} (hy : ∀ i, ‖y i‖ = 1) (hinj : Function.Injective y)
-    (hg : ∀ a b : Fin 3, ∑ i, pentBipyramid i a * y i b = ∑ i, pentBipyramid i b * y i a)
-    (hρ : ∀ i, ‖y i - pentBipyramid i‖ ≤ 1 / 10000) :
-    1 / 1000 * ∑ i, ‖y i - pentBipyramid i‖ ^ 2
-      ≤ coulombEnergy y - coulombEnergy pentBipyramid := by
-  have hB3 := energy_ge_cubic hy hinj
-  have hD := sum_Dpair_lower (r := 1 / 10000) (by norm_num) hρ
-  have hH := hessian_lower (fun i => y i - pentBipyramid i)
-  have hq := Finset.sum_le_sum fun i (_ : i ∈ Finset.univ) => (by
+lemma pair_rem {A B t q a b : ℝ} (hA : 0 ≤ A) (hB : 0 ≤ B) (hA' : A ≤ 1 / 2) (hB' : B ≤ 1 / 2) (ha : 0 ≤ a)
+    (hb : 0 ≤ b) (ha' : a ≤ 1 / 10000) (hb' : b ≤ 1 / 10000) (ht : |t| ≤ a + b) (hq : |q| ≤ a * b) :
+    3 / 2 * A * t ^ 2 - 66 / 100000 * (a ^ 2 + b ^ 2) ≤ 3 / 2 * A * (t + q) ^ 2 + 5 / 2 * B * (t + q) ^ 3 := by
+  have hS := add_nonneg (sq_nonneg a) (sq_nonneg b)
+  have e0 : -(1 / 10000 * (a ^ 2 + b ^ 2)) ≤ t * q := by
+    nlinarith [neg_abs_le (t * q), abs_mul t q, mul_le_mul ht hq (abs_nonneg _) (by positivity),
+      mul_nonneg (sub_nonneg.2 hb') (sq_nonneg a), mul_nonneg (sub_nonneg.2 ha') (sq_nonneg b)]
+  have hu : |t + q| ≤ 10001 / 10000 * (a + b) := by
+    linarith [abs_add_le t q, mul_le_mul_of_nonneg_right ha' hb]
+  have hc : -(4002 / 10000000 * (a ^ 2 + b ^ 2)) ≤ (t + q) ^ 3 := by
+    nlinarith [pow_le_pow_left₀ (abs_nonneg _) hu 3, neg_abs_le ((t + q) ^ 3), abs_pow (t + q) 3,
+      mul_nonneg (add_nonneg ha hb) (sq_nonneg (a - b)),
+      mul_nonneg (by linarith : 0 ≤ 2 / 10000 - a - b) hS]
+  nlinarith [mul_le_mul_of_nonneg_left e0 hA, mul_nonneg hA (sq_nonneg q), mul_le_mul_of_nonneg_left hc hB,
+    mul_le_mul_of_nonneg_right hA' hS, mul_le_mul_of_nonneg_right hB' hS]
+
+end Reg
+
+open Reg in
+theorem TwoRegime.localMinAt_tiny : TwoRegime.LocalMinAt (1 / 30000) := fun z hz hclose => by
+  obtain ⟨g, hg1, hg2⟩ := exists_gauge pentBipyramid z
+  set y := fun i => g (z i)
+  have hy : ∀ i, ‖y i‖ = 1 := fun i => by simpa [y] using hz.1 i
+  have hn : ∀ i, ⟪pentBipyramid i, y i - pentBipyramid i⟫ = -(1 / 2) * ‖y i - pentBipyramid i‖ ^ 2 := fun i => by
+    simp [inner_sub_right, norm_sub_sq_real, hy, pent_norm, real_inner_comm]; ring
+  have hS : ∑ i, ‖y i - pentBipyramid i‖ ^ 2 ≤ (1 / 10000) ^ 2 := hg2.trans ((sum_le_sum fun i _ =>
+    pow_le_pow_left₀ (norm_nonneg _) (hclose i) 2).trans (by norm_num))
+  have hρ : ∀ i, ‖y i - pentBipyramid i‖ ≤ 1 / 10000 := fun i => le_of_sq_le_sq
+    ((single_le_sum (fun j _ => sq_nonneg ‖y j - pentBipyramid j‖) (mem_univ i)).trans hS) (by norm_num)
+  have hP := sum_le_sum fun i (_ : i ∈ univ) => sum_le_sum fun j (hj : j ∈ Ioi i) => (by
+    have hij := (mem_Ioi.1 hj).ne
+    have hg := inner_lt_one_of_ne (pent_norm i) (pent_norm j) (pentBipyramid_injective.ne hij)
+    have h0 := (phi_pos hg).le
+    have hφ : phi ⟪pentBipyramid i, pentBipyramid j⟫ ≤ 86 / 100 := by
+      have := box
+      rw [gram]; fin_cases i <;> fin_cases j <;> simp [gt, phi_neg_one] at hij ⊢ <;> linarith
+    have hB := phi_bregman_cubic hg (inner_lt_one_of_ne (hy i) (hy j) ((g.injective.comp hz.2).ne hij))
+    have e : ⟪y i, y j⟫ - ⟪pentBipyramid i, pentBipyramid j⟫ = ⟪pentBipyramid i, y j - pentBipyramid j⟫
+        + ⟪pentBipyramid j, y i - pentBipyramid i⟫ + ⟪y i - pentBipyramid i, y j - pentBipyramid j⟫ := by
+      simp only [inner_sub_left, inner_sub_right, real_inner_comm]; ring
+    rw [e] at hB
+    have := pair_rem (pow_nonneg h0 5) (pow_nonneg h0 7) ((pow_le_pow_left₀ h0 hφ 5).trans (by norm_num))
+      ((pow_le_pow_left₀ h0 hφ 7).trans (by norm_num)) (norm_nonneg _) (norm_nonneg _) (hρ i) (hρ j)
+      ((abs_add_le _ _).trans ((add_le_add (abs_real_inner_le_norm (pentBipyramid i) (y j - pentBipyramid j))
+        (abs_real_inner_le_norm (pentBipyramid j) (y i - pentBipyramid i))).trans_eq
+        (by simp [pent_norm, add_comm]))) (abs_real_inner_le_norm (y i - pentBipyramid i) (y j - pentBipyramid j))
+    rw [W_symm j, W_ne hij]
+    linarith :
+    phi ⟪pentBipyramid i, pentBipyramid j⟫ + (W i j * ⟪pentBipyramid j, y i - pentBipyramid i⟫
+        + W j i * ⟪pentBipyramid i, y j - pentBipyramid j⟫) + W i j * ⟪y i - pentBipyramid i, y j - pentBipyramid j⟫
+        + 3 / 2 * phi ⟪pentBipyramid i, pentBipyramid j⟫ ^ 5
+          * (⟪pentBipyramid i, y j - pentBipyramid j⟫ + ⟪pentBipyramid j, y i - pentBipyramid i⟫) ^ 2
+        - 66 / 100000 * (‖y i - pentBipyramid i‖ ^ 2 + ‖y j - pentBipyramid j‖ ^ 2) ≤ phi ⟪y i, y j⟫)
+  have hH := hessian_lower fun i => y i - pentBipyramid i
+  have h4 := sum_le_sum fun i (_ : i ∈ univ) => (by
     nlinarith [pow_le_pow_left₀ (norm_nonneg _) (hρ i) 2] :
       ‖y i - pentBipyramid i‖ ^ 4 ≤ (1 / 10000) ^ 2 * ‖y i - pentBipyramid i‖ ^ 2)
-  unfold Dpair at hD; unfold Qhess at hH
-  simp only [Finset.sum_sub_distrib, Finset.sum_add_distrib, ← Finset.mul_sum] at hB3 hD hH hq
-  linarith [pen_eq hy hg, Finset.sum_nonneg fun i (_ : i ∈ Finset.univ) => sq_nonneg ‖y i - pentBipyramid i‖]
-
-/-- **Strict local minimality of the pentagonal bipyramid** (perturbative, radius `10⁻⁴` in
-`ℓ²` distance of the labelled configuration): every configuration within that distance has energy
-at least `E(P)`, and equality forces the configuration to be an isometric image of `P`. -/
-theorem pent_local_min {z : Fin 7 → R3} (hz : z ∈ SphereConfig 7)
-    (hclose : ∑ i, ‖z i - pentBipyramid i‖ ^ 2 ≤ (1 / 10000) ^ 2) :
-    coulombEnergy pentBipyramid ≤ coulombEnergy z ∧
-      (coulombEnergy z = coulombEnergy pentBipyramid →
-        ∃ g : R3 ≃ₗᵢ[ℝ] R3, ∀ i, z i = g (pentBipyramid i)) := by
-  obtain ⟨g, hg1, hg2⟩ := exists_gauge pentBipyramid z
-  have hS := Finset.sum_nonneg fun i (_ : i ∈ Finset.univ) => sq_nonneg ‖g (z i) - pentBipyramid i‖
-  have key := local_ineq (y := fun i => g (z i)) (fun i => by simpa using hz.1 i) (g.injective.comp hz.2) hg1 fun i =>
-    le_of_sq_le_sq ((Finset.single_le_sum (fun j _ => sq_nonneg ‖g (z j) - pentBipyramid j‖)
-      (Finset.mem_univ i)).trans (hg2.trans hclose)) (by norm_num)
-  rw [coulombEnergy_comp_isometry g z] at key
-  exact ⟨by linarith, fun heq => ⟨g.symm, fun i => g.eq_symm_apply.2 (by
-    simpa [sub_eq_zero] using (Finset.sum_eq_zero_iff_of_nonneg fun j _ =>
-      sq_nonneg ‖g (z j) - pentBipyramid j‖).1 (by linarith) i (Finset.mem_univ i))⟩⟩
-
-end Reg
-end ThomsonN7
-
-/- END LOC2 -/
-
-namespace ThomsonN7
-namespace Reg
-
-/-- Sup-norm form of the tiny-ball local minimality: every unit injective configuration within
-`1/30000` of the labelled bipyramid in every vertex has energy at least `E(P)`, with equality
-only on the `O(3)`-orbit of `P`. -/
-theorem pent_local_min_sup {z : Fin 7 → R3} (hz : z ∈ SphereConfig 7)
-    (hclose : ∀ i, ‖z i - pentBipyramid i‖ ≤ 1 / 30000) :
-    coulombEnergy pentBipyramid ≤ coulombEnergy z ∧
-      (coulombEnergy z = coulombEnergy pentBipyramid →
-        ∃ g : R3 ≃ₗᵢ[ℝ] R3, ∀ i, z i = g (pentBipyramid i)) :=
-  pent_local_min hz ((Finset.sum_le_sum fun i _ => pow_le_pow_left₀ (norm_nonneg _) (hclose i) 2).trans (by norm_num))
-
-end Reg
-
-/-- The tiny-ball local statement in the `LocalMinAt` interface of `TwoRegime`. -/
-theorem TwoRegime.localMinAt_tiny : TwoRegime.LocalMinAt (1 / 30000) :=
-  fun _ hz h => Reg.pent_local_min_sup hz h
+  have hG : ∀ a b : Fin 3, ∑ i, (pentBipyramid i a * (y i - pentBipyramid i) b
+      - pentBipyramid i b * (y i - pentBipyramid i) a) = 0 := fun a b => by
+    simpa [mul_sub, sum_sub_distrib, mul_comm, sub_eq_zero] using hg1 a b
+  have h6 : ∑ i, ∑ j ∈ Ioi i, (‖y i - pentBipyramid i‖ ^ 2 + ‖y j - pentBipyramid j‖ ^ 2)
+      = 6 * ∑ i, ‖y i - pentBipyramid i‖ ^ 2 := by
+    simp only [← filter_lt_eq_Ioi, sum_filter, Fin.sum_univ_seven]; norm_num; ring
+  simp only [sum_add_distrib] at h6
+  have h2 : ∀ i, ∑ j, W i j * ⟪pentBipyramid j, y i - pentBipyramid i⟫
+      = -(1 / 2) * (muP i * ‖y i - pentBipyramid i‖ ^ 2) := fun i => by
+    simp [← real_inner_smul_left, ← sum_inner, pent_critical]
+    rw [real_inner_smul_left, hn]; ring
+  have hl := sum_Ioi_add_swap (fun i j => W i j * ⟪pentBipyramid j, y i - pentBipyramid i⟫) fun i => by simp [W_diag]
+  simp only [h2, ← mul_sum, sum_add_distrib] at hl
+  simp only [sum_add_distrib, sum_sub_distrib, ← mul_sum, h6] at hP
+  simp only [hG, hn, mul_pow, ← pow_mul, ← mul_sum] at hH
+  norm_num at hH
+  rw [← coulombEnergy_eq_sum_phi hy, ← coulombEnergy_eq_sum_phi pent_norm, coulombEnergy_comp_isometry g z] at hP
+  have hS0 := sum_nonneg fun i (_ : i ∈ univ) => sq_nonneg ‖y i - pentBipyramid i‖
+  rw [← mul_sum] at h4
+  refine ⟨by linarith, fun heq => ⟨g.symm, fun i => g.eq_symm_apply.2 ?_⟩⟩
+  simpa [sub_eq_zero] using (sum_eq_zero_iff_of_nonneg fun j _ => sq_nonneg ‖y j - pentBipyramid j‖).1
+    (by linarith) i (mem_univ i)
 
 end ThomsonN7
-
-/- END REGLOCAL -/
 end RegLocalSection
 
 section Asm_SlabHead
