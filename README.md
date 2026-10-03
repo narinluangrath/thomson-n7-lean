@@ -56,6 +56,28 @@ The full account, with every phase, what didn't work and the caveats, is in [`CO
 - **Unchanged:** about 17,000 words are still raw certificate numbers that no human reads, most of them one SDP
   certificate that is already at its minimum size for this formulation.
 
+## Is shorter more comprehensible? Two framings
+
+**Wolfram's "alien proofs".** In [*What's the future for pure math research in the age of AI?*](https://writings.stephenwolfram.com/2026/09/whats-the-future-for-pure-math-research-in-the-age-of-ai/)
+(September 2026), Stephen Wolfram points to his own machine proof of the simplest axiom for Boolean algebra. It is
+very long and "alien", and in 26 years nobody has found a human-level version. His explanation is computational
+irreducibility: some facts have no shortcut, so the only proof is the computation itself. That predicts this project
+lands in between: the structure of the argument can become clearer, but the certificate computations won't, however
+small we make them. It also matches what we see. The rewrites that both shortened a section and made it read better
+did it by using concepts Mathlib already has (Gram-matrix positivity, reflections), which is close to his point that
+mathematics only becomes useful once it is "knitted into" shared mathematical culture. The rewrites that only folded
+lemmas into one big proof went the minified direction.
+
+**The skeleton test.** To check this directly, we stripped the compressed proof to its statements: no proofs, no
+data. That leaves 430 declarations and about 12,000 words. A spine of about 1,700 words still tells the paper's
+argument in the paper's order, and most of it reads like the paper. But about 20 intermediate steps the paper cites
+by name have been inlined away, because the word count charges for every named lemma. Full results are in
+[`SKELETON.md`](SKELETON.md), and the skeleton itself is in [`SKELETON.lean.txt`](SKELETON.lean.txt).
+
+**Our current answer: in between.** The top-level structure is close to an essence. The certificates are irreducibly
+alien. And optimising for words has started to delete the named steps a reader needs, so going further may need a
+different metric, not more compression.
+
 **Next:** more section rewrites (only small regions, about 2k proof words, are left un-rewritten), and eventually deciding
 whether the remaining structure is the "essence" or just a smaller pile.
 

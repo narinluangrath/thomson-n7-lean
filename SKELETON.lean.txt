@@ -1,0 +1,484 @@
+-- Statement skeleton of Solution.lean: 430 declarations, 12024 words; left out 693 data definitions.
+-- Not valid Lean: proofs and definition bodies are cut at `:=`.
+
+-- ## Base (17 declarations, 426 words)
+noncomputable def phi (t : ℝ) : ℝ
+lemma neg_one_le_inner_of_unit {x y : R3} (hx : ‖x‖ = 1) (hy : ‖y‖ = 1) : -1 ≤ inner ℝ x y
+lemma inner_lt_one_of_ne {x y : R3} (hx : ‖x‖ = 1) (hy : ‖y‖ = 1) (hne : x ≠ y) : inner ℝ x y < 1
+lemma coulombEnergy_eq_sum_phi {n : ℕ} {x : Fin n → R3} (hx : ∀ i, ‖x i‖ = 1) : coulombEnergy x = ∑ i, ∑ j ∈ Finset.Ioi i, phi (inner ℝ (x i) (x j))
+lemma coulombEnergy_comp_isometry {n : ℕ} (g : R3 ≃ₗᵢ[ℝ] R3) (x : Fin n → R3) : coulombEnergy (fun i => g (x i)) = coulombEnergy x
+lemma two_mul_sum_Ioi {n : ℕ} (F : Fin n → Fin n → ℝ) (hF : ∀ i j, F i j = F j i) : 2 * ∑ i, ∑ j ∈ Finset.Ioi i, F i j = ∑ i, ∑ j, if i = j then 0 else F i j
+lemma coulombEnergy_comp_perm {n : ℕ} (σ : Equiv.Perm (Fin n)) (x : Fin n → R3) : coulombEnergy (fun i => x (σ i)) = coulombEnergy x
+lemma sphereConfig_comp {n : ℕ} (g : R3 ≃ₗᵢ[ℝ] R3) (σ : Equiv.Perm (Fin n)) {x : Fin n → R3} (hx : x ∈ SphereConfig n) : (fun i => g (x (σ i))) ∈ SphereConfig n
+noncomputable def c1 : ℝ
+noncomputable def c2 : ℝ
+lemma cos_2pi5 : cos (2 * π / 5) = c1
+lemma cos_4pi5 : cos (4 * π / 5) = c2
+lemma pent_norm (i : Fin 7) : ‖pentBipyramid i‖ = 1
+lemma phi_pos {t : ℝ} (h : t < 1) : 0 < phi t
+lemma phi_sq_mul {t : ℝ} (h : t < 1) : phi t ^ 2 * (2 - 2 * t) = 1
+lemma phi_tau_eq {t0 t : ℝ} (h0 : t0 < 1) (h : t < 1) : t - t0 = (phi t ^ 2 - phi t0 ^ 2) / (2 * phi t0 ^ 2 * phi t ^ 2)
+lemma phi_bregman_cubic {t0 t : ℝ} (h0 : t0 < 1) (h : t < 1) : phi t0 + phi t0 ^ 3 * (t - t0) + 3 / 2 * phi t0 ^ 5 * (t - t0) ^ 2 + 5 / 2 * phi t0 ^ 7 * (t - t0) ^ 3 ≤ phi t
+
+-- ## ThreePoint (42 declarations, 2112 words)
+noncomputable def Q3 : ℕ → ℝ → ℝ → ℝ → ℝ
+noncomputable def Y3 (m k : ℕ) (u v t : ℝ) : Matrix (Fin m) (Fin m) ℝ
+def matDot {m : ℕ} (A B : Matrix (Fin m) (Fin m) ℝ) : ℝ
+theorem S3_swap12 (m k : ℕ) (u v t : ℝ) : S3 m k u v t = S3 m k v u t
+theorem S3_swap23 (m k : ℕ) (u v t : ℝ) : S3 m k u v t = S3 m k u t v
+theorem quad_Y3_nonneg (m k : ℕ) {n : ℕ} (u : Fin n → ℝ) (t : Fin n → Fin n → ℝ) (a b : Fin n → ℝ) (hu : ∀ j, 1 - u j ^ 2 = a j ^ 2 + b j ^ 2) (ht : ∀ j l, t j l - u j * u l = a j * a l + b j * b l) (w : Fin m → ℝ) : 0 ≤ ∑ j, ∑ l, w ⬝ᵥ (Y3 m k (u j) (u l) (t j l)).mulVec w
+theorem exists_tangent_frame (x : R3) (hx : ‖x‖ = 1) : ∃ e₁ e₂ : R3, ∀ y z : R3, ‖y‖ = 1 → ‖z‖ = 1 → (1 - ⟪x, y⟫ ^ 2 = ⟪e₁, y⟫ ^ 2 + ⟪e₂, y⟫ ^ 2) ∧ (⟪y, z⟫ - ⟪x, y⟫ * ⟪x, z⟫ = ⟪e₁, y⟫ * ⟪e₁, z⟫ + ⟪e₂, y⟫ * ⟪e₂, z⟫)
+theorem matDot_add {m : ℕ} (F A B : Matrix (Fin m) (Fin m) ℝ) : matDot F (A + B) = matDot F A + matDot F B
+theorem matDot_smul {m : ℕ} (F A : Matrix (Fin m) (Fin m) ℝ) (c : ℝ) : matDot F (c • A) = c * matDot F A
+theorem matDot_moment_nonneg (m k : ℕ) {n : ℕ} (x : Fin n → R3) (hx : ∀ i, ‖x i‖ = 1) (F : Matrix (Fin m) (Fin m) ℝ) (hF : F.PosSemidef) : 0 ≤ ∑ i, ∑ j, ∑ l, matDot F (S3 m k ⟪x i, x j⟫ ⟪x i, x l⟫ ⟪x j, x l⟫)
+def dsum (f : Fin n → Fin n → Fin n → ℝ) : ℝ
+theorem sum_all_eq (f : Fin n → Fin n → Fin n → ℝ) : ∑ i, ∑ j, ∑ l, f i j l = dsum f + ∑ i, ∑ l, f i i l + ∑ i, ∑ j, f i j i + ∑ i, ∑ j, f i j j - 2 * ∑ i, f i i i
+theorem dsum_add (f g : Fin n → Fin n → Fin n → ℝ) : dsum (fun i j l => f i j l + g i j l) = dsum f + dsum g
+theorem dsum_sub (f g : Fin n → Fin n → Fin n → ℝ) : dsum (fun i j l => f i j l - g i j l) = dsum f - dsum g
+theorem dsum_swap23 (f : Fin n → Fin n → Fin n → ℝ) : dsum (fun i j l => f i l j) = dsum f
+theorem dsum_swap12 (f : Fin n → Fin n → Fin n → ℝ) : dsum (fun i j l => f j i l) = dsum f
+theorem dsum_cyc (f : Fin n → Fin n → Fin n → ℝ) : dsum (fun i j l => f j l i) = dsum f
+theorem dsum_nonneg {f : Fin n → Fin n → Fin n → ℝ} (h : ∀ i j l, i ≠ j → i ≠ l → j ≠ l → 0 ≤ f i j l) : 0 ≤ dsum f
+theorem sum_ne_eq_two_sum_Ioi (h : Fin n → Fin n → ℝ) (hsymm : ∀ i j, h i j = h j i) : ∑ i, ∑ j, (if i ≠ j then h i j else 0) = 2 * ∑ i, ∑ j ∈ Finset.Ioi i, h i j
+theorem sum_ne_eq_sub (a : Fin n → ℝ) (i : Fin n) : ∑ j, (if i ≠ j then a j else 0) = ∑ j, a j - a i
+noncomputable def Rs (s : ℝ → ℝ → ℝ → ℝ) (n : ℕ) (u v t : ℝ) : ℝ
+theorem three_point_identity (hn : 3 ≤ n) (s : ℝ → ℝ → ℝ → ℝ) (hs12 : ∀ u v t, s u v t = s v u t) (hs23 : ∀ u v t, s u v t = s u t v) (H : ℝ → ℝ) (e : ℝ) (x : Fin n → R3) (hx : ∀ i, ‖x i‖ = 1) : dsum (fun i j l => ((H ⟪x i, x j⟫ + H ⟪x i, x l⟫ + H ⟪x j, x l⟫) / 3 - e / (n.choose 2 : ℝ)) - Rs s n ⟪x i, x j⟫ ⟪x i, x l⟫ ⟪x j, x l⟫) + ((n : ℝ) - 2) * ∑ i, ∑ j, ∑ l, s ⟪x i, x j⟫ ⟪x i, x l⟫ ⟪x j, x l⟫ = 2 * ((n : ℝ) - 2) * (∑ i, ∑ j ∈ Finset.Ioi i, H ⟪x i, x j⟫ - e)
+def GramOK (u v t : ℝ) : Prop
+theorem gramOK_inner (x y z : R3) (hx : ‖x‖ = 1) (hy : ‖y‖ = 1) (hz : ‖z‖ = 1) : GramOK ⟪x, y⟫ ⟪x, z⟫ ⟪y, z⟫
+noncomputable def Rk (n m k : ℕ) (u v t : ℝ) : Matrix (Fin m) (Fin m) ℝ
+theorem matDot_Rk {m : ℕ} (F : Matrix (Fin m) (Fin m) ℝ) (n k : ℕ) (u v t : ℝ) : matDot F (Rk n m k u v t) = Rs (fun u v t => matDot F (S3 m k u v t)) n u v t
+theorem sum_matDot_Rk (K n : ℕ) (m : ℕ → ℕ) (F : (k : ℕ) → Matrix (Fin (m k)) (Fin (m k)) ℝ) (u v t : ℝ) : ∑ k ∈ Finset.range K, matDot (F k) (Rk n (m k) k u v t) = Rs (fun u v t => ∑ k ∈ Finset.range K, matDot (F k) (S3 (m k) k u v t)) n u v t
+theorem sum4_swap {ι κ : Type*} [Fintype ι] (s : Finset κ) (f : ι → ι → ι → κ → ℝ) : ∑ i, ∑ j, ∑ l, ∑ k ∈ s, f i j l k = ∑ k ∈ s, ∑ i, ∑ j, ∑ l, f i j l k
+theorem matDot_root_nonneg (m k : ℕ) {n : ℕ} (x : Fin n → R3) (hx : ∀ i, ‖x i‖ = 1) (i : Fin n) (F : Matrix (Fin m) (Fin m) ℝ) (hF : F.PosSemidef) : 0 ≤ ∑ j, ∑ l, matDot F (Y3 m k ⟪x i, x j⟫ ⟪x i, x l⟫ ⟪x j, x l⟫)
+noncomputable def mrg (s : Fin n → ℝ → ℝ → ℝ → ℝ) (i : Fin n) (t : ℝ) : ℝ
+theorem dsum_os6 (f : Fin n → Fin n → Fin n → ℝ) : dsum (fun i j l => f i j l + f i l j + f j i l + f j l i + f l i j + f l j i) = 6 * dsum f
+theorem typed_bound_comb2 {n : ℕ} (hn : 3 ≤ n) (s : Fin n → ℝ → ℝ → ℝ → ℝ) (H : Fin n → Fin n → ℝ → ℝ) (hH : ∀ i j t, H j i t = H i j t) (e : ℝ) (τ : Fin n → Fin n → ℝ) (hsymm : ∀ i j, τ i j = τ j i) (hdiag : ∀ i, τ i i = 1) (W : Fin n → Fin n → Fin n → ℝ → ℝ) (c : Fin n → Fin n → Fin n → ℝ) (hW : ∀ i j, i ≠ j → ∀ t, ∑ l, (if i ≠ l ∧ j ≠ l then W i j l t else 0) = H i j t - mrg s i t - mrg s j t) (hc : dsum c = 6 * (e + ∑ i, s i 1 1 1)) (hroot : 0 ≤ ∑ i, ∑ j, ∑ l, s i (τ i j) (τ i l) (τ j l)) (hpt : ∀ i j l, i ≠ j → i ≠ l → j ≠ l → 0 ≤ W i j l (τ i j) + W i l j (τ i l) + W j l i (τ j l) - c i j l - (s i (τ i j) (τ i l) (τ j l) + s i (τ i l) (τ i j) (τ l j) + s j (τ j i) (τ j l) (τ i l) + s j (τ j l) (τ j i) (τ l i) + s l (τ l i) (τ l j) (τ i j) + s l (τ l j) (τ l i) (τ j i))) : e ≤ ∑ i, ∑ j ∈ Finset.Ioi i, H i j (τ i j)
+theorem Q3_swap (k : ℕ) (u v t : ℝ) : Q3 k u v t = Q3 k v u t
+def isP (i : Fin 7) : Prop
+instance (i : Fin 7) : Decidable (isP i)
+noncomputable def H7 (HA HB HC : ℝ → ℝ) (i j : Fin 7) (t : ℝ) : ℝ
+noncomputable def gm (S : ℝ → ℝ → ℝ → ℝ) (t : ℝ) : ℝ
+noncomputable def lamA (SP SR : ℝ → ℝ → ℝ → ℝ) (HA ψBa : ℝ → ℝ) (cal : ℝ) (u v t : ℝ) : ℝ
+noncomputable def lamB (SP SR : ℝ → ℝ → ℝ → ℝ) (HB ψBa ψCb : ℝ → ℝ) (cbe : ℝ) (u v t : ℝ) : ℝ
+noncomputable def lamG (SR : ℝ → ℝ → ℝ → ℝ) (HC ψCb : ℝ → ℝ) (cga : ℝ) (u v t : ℝ) : ℝ
+noncomputable def Sk (K : ℕ) (m : ℕ → ℕ) (F : (k : ℕ) → Matrix (Fin (m k)) (Fin (m k)) ℝ) (u v t : ℝ) : ℝ
+theorem typed7_bound_lo (K : ℕ) (m : ℕ → ℕ) (FP FR : (k : ℕ) → Matrix (Fin (m k)) (Fin (m k)) ℝ) (hFP : ∀ k, k < K → (FP k).PosSemidef) (hFR : ∀ k, k < K → (FR k).PosSemidef) (HA HB HC ψBa ψCb : ℝ → ℝ) (e cal cbe alo ahi amin : ℝ) (x : Fin 7 → R3) (hx : ∀ i, ‖x i‖ = 1) (hmin : ∀ i j, i ≠ j → amin ≤ ⟪x i, x j⟫) (hcut : alo ≤ ⟪x 0, x 1⟫ ∧ ⟪x 0, x 1⟫ ≤ ahi) (hα : ∀ u v t, GramOK u v t → alo ≤ u → u ≤ ahi → amin ≤ v → amin ≤ t → 0 ≤ lamA (Sk K m FP) (Sk K m FR) HA ψBa cal u v t) (hβ : ∀ u v t, GramOK u v t → amin ≤ u → amin ≤ v → amin ≤ t → 0 ≤ lamB (Sk K m FP) (Sk K m FR) HB ψBa ψCb cbe u v t) (hγ : ∀ u v t, GramOK u v t → amin ≤ u → amin ≤ v → amin ≤ t → 0 ≤ lamG (Sk K m FR) HC ψCb ((e + 2 * Sk K m FP 1 1 1 + 5 * Sk K m FR 1 1 1 - 5 * cal - 20 * cbe) / 10) u v t) : e ≤ ∑ i, ∑ j ∈ Finset.Ioi i, H7 HA HB HC i j ⟪x i, x j⟫
+
+-- ## Kron (1 declarations, 2 words)
+inductive Ex
+
+-- ## Ex (35 declarations, 763 words)
+noncomputable def ev (u v t : ℝ) : Ex → ℝ
+def kev (w D : ℕ) : Ex → ℤ
+def l1 : Ex → ℕ
+def dx : Ex → ℕ
+def dy : Ex → ℕ
+def dz : Ex → ℕ
+def toList : Ex → List (ℤ × ℕ × ℕ × ℕ)
+lemma sum_fm [CommRing R] (g : ℤ × ℕ × ℕ × ℕ → R) (hg : ∀ x y, g (x.1 * y.1, x.2 + y.2) = g x * g y) (L M : List _) : ((L.flatMap fun x => M.map fun y => (x.1 * y.1, x.2 + y.2)).map g).sum = (L.map g).sum * (M.map g).sum
+lemma key (e : Ex) (w D : ℕ) : (e.toList.map (|·.1|)).sum = e.l1 ∧ (∀ x ∈ e.toList, x.2.1 ≤ e.dx ∧ x.2.2.1 ≤ e.dy ∧ x.2.2.2 ≤ e.dz) ∧ (∀ u v t, e.ev u v t = (e.toList.map fun x => x.1 * (mon x.2.1 x.2.2.1 x.2.2.2).ev u v t).sum) ∧ e.kev w D = (e.toList.map fun x => x.1 * (2 ^ w) ^ (x.2.1 + D * (x.2.2.1 + D * x.2.2.2))).sum
+lemma regroup (g : α → ℕ) (a : α → ℤ) {N} {L : List α} (hL : ∀ x ∈ L, g x < N) : (∀ k, |(L.map fun x => if g x = k then a x else 0).sum| ≤ (L.map (|a ·|)).sum) ∧ ∀ {R} [CommRing R] (F : ℕ → R), (L.map fun x => a x * F (g x)).sum = ∑ k ∈ Finset.range N, ((L.map fun x => if g x = k then a x else 0).sum : R) * F k
+lemma digit_unique {a : ℕ → ℤ} (hb : ∀ k, |a k| < B) (hs : ∑ k ∈ Finset.range N, a k * B ^ k = 0) : ∀ k < N, a k = 0
+lemma decode (h : (n : ℕ) = a + D * (b + D * d)) (h' : a < D ∧ b < D ∧ d < D) : n % D = a ∧ n / D % D = b ∧ n / D / D = d ∧ n < D * D * D
+theorem ev_eq_zero_of_kev (e : Ex) (w D : ℕ) (hx : e.dx < D) (hy : e.dy < D) (hz : e.dz < D) (hl : e.l1 < 2 ^ w) (hk : e.kev w D = 0) (u v t : ℝ) : e.ev u v t = 0
+def one : Ex
+def neg (e : Ex) : Ex
+def sub (e f : Ex) : Ex
+def smul (a : ℤ) (e : Ex) : Ex
+def sq (e : Ex) : Ex
+def sumE (l : List Ex) : Ex
+def sumRange (r : ℕ) (f : ℕ → Ex) : Ex
+@[simp] lemma ev_c (n : ℤ) : (c n).ev u v t = n
+@[simp] lemma ev_mon (a b d : ℕ) : (mon a b d).ev u v t = u ^ a * v ^ b * t ^ d
+@[simp] lemma ev_add (p q : Ex) : (add p q).ev u v t = p.ev u v t + q.ev u v t
+@[simp] lemma ev_mul (p q : Ex) : (mul p q).ev u v t = p.ev u v t * q.ev u v t
+@[simp] lemma ev_one : one.ev u v t = 1
+@[simp] lemma ev_U : U.ev u v t = u
+@[simp] lemma ev_V : V.ev u v t = v
+@[simp] lemma ev_T : T.ev u v t = t
+@[simp] lemma ev_neg (e : Ex) : (neg e).ev u v t = - e.ev u v t
+@[simp] lemma ev_sub (e f : Ex) : (sub e f).ev u v t = e.ev u v t - f.ev u v t
+@[simp] lemma ev_smul (a : ℤ) (e : Ex) : (smul a e).ev u v t = a * e.ev u v t
+@[simp] lemma ev_sq (e : Ex) : (sq e).ev u v t = e.ev u v t ^ 2
+lemma ev_sumE (l : List Ex) : (sumE l).ev u v t = (l.map fun e => e.ev u v t).sum
+lemma ev_sumRange (r : ℕ) (f : ℕ → Ex) : (sumRange r f).ev u v t = ∑ i ∈ Finset.range r, (f i).ev u v t
+def varVal : ℕ → ℝ
+
+-- ## Cert (97 declarations, 2169 words)
+def q3E : ℕ → Ex
+lemma ev_q3E (u v t : ℝ) : ∀ k, (q3E k).ev u v t = Q3 k u v t
+lemma qform_dd_nonneg (r : ℕ) (Δ : ℕ → ℕ → ℝ) (x : ℕ → ℝ) (hs : ∀ i ∈ Finset.range r, ∀ j ∈ Finset.range r, Δ i j = Δ j i) (hdd : ∀ i ∈ Finset.range r, ∑ j ∈ Finset.range r, (if i = j then 0 else |Δ i j|) ≤ Δ i i) : 0 ≤ ∑ i ∈ Finset.range r, ∑ j ∈ Finset.range r, x i * Δ i j * x j
+structure Blk
+def smulNZ (a : ℤ) (e : Ex) : Ex
+lemma ev_smulNZ (a : ℤ) (e : Ex) (u v t : ℝ) : (smulNZ a e).ev u v t = a * e.ev u v t
+def sbst (i j k : ℕ) : Ex → Ex
+lemma ev_sbst (i j k : ℕ) (e : Ex) (u v t : ℝ) : (sbst i j k e).ev u v t = e.ev (varVal u v t i) (varVal u v t j) (varVal u v t k)
+def fpE (r : ℕ) (b : Blk) : Ex
+lemma ent_bil (r : ℕ) (b : Blk) (x y : ℕ → ℝ) : ∑ a ∈ Finset.range r, ∑ c ∈ Finset.range r, (b.ent r a c : ℝ) * (x a * y c) = ∑ q ∈ Finset.range r, (b.dq q : ℝ) * ((∑ a ∈ Finset.range r, (b.lq q a : ℝ) * x a) * ∑ a ∈ Finset.range r, (b.lq q a : ℝ) * y a) + ∑ a ∈ Finset.range r, ∑ c ∈ Finset.range r, (b.del a c : ℝ) * (x a * y c)
+def fkE (r : ℕ) (b : Blk) (k : ℕ) : Ex
+noncomputable def fmat (r Lam : ℕ) (b : Blk) : Matrix (Fin r) (Fin r) ℝ
+lemma matDot_fmat_Y3 (r Lam : ℕ) (b : Blk) (k : ℕ) (u v t : ℝ) : matDot (fmat r Lam b) (Y3 r k u v t) = (fkE r b k).ev u v t / Lam
+lemma ent_nonneg {r : ℕ} {b : Blk} (h : b.ok r = true) (x : ℕ → ℝ) : 0 ≤ ∑ a ∈ Finset.range r, ∑ c ∈ Finset.range r, (b.ent r a c : ℝ) * (x a * x c)
+lemma fmat_psd {r : ℕ} (Lam : ℕ) {b : Blk} (h : b.ok r = true) : (fmat r Lam b).PosSemidef
+def sixE (i j k : ℕ) (e : Ex) : Ex
+def ftotE (n K : ℕ) (fs : ℕ → Ex) : Ex
+def zt (zs : List (ℕ × ℕ × ℕ)) (a : ℕ) : ℕ × ℕ × ℕ
+def zmon (zs : List (ℕ × ℕ × ℕ)) (a : ℕ) : Ex
+def zzmon (zs : List (ℕ × ℕ × ℕ)) (a c : ℕ) : Ex
+noncomputable def zval (zs : List (ℕ × ℕ × ℕ)) (u v t : ℝ) (a : ℕ) : ℝ
+def sqfE (b : Blk) (zs : List (ℕ × ℕ × ℕ)) : Ex
+lemma ev_sqfE (b : Blk) (zs : List (ℕ × ℕ × ℕ)) (u v t : ℝ) : (sqfE b zs).ev u v t = ∑ q ∈ Finset.range zs.length, (b.dq q : ℝ) * (∑ a ∈ Finset.range zs.length, (b.lq q a : ℝ) * zval zs u v t a) ^ 2 + ∑ a ∈ Finset.range zs.length, ∑ c ∈ Finset.range zs.length, zval zs u v t a * (b.del a c : ℝ) * zval zs u v t c
+lemma sqfE_nonneg {b : Blk} {zs : List (ℕ × ℕ × ℕ)} (h : b.ok zs.length = true) (u v t : ℝ) : 0 ≤ (sqfE b zs).ev u v t
+def GramCut (an : ℤ) (ad : ℕ) (u v t : ℝ) : Prop
+def codeE (an : ℤ) (ad : ℕ) : ℕ → Ex
+lemma codeE_nonneg (an : ℤ) (ad : ℕ) (code : ℕ) {u v t : ℝ} (h : GramCut an ad u v t) : 0 ≤ (codeE an ad code).ev u v t
+def gE (an : ℤ) (ad : ℕ) (g : List ℕ) : Ex
+lemma gE_nonneg (an : ℤ) (ad : ℕ) (g : List ℕ) {u v t : ℝ} (h : GramCut an ad u v t) : 0 ≤ (gE an ad g).ev u v t
+structure SBlk
+def sblkE (an : ℤ) (ad : ℕ) (s : SBlk) : Ex
+def Blk.empty : Blk
+def hE (h : List ℤ) : Ex
+def chk (e : Ex) : Bool
+structure Cert3
+def unpackI (B : ℕ) : ℕ → ℕ → List ℤ
+def unpackM (B cols : ℕ) : ℕ → ℕ → List (List ℤ)
+def linF : List (ℕ × ℕ × ℕ) → List ℤ → Ex
+def sqF (zs : List (ℕ × ℕ × ℕ)) : List (ℕ × ℕ × ℕ) → List ℤ → List (List ℤ) → Ex
+def rowF (ta : ℕ × ℕ × ℕ) : List (ℕ × ℕ × ℕ) → List ℤ → Ex
+def quadF (zs : List (ℕ × ℕ × ℕ)) : List (ℕ × ℕ × ℕ) → List (List ℤ) → Ex
+def sqfF (b : Blk) (zs : List (ℕ × ℕ × ℕ)) : Ex
+lemma ev_sqfF (b : Blk) (zs : List (ℕ × ℕ × ℕ)) (u v t : ℝ) : (sqfF b zs).ev u v t = (sqfE b zs).ev u v t
+def transposeSq : ℕ → List (List ℤ) → List (List ℤ)
+def offAbs (i : ℕ) : ℕ → List ℤ → ℤ
+def domAll : ℕ → List (List ℤ) → Bool
+def okF (r : ℕ) (b : Blk) : Bool
+lemma okF_sound {r : ℕ} {b : Blk} (h : okF r b = true) : b.ok r = true
+def codeT (an : ℤ) (ad : ℕ) (bn : ℤ) (bd : ℕ) (j : ℕ) : Ex
+def gT (an : ℤ) (ad : ℕ) (bn : ℤ) (bd : ℕ) (g : List ℕ) : Ex
+structure TBlk
+def tblkE (an : ℤ) (ad : ℕ) (bn : ℤ) (bd : ℕ) (s : TBlk) : Ex
+def kw (w D : ℕ) (zs : List (ℕ × ℕ × ℕ)) (a : ℕ) : ℤ
+def sqfVal (b : Blk) (n : ℕ) (P : ℕ → ℤ) : ℤ
+lemma unpack_le {B : ℕ} (hB : 0 < B) (n m x : ℕ) : (∀ v ∈ unpackI B n x, v.natAbs ≤ 2 ^ (B - 1)) ∧ ∀ row ∈ unpackM B n m x, ∀ v ∈ row, v.natAbs ≤ 2 ^ (B - 1)
+def proj (k : ℕ) (τ : ℕ × ℕ × ℕ) : ℕ
+def degK (k : ℕ) : Ex → ℕ
+def mxs (k : ℕ) (zs : List (ℕ × ℕ × ℕ)) : ℕ
+lemma smulNZ_le (k : ℕ) (a : ℤ) (e : Ex) : (smulNZ a e).l1 ≤ a.natAbs * e.l1 ∧ degK k (smulNZ a e) ≤ degK k e
+lemma linF_le (k M : ℕ) (ta : ℕ × ℕ × ℕ) : ∀ (τs : List (ℕ × ℕ × ℕ)) (xs : List ℤ), (∀ x ∈ xs, x.natAbs ≤ M) → (linF τs xs).l1 ≤ τs.length * M ∧ degK k (linF τs xs) ≤ mxs k τs ∧ (rowF ta τs xs).l1 ≤ τs.length * M ∧ degK k (rowF ta τs xs) ≤ proj k ta + mxs k τs
+lemma sqF_le (k Md Ml : ℕ) (zs : List (ℕ × ℕ × ℕ)) : ∀ (fs : List (ℕ × ℕ × ℕ)) (ds : List ℤ) (ls : List (List ℤ)), (∀ x ∈ ds, x.natAbs ≤ Md) → (∀ row ∈ ls, ∀ x ∈ row, x.natAbs ≤ Ml) → (sqF zs fs ds ls).l1 ≤ fs.length * (Md * (zs.length * Ml) ^ 2) ∧ degK k (sqF zs fs ds ls) ≤ 2 * mxs k zs ∧ (quadF zs fs ls).l1 ≤ fs.length * (zs.length * Ml) ∧ degK k (quadF zs fs ls) ≤ mxs k fs + mxs k zs
+def TBlk.wf (s : TBlk) : Bool
+def TBlk.l1B (s : TBlk) : ℕ
+lemma sumE_map {α : Type*} (k w D : ℕ) (f : α → Ex) (b d : α → ℕ) : ∀ l : List α, (∀ x ∈ l, (f x).l1 ≤ b x ∧ degK k (f x) ≤ d x) → (sumE (l.map f)).l1 ≤ (l.map b).sum ∧ degK k (sumE (l.map f)) ≤ (l.map d).foldr max 0 ∧ (sumE (l.map f)).kev w D = (l.map fun x => (f x).kev w D).sum
+def idL (Fx : Ex) (an : ℤ) (ad : ℕ) (bn : ℤ) (bd : ℕ) (S : List TBlk) : ℕ
+def idDeg (k : ℕ) (Fx : Ex) (an : ℤ) (ad : ℕ) (bn : ℤ) (bd : ℕ) (S : List TBlk) : ℕ
+def hybW (Fx : Ex) (an : ℤ) (ad : ℕ) (bn : ℤ) (bd : ℕ) (S : List TBlk) : ℕ
+def hybD (Fx : Ex) (an : ℤ) (ad : ℕ) (bn : ℤ) (bd : ℕ) (S : List TBlk) : ℕ
+def hybVal (fq : ℕ → ℕ → TBlk → ℤ) (Fx : Ex) (an : ℤ) (ad : ℕ) (bn : ℤ) (bd : ℕ) (S : List TBlk) : ℤ
+def hybChk (fq : ℕ → ℕ → TBlk → ℤ) (Fx : Ex) (an : ℤ) (ad : ℕ) (bn : ℤ) (bd : ℕ) (S : List TBlk) : Bool
+def offB (B : ℕ) : ℤ
+def dotN (B : ℕ) : List ℕ → ℕ → ℕ
+def rowsN (B cols : ℕ) (ps : List ℕ) : ℕ → ℕ → List ℕ
+lemma rowsN_length (B cols : ℕ) (ps : List ℕ) : ∀ rows x, (rowsN B cols ps rows x).length = rows
+lemma rowsN_spec (B cols : ℕ) (ps : List ℕ) (hps : ps.length = cols) : ∀ (rows x q : ℕ), q < rows → (((rowsN B cols ps rows x).getD q 0 : ℕ) : ℤ) - offB B * (ps.sum : ℕ) = ∑ a ∈ Finset.range cols, ((unpackM B cols rows x).getD q []).getD a 0 * (ps.getD a 0 : ℤ)
+def comb1 (Bd Bl : ℕ) (Pt : ℤ) : List ℕ → ℕ → ℤ
+lemma comb1_spec (Bd Bl : ℕ) (Pt : ℤ) : ∀ (Ls : List ℕ) (xd : ℕ), comb1 Bd Bl Pt Ls xd = ∑ q ∈ Finset.range Ls.length, (unpackI Bd Ls.length xd).getD q 0 * ((((Ls.getD q 0 : ℕ) : ℤ) - offB Bl * Pt) * (((Ls.getD q 0 : ℕ) : ℤ) - offB Bl * Pt))
+def comb2 (BD : ℕ) (Pt : ℤ) : List ℕ → List ℕ → ℤ
+lemma comb2_spec (BD : ℕ) (Pt : ℤ) : ∀ (ps Ds : List ℕ), ps.length = Ds.length → comb2 BD Pt ps Ds = ∑ a ∈ Finset.range ps.length, (ps.getD a 0 : ℤ) * (((Ds.getD a 0 : ℕ) : ℤ) - offB BD * Pt)
+def weights (w D : ℕ) (z : List (ℕ × ℕ × ℕ)) : List ℕ
+def fqFlat (w D : ℕ) (s : TBlk) : ℤ
+lemma fqFlat_spec (w D : ℕ) (s : TBlk) (h : s.wf = true) : fqFlat w D s = (sqfF s.B s.z).kev w D
+def fqCur (w D : ℕ) (s : TBlk) : ℤ
+def h1E (h : List ℤ) : Ex
+def hvE (h : List ℤ) (i : ℕ) : Ex
+def gmE (S : Ex) (i : ℕ) : Ex
+def SE (K : ℕ) (m : ℕ → ℕ) (bl : ℕ → Blk) : Ex
+noncomputable def polyR (Lam : ℕ) (h : List ℤ) (x : ℝ) : ℝ
+def lamAE (HA ψBa : List ℤ) (cal : ℤ) (SP SR : Ex) : Ex
+def lamBE (HB ψBa ψCb : List ℤ) (cbe : ℤ) (SP SR : Ex) : Ex
+def tgE (HC ψCb : List ℤ) (SR : Ex) (i : ℕ) : Ex
+def lamGE (HC ψCb : List ℤ) (e cal cbe : ℤ) (SP SR : Ex) : Ex
+structure TCert
+theorem tc_cap_meta : tc_cap.checkMeta = true
+theorem tc_cap_A : tc_cap.chkA = true
+theorem tc_cap_B : tc_cap.chkB = true
+theorem tc_cap_G : tc_cap.chkG = true
+
+-- ## Blk (8 declarations, 221 words)
+def dq (b : Blk) (q : ℕ) : ℤ
+def lq (b : Blk) (q a : ℕ) : ℤ
+def del (b : Blk) (a c : ℕ) : ℤ
+def ent (r : ℕ) (b : Blk) (a c : ℕ) : ℤ
+def ok (r : ℕ) (b : Blk) : Bool
+lemma list_sum_range_map {M : Type*} [AddCommMonoid M] (f : ℕ → M) (r : ℕ) : ((List.range r).map f).sum = ∑ i ∈ Finset.range r, f i
+lemma ok_parts {r : ℕ} {b : Blk} (h : b.ok r = true) : (∀ i ∈ Finset.range r, 0 ≤ b.dq i) ∧ (∀ i ∈ Finset.range r, ∀ j ∈ Finset.range r, b.del i j = b.del j i) ∧ (∀ i ∈ Finset.range r, ∑ j ∈ Finset.range r, (if i = j then (0 : ℤ) else |b.del i j|) ≤ b.del i i)
+lemma qf_nonneg {r : ℕ} {b : Blk} (h : b.ok r = true) (x : ℕ → ℝ) : 0 ≤ ∑ q ∈ Finset.range r, (b.dq q : ℝ) * (∑ a ∈ Finset.range r, (b.lq q a : ℝ) * x a) ^ 2 + ∑ a ∈ Finset.range r, ∑ c ∈ Finset.range r, x a * (b.del a c : ℝ) * x c
+
+-- ## Cert3 (9 declarations, 204 words)
+def blk (cf : Cert3) (k : ℕ) : Blk
+def m (cf : Cert3) (k : ℕ) : ℕ
+def K (cf : Cert3) : ℕ
+noncomputable def Fm (cf : Cert3) (k : ℕ) : Matrix (Fin (cf.m k)) (Fin (cf.m k)) ℝ
+noncomputable def Hf (cf : Cert3) (x : ℝ) : ℝ
+def idE (cf : Cert3) : Ex
+def check (cf : Cert3) : Bool
+lemma check_parts {cf : Cert3} (h : cf.check = true) : 3 ≤ cf.n ∧ 0 < cf.Lam ∧ 0 < cf.ad ∧ (∀ k < cf.K, (cf.blk k).ok (cf.m k) = true) ∧ (cf.S.all (fun s => s.B.ok s.z.length) = true) ∧ chk cf.idE = true
+lemma hpt_cut (cf : Cert3) (hc : cf.check = true) {u v t : ℝ} (hg : GramOK u v t) (hu : (cf.an : ℝ) / cf.ad ≤ u) (hv : (cf.an : ℝ) / cf.ad ≤ v) (ht : (cf.an : ℝ) / cf.ad ≤ t) : ∑ k ∈ Finset.range cf.K, matDot (cf.Fm k) (Rk cf.n (cf.m k) k u v t) ≤ (cf.Hf u + cf.Hf v + cf.Hf t) / 3 - ((cf.eps : ℝ) / cf.Lam) / (cf.n.choose 2 : ℕ)
+
+-- ## M3 (7 declarations, 115 words)
+def cP (k l : Fin 7) : Fin 4
+def det4h {R : Type*} [CommRing R] (δ p01 p02 p03 p12 p13 p23 : R) : R
+lemma det4h_inner_eq_zero (u : Fin 4 → R3) (hu : ∀ i, ‖u i‖ = 1) : det4h 1 (⟪u 0, u 1⟫_ℝ) (⟪u 0, u 2⟫_ℝ) (⟪u 0, u 3⟫_ℝ) (⟪u 1, u 2⟫_ℝ) (⟪u 1, u 3⟫_ℝ) (⟪u 2, u 3⟫_ℝ) = 0
+noncomputable def cosA : ℝ
+noncomputable def cosB : ℝ
+noncomputable def val : Fin 4 → ℝ
+lemma inner_P (k l : Fin 7) : ⟪pentBipyramid k, pentBipyramid l⟫_ℝ = if k = l then 1 else val (cP k l)
+
+-- ## Reg (57 declarations, 1079 words)
+noncomputable def s1 : ℝ
+noncomputable def s2 : ℝ
+lemma s2_eq : s2 = 2 * s1 * c1
+lemma s1_sq : s1 ^ 2 = 1 - c1 ^ 2
+lemma hF4 : c1 ^ 2 + c1 / 2 - 1 / 4 = 0
+lemma pk (i : Fin 7) (θ : ℝ) (hi : (i : ℕ) < 5
+lemma pent_0 : pentBipyramid 0 = !₂[1, 0, 0]
+lemma pent_1 : pentBipyramid 1 = !₂[c1, s1, 0]
+lemma pent_2 : pentBipyramid 2 = !₂[c2, s2, 0]
+lemma pent_3 : pentBipyramid 3 = !₂[c2, -s2, 0]
+lemma pent_4 : pentBipyramid 4 = !₂[c1, -s1, 0]
+lemma pent_5' : pentBipyramid 5 = !₂[0, 0, 1]
+lemma pent_6' : pentBipyramid 6 = !₂[0, 0, -1]
+lemma inner_vec3 (a b c d e f : ℝ) : inner ℝ (!₂[a, b, c] : R3) !₂[d, e, f] = a * d + b * e + c * f
+noncomputable def W (i j : Fin 7) : ℝ
+lemma W_diag (i : Fin 7) : W i i = 0
+lemma W_ne {i j : Fin 7} (h : i ≠ j) : W i j = phi (inner ℝ (pentBipyramid i) (pentBipyramid j)) ^ 3
+noncomputable def muP (i : Fin 7) : ℝ
+lemma gram (i j : Fin 7) : inner ℝ (pentBipyramid i) (pentBipyramid j) = gt i j
+lemma g_0_1 : inner ℝ (pentBipyramid 0) (pentBipyramid 1) = c1
+lemma g_0_5 : inner ℝ (pentBipyramid 0) (pentBipyramid 5) = 0
+lemma g_1_5 : inner ℝ (pentBipyramid 1) (pentBipyramid 5) = 0
+lemma Wt (i j : Fin 7) : W i j = if i = j then 0 else phi (gt i j) ^ 3
+noncomputable def μ : ℝ
+lemma muPv (i : Fin 7) : muP i = ![μ, μ, μ, μ, μ, -(phi (-1) ^ 3), -(phi (-1) ^ 3)] i
+theorem pent_critical (i : Fin 7) : ∑ j, W i j • pentBipyramid j = muP i • pentBipyramid i
+lemma W_symm (i j : Fin 7) : W i j = W j i
+lemma sum_Ioi_add_swap {n : ℕ} (F : Fin n → Fin n → ℝ) (hd : ∀ i, F i i = 0) : ∑ i, ∑ j ∈ Finset.Ioi i, (F i j + F j i) = ∑ i, ∑ j, F i j
+theorem exists_gauge {n : ℕ} (P y : Fin n → R3) : ∃ g : R3 ≃ₗᵢ[ℝ] R3, (∀ a b : Fin 3, ∑ i, P i a * g (y i) b = ∑ i, P i b * g (y i) a) ∧ ∑ i, ‖g (y i) - P i‖ ^ 2 ≤ ∑ i, ‖y i - P i‖ ^ 2
+abbrev Poly
+noncomputable def mono (e : ℕ × ℕ × ℕ × ℕ × ℕ) : ℝ
+noncomputable def ev (P : Poly) : ℝ
+def Poly.mul (P Q : Poly) : Poly
+lemma ev_mul (P Q : Poly) : ev (P.mul Q) = ev P * ev Q
+lemma ev_append (P Q : Poly) : ev (P ++ Q) = ev P + ev Q
+def monQ (b : List ℚ) (e : ℕ × ℕ × ℕ × ℕ × ℕ) : ℚ
+def lo (P : Poly) : ℚ
+def hi (P : Poly) : ℚ
+def wq (x : ℚ) (e k l : ℕ) : Poly
+def E (i j : ℕ) : Poly
+def M0 (i j : ℕ) : ℚ
+def dl (i j : ℕ) : ℚ
+def ldl : ℕ → List (List ℚ) → List (List ℚ)
+def cols : List (List ℚ)
+def Lq (i k : ℕ) : ℚ
+def Dq (k : ℕ) : ℚ
+def res (i j : ℕ) : ℚ
+def check : Bool
+theorem check_ok : check = true
+lemma phi_mem {t a b : ℝ} (ht : t < 1) (h1 : a ^ 2 * (2 - 2 * t) ≤ 1) (h2 : 1 ≤ b ^ 2 * (2 - 2 * t)) (hb : 0 ≤ b) : a ≤ phi t ∧ phi t ≤ b
+lemma box : ((30901699/100000000 : ℝ) ≤ c1 ∧ c1 ≤ 309017/1000000) ∧ ((95105651/100000000 : ℝ) ≤ s1 ∧ s1 ≤ 23776413/25000000) ∧ ((2126627/2500000 : ℝ) ≤ phi c1 ∧ phi c1 ≤ 85065081/100000000) ∧ ((52573111/100000000 : ℝ) ≤ phi c2 ∧ phi c2 ≤ 6571639/12500000) ∧ (35355339/50000000 : ℝ) ≤ phi 0 ∧ phi 0 ≤ 70710679/100000000
+lemma ev_mem (P : Poly) : (lo P : ℝ) ≤ ev P ∧ ev P ≤ hi P
+theorem qform (x : ℕ → ℝ) : 449 / 100000 * ∑ i ∈ range 21, x i ^ 2 ≤ ∑ i ∈ range 21, ∑ j ∈ range 21, x i * ev (E i j) * x j
+lemma phi_neg_one : phi (-1) = 1 / 2
+lemma hessian_lower (h : Fin 7 → R3) : 449 / 100000 * ∑ i, ‖h i‖ ^ 2 ≤ ∑ i, ∑ j ∈ Ioi i, W i j * ⟪h i, h j⟫ - 1 / 2 * ∑ i, muP i * ‖h i‖ ^ 2 + ∑ i, ∑ j ∈ Ioi i, 3 / 2 * phi ⟪pentBipyramid i, pentBipyramid j⟫ ^ 5 * (⟪pentBipyramid i, h j⟫ + ⟪pentBipyramid j, h i⟫) ^ 2 + 2 * ∑ i, ⟪pentBipyramid i, h i⟫ ^ 2 + ∑ a, ∑ b, (∑ i, (pentBipyramid i a * h i b - pentBipyramid i b * h i a)) ^ 2
+lemma pair_rem {A B t q a b : ℝ} (hA : 0 ≤ A) (hB : 0 ≤ B) (hA' : A ≤ 1 / 2) (hB' : B ≤ 1 / 2) (ha : 0 ≤ a) (hb : 0 ≤ b) (ha' : a ≤ 1 / 10000) (hb' : b ≤ 1 / 10000) (ht : |t| ≤ a + b) (hq : |q| ≤ a * b) : 3 / 2 * A * t ^ 2 - 66 / 100000 * (a ^ 2 + b ^ 2) ≤ 3 / 2 * A * (t + q) ^ 2 + 5 / 2 * B * (t + q) ^ 3
+theorem TwoRegime.localMinAt_tiny : TwoRegime.LocalMinAt (1 / 30000)
+
+-- ## GV (3 declarations, 302 words)
+lemma isometry_of_gram (u v : Fin 3 → R3) (h : ∀ i j, ⟪u i, u j⟫_ℝ = ⟪v i, v j⟫_ℝ) (hv : (Matrix.gram ℝ v).det ≠ 0) : ∃ g : R3 ≃ₗᵢ[ℝ] R3, ∀ i, g (u i) = v i
+lemma core {a b L M N x y z p q r w : ℝ} (hw : w ≤ 1 / 10) (hc : 309 / 1000 ≤ c1 ∧ c1 ≤ 31 / 100) (h01 : |a - c1| ≤ w) (h05 : |b| ≤ w) (hL : 9 / 10 ≤ L) (sL : L ^ 2 = 1 - a ^ 2) (hM : |M| ≤ 157 / 100 * w) (hN : 0 < N) (sN : N ^ 2 = 1 - b ^ 2 - M ^ 2) (n1 : 1 = x ^ 2 + y ^ 2 + z ^ 2) (n2 : 1 = p ^ 2 + q ^ 2 + r ^ 2) (h0 : |x - p| ≤ w) (h1 : |a * x + L * y - (c1 * p + s1 * q)| ≤ w) (h5 : |b * x + M * y + N * z - r| ≤ w) : (x - p) ^ 2 + (y - q) ^ 2 + (z - r) ^ 2 ≤ (11 / 2 * w) ^ 2
+theorem exists_iso_close {y : Fin 7 → R3} (hy : ∀ i, ‖y i‖ = 1) {w : ℝ} (hw : w ≤ 1 / 10) (hG : ∀ i j, |⟪y i, y j⟫_ℝ - ⟪pentBipyramid i, pentBipyramid j⟫_ℝ| ≤ w) : ∃ g : R3 ≃ₗᵢ[ℝ] R3, ∀ i, ‖g (y i) - pentBipyramid i‖ ≤ 11 / 2 * w
+
+-- ## TwoRegime (8 declarations, 332 words)
+def LocalMinAt (d : ℝ) : Prop
+def LocalGram (ω : ℝ → ℝ) : Prop
+theorem localGram_of_localMinAt {w : ℝ} (hw : w ≤ 1 / 10) (hL : LocalMinAt (11 / 2 * w)) : LocalGram (fun _ => w)
+theorem margin_of_threePoint_cut {H : ℝ → ℝ} {a η : ℝ} (K : ℕ) (m : ℕ → ℕ) (F : (k : ℕ) → Matrix (Fin (m k)) (Fin (m k)) ℝ) (hF : ∀ k, k < K → (F k).PosSemidef) (hpt : ∀ u v t : ℝ, ThreePoint.GramOK u v t → a ≤ u → a ≤ v → a ≤ t → ∑ k ∈ Finset.range K, ThreePoint.matDot (F k) (ThreePoint.Rk 7 (m k) k u v t) ≤ (H u + H v + H t) / 3 - (coulombEnergy pentBipyramid + η) / ((Nat.choose 7 2 : ℕ) : ℝ)) (hH : ∀ t : ℝ, a ≤ t → t < 1 → H t ≤ phi t) : ∀ y ∈ SphereConfig 7, (∀ i j, i ≠ j → a ≤ ⟪y i, y j⟫_ℝ) → coulombEnergy pentBipyramid + η ≤ coulombEnergy y
+def InWindow (lo hi : ℝ → ℝ) (y : Fin 7 → R3) (σ : Equiv.Perm (Fin 7)) : Prop
+def LocalGramA (lo hi : ℝ → ℝ) : Prop
+theorem localGramA_of_localGram {ω lo hi : ℝ → ℝ} (hL : LocalGram ω) (hlo : ∀ t, lo t ≤ ω t) (hhi : ∀ t, hi t ≤ ω t) : LocalGramA lo hi
+theorem local_of_windowA {lo hi : ℝ → ℝ} (hL : LocalGramA lo hi) {y : Fin 7 → R3} (hy : y ∈ SphereConfig 7) (σ : Equiv.Perm (Fin 7)) (hσ : InWindow lo hi y σ) : coulombEnergy pentBipyramid ≤ coulombEnergy y ∧ (coulombEnergy y = coulombEnergy pentBipyramid → ∃ (g : R3 ≃ₗᵢ[ℝ] R3) (σ : Equiv.Perm (Fin 7)), ∀ i, y i = g (pentBipyramid (σ i)))
+
+-- ## EPBounds (7 declarations, 165 words)
+lemma sqrt2_bounds : 1414213562 / 1000000000 ≤ √2 ∧ √2 ≤ 1414213563 / 1000000000
+lemma sqrt5_bounds : 2236067977 / 1000000000 ≤ √5 ∧ √5 ≤ 2236067978 / 1000000000
+lemma sin_pi_div_five_sq : sin (π / 5) ^ 2 = (5 - √5) / 8
+lemma sin_pi_div_five_bounds : 587785252 / 1000000000 ≤ sin (π / 5) ∧ sin (π / 5) ≤ 587785253 / 1000000000
+lemma sin_two_pi_div_five : sin (2 * π / 5) = sin (π / 5) * ((1 + √5) / 2)
+lemma pent_formula_bounds : 14452977 / 1000000 ≤ 1 / 2 + 5 * √2 + 5 / (2 * sin (π / 5)) + 5 / (2 * sin (2 * π / 5)) ∧ 1 / 2 + 5 * √2 + 5 / (2 * sin (π / 5)) + 5 / (2 * sin (2 * π / 5)) ≤ 14452978 / 1000000
+lemma coulombEnergy_pent_bounds : 14452977 / 1000000 ≤ coulombEnergy pentBipyramid ∧ coulombEnergy pentBipyramid ≤ 14452978 / 1000000
+
+-- ## SlabOneD (23 declarations, 423 words)
+def peval : List ℤ → ℝ → ℝ
+def padd : List ℤ → List ℤ → List ℤ
+def pscale (c : ℤ) (p : List ℤ) : List ℤ
+def pneg (p : List ℤ) : List ℤ
+def pmul : List ℤ → List ℤ → List ℤ
+theorem peval_padd (p q : List ℤ) (y : ℝ) : peval (padd p q) y = peval p y + peval q y
+theorem peval_pscale (c : ℤ) (p : List ℤ) (y : ℝ) : peval (pscale c p) y = c * peval p y
+theorem peval_pneg (p : List ℤ) (y : ℝ) : peval (pneg p) y = - peval p y
+theorem peval_pmul (p q : List ℤ) (y : ℝ) : peval (pmul p q) y = peval p y * peval q y
+def compQ : List ℤ → List ℤ
+theorem peval_compQ (Q : List ℤ) (y : ℝ) : peval (compQ Q) y = peval Q (1 - 2 * y ^ 2)
+structure Par
+def ppow (p : List ℤ) : ℕ → List ℤ
+theorem peval_ppow (p : List ℤ) (y : ℝ) : ∀ k, peval (ppow p k) y = peval p y ^ k
+theorem peval_eq_sum (p : List ℤ) (y : ℝ) : peval p y = ∑ k ∈ Finset.range p.length, (p.getD k 0 : ℝ) * y ^ k
+theorem peval_eq_zero_of_all (p : List ℤ) (h : p.all (· == 0) = true) (y : ℝ) : peval p y = 0
+def bern (p : List ℤ) (A B D : ℤ) : List ℤ
+def okI (p : List ℤ) : ℕ → ℤ → ℤ → ℤ → Bool
+theorem okI_sound (p : List ℤ) (d : ℕ) : ∀ A B D : ℤ, okI p d A B D → 0 < (D : ℝ) → ∀ y : ℝ, A ≤ D * y → D * y < B → 0 ≤ peval p y
+structure Cert
+def Cert.poly (c : Cert) : List ℤ
+def Cert.check (P : Par) (c : Cert) : Bool
+theorem Cert.sound (P : Par) (c : Cert) (hc : c.check P = true) {t : ℝ} (h2 : (P.nu2 : ℝ) * (1 - t) ≤ 2 * P.mu2) (h1 : 2 * (P.mu1 : ℝ) ≤ P.nu1 * (1 - t)) (ht : t < 1) : peval c.Q t / c.Lam ≤ (Real.sqrt (2 - 2 * t))⁻¹
+
+-- ## CutOneD (2 declarations, 42 words)
+theorem cutCert_ok : cutCert.check ⟨19, 20, 0, 0⟩ = true
+theorem cutH_le_phi {t : ℝ} (h1 : (-9 / 10 : ℝ) ≤ t) (h2 : t < 1) : peval cutCert.Q t / cutCert.Lam ≤ (Real.sqrt (2 - 2 * t))⁻¹
+
+-- ## Case1 (3 declarations, 141 words)
+theorem cf_ok : Case1Data.cf.check = true
+theorem case1_margin : ∀ y ∈ SphereConfig 7, (∀ i j, i ≠ j → (-9 / 10 : ℝ) ≤ ⟪y i, y j⟫_ℝ) → coulombEnergy pentBipyramid + 3 / 10000 ≤ coulombEnergy y
+theorem seven_of_case2 (h2 : ∀ y ∈ SphereConfig 7, (∃ i j, i ≠ j ∧ ⟪y i, y j⟫_ℝ < -9 / 10) → coulombEnergy pentBipyramid ≤ coulombEnergy y ∧ (coulombEnergy y = coulombEnergy pentBipyramid → ∃ (g : R3 ≃ₗᵢ[ℝ] R3) (σ : Equiv.Perm (Fin 7)), ∀ i, y i = g (pentBipyramid (σ i)))) : (∀ x ∈ SphereConfig 7, coulombEnergy pentBipyramid ≤ coulombEnergy x) ∧ (∀ x ∈ SphereConfig 7, coulombEnergy x = coulombEnergy pentBipyramid → ∃ (g : R3 ≃ₗᵢ[ℝ] R3) (σ : Equiv.Perm (Fin 7)), ∀ i, x i = g (pentBipyramid (σ i)))
+
+-- ## T4 (8 declarations, 452 words)
+lemma detpos {x y z p q r : ℝ} (hx : |x| ≤ 1 / 10) (hy : |y| ≤ 1 / 10) (hz : |z| ≤ 1 / 10) (hp : 0 ≤ p) (hp' : p ≤ 1 / 2) (hq : 0 ≤ q) (hq' : q ≤ 1 / 2) (hr : 0 ≤ r) (hr' : r ≤ 1 / 2) : M3.det4h 1 x y z p q r ≠ 0
+lemma det_ne {τ x y z p q r : ℝ} (hτ : τ ≤ 1 / 10) (hx : |x| ≤ τ) (hy : |y| ≤ τ) (hz : |z| ≤ τ) (hp : |p - M3.cosB| ≤ τ) (hq : |q - M3.cosB| ≤ τ) (hr : |r - M3.cosB| ≤ τ) : M3.det4h 1 x y z p q r ≠ 0
+lemma no_cosA {τ : ℝ} (hτ : τ ≤ 1 / 10) {a b c : R3} (ha : ‖a‖ = 1) (hb : ‖b‖ = 1) (hc : ‖c‖ = 1) (h1 : |⟪a, b⟫_ℝ - M3.cosA| ≤ τ) (h2 : |⟪a, c⟫_ℝ - M3.cosA| ≤ τ) (h3 : |⟪b, c⟫_ℝ - M3.cosA| ≤ τ) : False
+def T (l : List Bool) (i j : Fin 7) : Fin 4
+def sig (s : Equiv.Perm (Fin 5)) : Equiv.Perm (Fin 7)
+theorem comb : ∀ l ∈ (List.replicate 10 [false, true]).sections, (∀ i j k : Fin 7, 1 < i → i < j → j < k → ¬(T l i j = T l i k ∧ T l i k = T l j k)) → ∃ s, ∀ i j : Fin 7, i < j → M3.cP (sig s i) (sig s j) = T l i j
+lemma T_eq (c : Fin 7 → Fin 7 → Bool) (i j : Fin 7) (hi : 1 < i) (h : i < j) : T [c 2 3, c 2 4, c 3 4, c 2 5, c 3 5, c 4 5, c 2 6, c 3 6, c 4 6, c 5 6] i j = cond (c i j) 3 1
+theorem ring_rigid {τ : ℝ} (hτ : τ ≤ 1 / 10) (y : Fin 7 → R3) (hy : ∀ i, ‖y i‖ = 1) (h01 : |⟪y 0, y 1⟫_ℝ + 1| ≤ τ) (h0r : ∀ r : Fin 7, 2 ≤ r.val → |⟪y 0, y r⟫_ℝ| ≤ τ) (h1r : ∀ r : Fin 7, 2 ≤ r.val → |⟪y 1, y r⟫_ℝ| ≤ τ) (hrr : ∀ r r' : Fin 7, 2 ≤ r.val → r < r' →
+
+-- ## Glue (23 declarations, 1466 words)
+def Concl (y : Fin 7 → R3) : Prop
+def cls3 {α : Sort*} (A B C : α) (i j : Fin 7) : α
+lemma energy_eq_sum {y : Fin 7 → R3} (hy : y ∈ SphereConfig 7) : coulombEnergy y = ∑ i : Fin 7, ∑ j ∈ Finset.Ioi i, phi ⟪y i, y j⟫_ℝ
+theorem slab_of_typed {lo hi e : ℝ} (HA HB HC : ℝ → ℝ) (he : coulombEnergy pentBipyramid < e) (hTB : ∀ y ∈ SphereConfig 7, lo ≤ ⟪y 0, y 1⟫_ℝ → ⟪y 0, y 1⟫_ℝ ≤ hi → (∀ i j, i ≠ j → ⟪y 0, y 1⟫_ℝ ≤ ⟪y i, y j⟫_ℝ) → e ≤ ∑ i : Fin 7, ∑ j ∈ Finset.Ioi i, cls3 HA HB HC i j ⟪y i, y j⟫_ℝ) (hA : ∀ t, lo ≤ t → t ≤ hi → HA t ≤ phi t) (hB : ∀ t, lo ≤ t → t < 1 → HB t ≤ phi t) (hC : ∀ t, lo ≤ t → t < 1 → HC t ≤ phi t) : ∀ y ∈ SphereConfig 7, lo ≤ ⟪y 0, y 1⟫_ℝ → ⟪y 0, y 1⟫_ℝ ≤ hi → (∀ i j, i ≠ j → ⟪y 0, y 1⟫_ℝ ≤ ⟪y i, y j⟫_ℝ) → coulombEnergy pentBipyramid < coulombEnergy y
+theorem seven_of_cap_slabs (a : ℕ → ℝ) (K : ℕ) (hK : -9 / 10 ≤ a K) (cap : ∀ y ∈ SphereConfig 7, ⟪y 0, y 1⟫_ℝ ≤ a 0 → (∀ i j, i ≠ j → ⟪y 0, y 1⟫_ℝ ≤ ⟪y i, y j⟫_ℝ) → Concl y) (slab : ∀ k, k < K → ∀ y ∈ SphereConfig 7, a k < ⟪y 0, y 1⟫_ℝ → ⟪y 0, y 1⟫_ℝ ≤ a (k + 1) → (∀ i j, i ≠ j → ⟪y 0, y 1⟫_ℝ ≤ ⟪y i, y j⟫_ℝ) → coulombEnergy pentBipyramid < coulombEnergy y) : (∀ x ∈ SphereConfig 7, coulombEnergy pentBipyramid ≤ coulombEnergy x) ∧ (∀ x ∈ SphereConfig 7, coulombEnergy x = coulombEnergy pentBipyramid → ∃ (g : R3 ≃ₗᵢ[ℝ] R3) (σ : Equiv.Perm (Fin 7)), ∀ i, x i = g (pentBipyramid (σ i)))
+def TubeRigid (τ : ℝ) : Prop
+theorem localGramA_of_le {τ : ℝ} (hτ : τ ≤ 1 / 165000) : TwoRegime.LocalGramA (fun _ => τ) (fun _ => τ)
+theorem cap_of_typed_tube {a0 e δ τ : ℝ} (HA HB HC : ℝ → ℝ) (hL : TwoRegime.LocalGramA (fun _ => τ) (fun _ => τ)) (hrig : TubeRigid τ) (hTB : ∀ y ∈ SphereConfig 7, ⟪y 0, y 1⟫_ℝ ≤ a0 → (∀ i j, i ≠ j → ⟪y 0, y 1⟫_ℝ ≤ ⟪y i, y j⟫_ℝ) → e ≤ ∑ i : Fin 7, ∑ j ∈ Finset.Ioi i, cls3 HA HB HC i j ⟪y i, y j⟫_ℝ) (hEδ : coulombEnergy pentBipyramid ≤ e + δ) (hA : ∀ t, -1 ≤ t → t ≤ a0 → HA t ≤ phi t ∧ (phi t - HA t ≤ δ → |t + 1| ≤ τ)) (hB : ∀ t, -1 ≤ t → t < 1 → HB t ≤ phi t ∧ (phi t - HB t ≤ δ → |t| ≤ τ)) (hC : ∀ t, -1 ≤ t → t < 1 → HC t ≤ phi t ∧ (phi t - HC t ≤ δ → |t - c1| ≤ τ ∨ |t - c2| ≤ τ)) : ∀ y ∈ SphereConfig 7, ⟪y 0, y 1⟫_ℝ ≤ a0 → (∀ i j, i ≠ j → ⟪y 0, y 1⟫_ℝ ≤ ⟪y i, y j⟫_ℝ) → Concl y
+theorem tubeRigid_of_le {τ : ℝ} (h : τ ≤ 1 / 10) : TubeRigid τ
+def CapSpec (a0 : ℝ) : Prop
+def SlabSpec (lo hi : ℝ) : Prop
+theorem seven_of_specs (a : ℕ → ℝ) (K : ℕ) (hK : -9 / 10 ≤ a K) (hcap : CapSpec (a 0)) (hslab : ∀ k, k < K → SlabSpec (a k) (a (k + 1))) : (∀ x ∈ SphereConfig 7, coulombEnergy pentBipyramid ≤ coulombEnergy x) ∧ (∀ x ∈ SphereConfig 7, coulombEnergy x = coulombEnergy pentBipyramid → ∃ (g : R3 ≃ₗᵢ[ℝ] R3) (σ : Equiv.Perm (Fin 7)), ∀ i, x i = g (pentBipyramid (σ i)))
+lemma sqrt2_enc60 : (1414213562373095048801688724209698078569671875376948073176679/1000000000000000000000000000000000000000000000000000000000000:ℝ) ≤ √2 ∧ √2 ≤ (35355339059327376220042218105242451964241796884423701829417/25000000000000000000000000000000000000000000000000000000000:ℝ)
+lemma sqrt5_enc60 : (2236067977499789696409173668731276235440618359611525724270897/1000000000000000000000000000000000000000000000000000000000000:ℝ) ≤ √5 ∧ √5 ≤ (1118033988749894848204586834365638117720309179805762862135449/500000000000000000000000000000000000000000000000000000000000:ℝ)
+lemma sin_pi_div_five_enc60 : (36736578268279570573044122164942048037353277352696624442017/62500000000000000000000000000000000000000000000000000000000:ℝ) ≤ sin (π / 5) ∧ sin (π / 5) ≤ (587785252292473129168705954639072768597652437643145991072273/1000000000000000000000000000000000000000000000000000000000000:ℝ)
+lemma pent_formula_enc60 : (2749119669932377435234055288292254784954290675400566755703294260891298019502848863829080584715823163195763171851924111216693219925026887457700757192016552400988256247789361356038783/190211303259030714423287866675876428681139726825150044489461341270161735474419585794589163301350513554082924534014861115400000000000000000000000000000000000000000000000000000000000:ℝ) ≤ 1 / 2 + 5 * √2 + 5 / (2 * sin (π / 5)) + 5 / (2 * sin (2 * π / 5)) ∧ 1 / 2 + 5 * √2 + 5 / (2 * sin (π / 5)) + 5 / (2 * sin (2 * π / 5)) ≤ (8590998968538679485106422775913296202982158360626771111572787709008136802664564722236982378865706250355829161488401108250568180672808974029458937792907486302049850635875288467833/594410322684470982572774583362113839628561646328593889029565496515121113275428212520708832082656592896884997083885396245000000000000000000000000000000000000000000000000000000000:ℝ)
+lemma coulombEnergy_pent_enc40 : (144529774142213429350444915306029287904778:ℝ) / 10^40 ≤ coulombEnergy pentBipyramid ∧ coulombEnergy pentBipyramid ≤ (144529774142213429350444915306029287904779:ℝ) / 10^40
+lemma coulombEnergy_pent_le_of {e δ : ℝ} (h : (144529774142213429350444915306029287904779:ℝ) / 10^40 ≤ e + δ) : coulombEnergy pentBipyramid ≤ e + δ
+lemma polyR_eq (Lam : ℕ) (Q : List ℤ) (t : ℝ) : Cert.polyR Lam Q t = SlabOneD.peval Q t / Lam
+theorem slabSpec_of_data {lo hi : ℝ} (cf : Cert.TCert) (hm : cf.checkMeta = true) (hA : cf.chkA = true) (hB : cf.chkB = true) (hG : cf.chkG = true) (hlo : cf.alo = lo) (hhi : cf.ahi = hi) (hE : (144529774142213429350444915306029287904779 : ℝ) / 10 ^ 40 < cf.ef) (hHA : ∀ t, lo ≤ t → t ≤ hi → SlabOneD.peval cf.HA t / cf.Lam ≤ (Real.sqrt (2 - 2 * t))⁻¹) (hHB : ∀ t, lo ≤ t → t < 1 → SlabOneD.peval cf.HB t / cf.Lam ≤ (Real.sqrt (2 - 2 * t))⁻¹) (hHC : ∀ t, lo ≤ t → t < 1 → SlabOneD.peval cf.HC t / cf.Lam ≤ (Real.sqrt (2 - 2 * t))⁻¹) : SlabSpec lo hi
+lemma node_c1_of {tn ε lo hi : ℝ} (hlo : lo ^ 2 ≤ 5) (h0 : 0 ≤ hi) (hhi : 5 ≤ hi ^ 2) (h1 : 4 * tn + 1 - 4 * ε ≤ lo) (h2 : hi ≤ 4 * tn + 1 + 4 * ε) : |tn - c1| ≤ ε
+lemma node_c2_of {tn ε lo hi : ℝ} (hlo : lo ^ 2 ≤ 5) (h0 : 0 ≤ hi) (hhi : 5 ≤ hi ^ 2) (h1 : -4 * tn - 1 - 4 * ε ≤ lo) (h2 : hi ≤ -4 * tn - 1 + 4 * ε) : |tn - c2| ≤ ε
+theorem capSpec_of_contactsR (cf : Cert.TCert) (hm : cf.checkMeta = true) (hA : cf.chkA = true) (hB : cf.chkB = true) (hG : cf.chkG = true) (halo : cf.alo = -1) (cA : Coerce.ContactA) (cB : Coerce.Contact1R) (cC : Coerce.Contact2R) (hcA : cA.check = true) (hcB : cB.check = true) (hcC : cC.check = true) (hQA : cA.Q = cf.HA) (hDA : cA.Dq = cf.Lam) (hQB : cB.Q = cf.HB) (hDB : cB.Dq = cf.Lam) (hQC : cC.Q = cf.HC) (hDC : cC.Dq = cf.Lam) {δ η τ ε1 ε2 : ℝ} (hτ : τ ≤ 1 / 165000) (hE : (144529774142213429350444915306029287904779 : ℝ) / 10 ^ 40 ≤ cf.ef + δ) (hη : 0 ≤ η) (hya : 0 ≤ (cA.ya1 : ℝ) / cA.ya2) (ha0 : ((cA.ya1 : ℝ) / cA.ya2) ^ 2 ≤ (1 - cf.ahi) / 2) (ha1 : cf.ahi < 1) (hδA : 8 * cA.Dq * δ ≤ ((cA.g0n : ℝ) / cA.g0d) * τ) (hδB : 2 * cB.s * cB.Dq * δ ≤ ((cB.g0n : ℝ) / cB.g0d) * (cB.q * η) ^ 2) (hτB : |1 - 2 * ((cB.p : ℝ) / cB.q) ^ 2| + 2 * η * (2 * ((cB.p : ℝ) / cB.q) + η) ≤ τ) (hδC : 2 * cC.s * cC.Dq * δ ≤ ((cC.g0n : ℝ) / cC.g0d) * (cC.q1 * cC.q2 * η * ((cC.p1 : ℝ) / cC.q1 - (cC.p2 : ℝ) / cC.q2) / 2) ^ 2) (hn1 : |1 - 2 * ((cC.p1 : ℝ) / cC.q1) ^ 2 - c1| ≤ ε1) (hn2 : |1 - 2 * ((cC.p2 : ℝ) / cC.q2) ^ 2 - c2| ≤ ε2) (hτ1 : ε1 + 2 * η * (2 * ((cC.p1 : ℝ) / cC.q1) + η) ≤ τ) (hτ2 : ε2 + 2 * η * (2 * ((cC.p2 : ℝ) / cC.q2) + η) ≤ τ) : CapSpec cf.ahi
+
+-- ## ThomsonN7.Glue.Coerce (30 declarations, 1143 words)
+def bernSum (a b : List ℤ) (n : ℕ) : ℕ → List ℕ → List ℤ
+structure BPiece
+def BPiece.diff (P : List ℤ) (c : BPiece) : List ℤ
+def BPiece.check (P : List ℤ) (c : BPiece) : Bool
+def chainOK (P : List ℤ) : List BPiece → ℤ → ℕ → ℤ → ℕ → Bool
+theorem chainOK_nonneg (P : List ℤ) (cs : List BPiece) : ∀ (l1 : ℤ) (l2 : ℕ) (r1 : ℤ) (r2 : ℕ), 0 < l2 → 0 < r2 → chainOK P cs l1 l2 r1 r2 = true → ∀ y : ℝ, (l1 : ℝ) ≤ l2 * y → (r2 : ℝ) * y ≤ r1 → 0 ≤ peval P y
+noncomputable def yOf (t : ℝ) : ℝ
+theorem yOf_pos {t : ℝ} (h : t < 1) : 0 < yOf t
+theorem one_sub_two_yOf_sq {t : ℝ} (h : t ≤ 1) : 1 - 2 * yOf t ^ 2 = t
+theorem yOf_le_one {t : ℝ} (h1 : -1 ≤ t) (h2 : t < 1) : yOf t ≤ 1
+def Fpoly (Q : List ℤ) (Dq : ℕ) : List ℤ
+theorem phi_sub_H {Q : List ℤ} {Dq : ℕ} (hD : 0 < Dq) {t : ℝ} (h : t < 1) : phi t - peval Q t / Dq = peval (Fpoly Q Dq) (yOf t) / (2 * yOf t * Dq)
+theorem H_le_phi_of_F {Q : List ℤ} {Dq : ℕ} (hD : 0 < Dq) {t : ℝ} (h : t < 1) (hF : 0 ≤ peval (Fpoly Q Dq) (yOf t)) : peval Q t / Dq ≤ phi t
+theorem F_le_of_slack {Q : List ℤ} {Dq : ℕ} (hD : 0 < Dq) {t δ : ℝ} (h : t < 1) (hy1 : yOf t ≤ 1) (hF : 0 ≤ peval (Fpoly Q Dq) (yOf t)) (hs : phi t - peval Q t / Dq ≤ δ) : peval (Fpoly Q Dq) (yOf t) ≤ 2 * Dq * δ
+theorem abs_t_sub_le {y yn η ν τ : ℝ} (hy : 0 < y) (hyn : 0 ≤ yn) (h : |y - yn| ≤ η) (hτ : |1 - 2 * yn ^ 2 - ν| + 2 * η * (2 * yn + η) ≤ τ) : |(1 - 2 * y ^ 2) - ν| ≤ τ
+def lin (p q : ℕ) : List ℤ
+theorem peval_lin (p q : ℕ) (y : ℝ) : peval (lin p q) y = q * y - p
+theorem two_node_alt {y y1 y2 η : ℝ} (hη : 0 ≤ η) (h : |(y - y1) * (y - y2)| ≤ η * |y1 - y2| / 2) : |y - y1| ≤ η ∨ |y - y2| ≤ η
+structure ContactA
+def ContactA.check (c : ContactA) : Bool
+theorem ContactA.hA (c : ContactA) (hc : c.check = true) {δ τ a0 : ℝ} (hya : 0 ≤ (c.ya1 : ℝ) / c.ya2) (ha0 : ((c.ya1 : ℝ) / c.ya2) ^ 2 ≤ (1 - a0) / 2) (ha1 : a0 < 1) (hδ : 8 * c.Dq * δ ≤ ((c.g0n : ℝ) / c.g0d) * τ) : ∀ t, -1 ≤ t → t ≤ a0 → peval c.Q t / c.Dq ≤ phi t ∧ (phi t - peval c.Q t / c.Dq ≤ δ → |t + 1| ≤ τ)
+theorem abs_node_sub_c1_le {tn ε lo hi : ℝ} (hlo : lo ≤ √5) (hhi : √5 ≤ hi) (h1 : 4 * tn + 1 - 4 * ε ≤ lo) (h2 : hi ≤ 4 * tn + 1 + 4 * ε) : |tn - c1| ≤ ε
+theorem abs_node_sub_c2_le {tn ε lo hi : ℝ} (hlo : lo ≤ √5) (hhi : √5 ≤ hi) (h1 : -4 * tn - 1 - 4 * ε ≤ lo) (h2 : hi ≤ -4 * tn - 1 + 4 * ε) : |tn - c2| ≤ ε
+structure Contact1R
+def Contact1R.check (c : Contact1R) : Bool
+structure Contact2R
+def Contact2R.check (c : Contact2R) : Bool
+theorem relaxR {Q X G R : List ℤ} {Dq s g0n g0d : ℕ} {ps pR : List BPiece} {δ W t : ℝ} (hD : 0 < Dq) (hs : 0 < s) (hg : 0 < g0n) (hg' : 0 < g0d) (hz : ∀ x ∈ padd (pscale (s : ℤ) (Fpoly Q Dq)) (pneg (padd (pmul X G) R)), x = 0) (hG : chainOK (padd (pscale (g0d : ℤ) G) (pneg [(g0n : ℤ)])) ps 0 1 1 1) (hR : chainOK R pR 0 1 1 1) (hX : 0 ≤ peval X (yOf t)) (hδ : 2 * s * Dq * δ ≤ (g0n : ℝ) / g0d * W) (h1 : -1 ≤ t) (h2 : t < 1) : peval Q t / Dq ≤ phi t ∧ (phi t - peval Q t / Dq ≤ δ → peval X (yOf t) ≤ W)
+theorem Contact1R.hB (c : Contact1R) (hc : c.check = true) {δ η τ : ℝ} (hη : 0 ≤ η) (hδ : 2 * c.s * c.Dq * δ ≤ ((c.g0n : ℝ) / c.g0d) * (c.q * η) ^ 2) (hτ : |1 - 2 * ((c.p : ℝ) / c.q) ^ 2| + 2 * η * (2 * ((c.p : ℝ) / c.q) + η) ≤ τ) : ∀ t, -1 ≤ t → t < 1 → peval c.Q t / c.Dq ≤ phi t ∧ (phi t - peval c.Q t / c.Dq ≤ δ → |t| ≤ τ)
+theorem Contact2R.hC (c : Contact2R) (hc : c.check = true) {δ η τ ε1 ε2 : ℝ} (hη : 0 ≤ η) (hδ : 2 * c.s * c.Dq * δ ≤ ((c.g0n : ℝ) / c.g0d) * (c.q1 * c.q2 * η * ((c.p1 : ℝ) / c.q1 - (c.p2 : ℝ) / c.q2) / 2) ^ 2) (hn1 : |1 - 2 * ((c.p1 : ℝ) / c.q1) ^ 2 - c1| ≤ ε1) (hn2 : |1 - 2 * ((c.p2 : ℝ) / c.q2) ^ 2 - c2| ≤ ε2) (hτ1 : ε1 + 2 * η * (2 * ((c.p1 : ℝ) / c.q1) + η) ≤ τ) (hτ2 : ε2 + 2 * η * (2 * ((c.p2 : ℝ) / c.q2) + η) ≤ τ) : ∀ t, -1 ≤ t → t < 1 → peval c.Q t / c.Dq ≤ phi t ∧ (phi t - peval c.Q t / c.Dq ≤ δ → |t - c1| ≤ τ ∨ |t - c2| ≤ τ)
+
+-- ## TCert (20 declarations, 183 words)
+def K : ℕ
+def m (k : ℕ) : ℕ
+def blkP (k : ℕ) : Blk
+def blkR (k : ℕ) : Blk
+def SPE : Ex
+def SRE : Ex
+def FA : Ex
+def FB : Ex
+def FG : Ex
+def chkA : Bool
+def chkB : Bool
+def chkG : Bool
+def checkMeta : Bool
+noncomputable def HAf : ℝ → ℝ
+noncomputable def HBf : ℝ → ℝ
+noncomputable def HCf : ℝ → ℝ
+noncomputable def ef : ℝ
+noncomputable def alo : ℝ
+noncomputable def ahi : ℝ
+theorem sound_lo (hm : cf.checkMeta = true) (hA : cf.chkA = true) (hB : cf.chkB = true) (hG : cf.chkG = true) (x : Fin 7 → R3) (hx : ∀ i, ‖x i‖ = 1) (hmin : ∀ i j, i ≠ j → cf.alo ≤ ⟪x i, x j⟫) (hcut : cf.alo ≤ ⟪x 0, x 1⟫ ∧ ⟪x 0, x 1⟫ ≤ cf.ahi) : cf.ef ≤ ∑ i, ∑ j ∈ Finset.Ioi i, H7 cf.HAf cf.HBf cf.HCf i j ⟪x i, x j⟫
+
+-- ## Final (13 declarations, 132 words)
+theorem capA_check : capA.check = true
+theorem capB_check : capB.check = true
+theorem capC_check : capC.check = true
+theorem capspec_cap : Glue.CapSpec (-99 / 100 : ℝ)
+theorem slab_s99_98 : Glue.SlabSpec (-99 / 100 : ℝ) (-49 / 50 : ℝ)
+theorem slab_s98_96 : Glue.SlabSpec (-49 / 50 : ℝ) (-24 / 25 : ℝ)
+theorem slab_s96_94 : Glue.SlabSpec (-24 / 25 : ℝ) (-47 / 50 : ℝ)
+theorem slab_s94_93 : Glue.SlabSpec (-47 / 50 : ℝ) (-93 / 100 : ℝ)
+theorem slab_s93_90 : Glue.SlabSpec (-93 / 100 : ℝ) (-9 / 10 : ℝ)
+def K : ℕ
+theorem hK : -9 / 10 ≤ a K
+theorem hslab : ∀ k, k < K → Glue.SlabSpec (a k) (a (k + 1))
+theorem hcap : Glue.CapSpec (a 0)
+
+-- ## Slab_s99_98 (3 declarations, 21 words)
+theorem certHA_ok : certHA.check parHA = true
+theorem certHB_ok : certHB.check parHB = true
+theorem certHC_ok : certHC.check parHC = true
+
+-- ## Slab_s98_96 (3 declarations, 21 words)
+theorem certHA_ok : certHA.check parHA = true
+theorem certHB_ok : certHB.check parHB = true
+theorem certHC_ok : certHC.check parHC = true
+
+-- ## Slab_s96_94 (3 declarations, 21 words)
+theorem certHA_ok : certHA.check parHA = true
+theorem certHB_ok : certHB.check parHB = true
+theorem certHC_ok : certHC.check parHC = true
+
+-- ## Slab_s94_93 (3 declarations, 21 words)
+theorem certHA_ok : certHA.check parHA = true
+theorem certHB_ok : certHB.check parHB = true
+theorem certHC_ok : certHC.check parHC = true
+
+-- ## Slab_s93_90 (3 declarations, 21 words)
+theorem certHA_ok : certHA.check parHA = true
+theorem certHB_ok : certHB.check parHB = true
+theorem certHC_ok : certHC.check parHC = true
+
+-- ## ThomsonN7 (2 declarations, 47 words)
+theorem thomson_seven : ∀ x ∈ SphereConfig 7, coulombEnergy pentBipyramid ≤ coulombEnergy x
+theorem thomson_seven_unique : ∀ x ∈ SphereConfig 7, coulombEnergy x = coulombEnergy pentBipyramid → ∃ (g : R3 ≃ₗᵢ[ℝ] R3) (σ : Equiv.Perm (Fin 7)), ∀ i, x i = g (pentBipyramid (σ i))
